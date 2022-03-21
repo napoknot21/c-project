@@ -1,2 +1,2 @@
-# c-project-
-C programing language projet about number operations library 
+# c-project
+C programing language project about numbers operations
