@@ -10,23 +10,23 @@
 /**
  * Variables storage node.
  */
-typedef struct node node;
+typedef struct Node Node;
 /**
  * Variables storage tree.
  */
-typedef struct tree tree;
+typedef struct Tree Tree;
 
-node *create_node(char id, int data);
+Node *create_node(char id, int data);
 
-tree *create_tree();
+Tree *create_tree();
 
 int max(int a, int b);
 
 int min(int a, int b);
 
-void node_free(node *n);
+void node_free(Node *n);
 
-void tree_free(tree *t);
+void tree_free(Tree *t);
 
 int getPos(char c);
 
@@ -34,30 +34,30 @@ int isUpperCase(char c);
 
 int isLowerCase(char c);
 
-int node_add(node *pNode, int n, char *string);
+int node_add(Node **pNode, int n, const char *string);
 
-int node_getValue(node *pNode, char *string);
+int node_getValue(Node **pNode, char *string);
 
-int node_size(node *pNode);
+int node_size(Node *pNode);
 
 int isLetter(char c);
 
 /**
  * Variables storage node.
  */
-struct node {
+struct Node {
     char id;
     int data;
-    node *children[52];
-    int length;
+    Node* left;
+    Node * middle;
+    Node * right;
 };
 
 /**
  * Variables storage tree.
  */
-struct tree {
-    node *children[52];
-    int length;
+struct Tree {
+    Node * root;
 };
 
 //todo : Clean code
@@ -97,10 +97,10 @@ int getPos(char c) {
  * Create the storage tree
  * @return an empty tree.
  */
-tree *create_tree() {
-    tree *t = malloc(sizeof(tree));
+Tree * create_tree() {
+    Tree* t = malloc(sizeof(Tree));
     if (t == NULL) return NULL;
-    t->length = 0;
+    t->root = NULL;
     return t;
 }
 
@@ -111,14 +111,14 @@ tree *create_tree() {
  * @param data the node's data.
  * @return the pointer of the created node.
  */
-node *create_node(char id, int data) {
-    node *n = malloc(sizeof(node));
+Node* create_node(char id, int data) {
+    Node* n = malloc(sizeof(Node));
     if (n == NULL) {
         return NULL;
     }
     n->id = id;
     n->data = data;
-    n->length = 0;
+    n->left = n->middle = n->right = NULL;
     return n;
 }
 
@@ -127,17 +127,14 @@ node *create_node(char id, int data) {
  *
  * @param t The storage tree.
  * @param string The variable's name
- * @return the data value if the value is found, -1 otherwise
+ * @return the data value if the value is found. <br>
+ *          -1 if the value wasn't found. <br>
+ *          -2 if the tree's integrity is compromised.
  */
-int tree_getValue(tree *t, char *string) {
-    int slen = (int) strlen(string);
-    if (string == NULL || slen < 1) return -1;
-    for (int i = 0; i < t->length; i++) {
-        if (t->children[i]->id == string[0]) {
-            return node_getValue(t->children[i], &string[1]);
-        }
-    }
-    return 0;
+int tree_getValue(Tree* t, char * string) {
+    int len = (int)strlen(string);
+    if (len < 1) return -1;
+    return node_getValue(&t->root, string);;
 }
 
 /**
@@ -145,17 +142,24 @@ int tree_getValue(tree *t, char *string) {
  *
  * @param n The current node.
  * @param string The variable's name.
- * @return the data value if the value is found, -1 otherwise.
+ * @return the data value if the value is found. <br>
+ *          -1 if the value wasn't found. <br>
+ *          -2 if the tree's integrity is compromised.
  */
-int node_getValue(node *n, char *string) {
-    int slen = (int) strlen(string);
-    if (slen == 0) return (n == NULL) ? -1 : n->data;
-    for (int i = 0; i < n->length; i++) {
-        if (n->children[i]->id == string[0]) {
-            return node_getValue(n->children[i], &string[1]);
-        }
+int node_getValue(Node **n, char *string) {
+    int len = (int)strlen(string);
+    if (len < 1 ) return -1;
+    if (n == NULL) return -2;
+    if (string[0] < (*n)->id) {
+        return node_getValue(&(*n)->left,string);
     }
-    return -1;
+    if (string[0] > (*n)->id) {
+        return node_getValue(&(*n)->right,string);
+    }
+    if (len == 1) {
+        return (*n)->data;
+    }
+    return node_getValue(&(*n)->middle,string + 1);
 }
 
 /**
@@ -165,28 +169,14 @@ int node_getValue(node *n, char *string) {
  * @param n the data value.
  * @param string the variable's name.
  * @return   0 if the variable was normally added. <br>
- *          -1 if the name is incorrect. <br>
- *          -2 if the tree is NULL. <br>
- *          -3 if the variable wasn't found
+ *          -1 if the name is empty. <br>
+ *          -2 if the tree is NULL.
  */
-int tree_add(tree *t, int n, char *string) {
+int tree_add(Tree* t, int n, char * string) {
     if (t == NULL) return -2;
-    int slen = (int) strlen(string);
-    if (string == NULL || slen < 1) return -1;
-    for (int i = 0; i < t->length; i++) {
-        if (t->children[i]->id == string[0]) {
-            return node_add(t->children[i], n, &string[1]);
-        }
-    }
-    if (t->length > 52) return -1;
-    if (slen == 1) {
-        t->children[t->length] = create_node(string[0], n);
-    } else {
-        t->children[t->length] = create_node(string[0], 0);
-        node_add((t->children[t->length]), n, &string[1]);
-
-    }
-    t->length++;
+    int len = (int)strlen(string);
+    if (len < 1) return -1;
+    node_add(&t->root,n,string);
     return 0;
 }
 
@@ -197,29 +187,24 @@ int tree_add(tree *t, int n, char *string) {
  * @param n the data value.
  * @param string the variable's name.
  * @return  0 if the variable was normally added. <br>
- *          -3 if the variable wasn't found
+ *          -1 if the variable's name is empty
  */
-int node_add(node *pNode, int n, char *string) {
-    int slen = (int) strlen(string);
-    if (slen == 0) {
-        pNode->data = n;
-        return 0;
+int node_add(Node **pNode, const int n, const char *string) {
+    int len = (int)strlen(string);
+    if (len < 1) return -1;
+    if (*pNode == NULL) {
+        *pNode = create_node(string[0],0);
     }
-
-    for (int i = 0; i < pNode->length; i++) {
-        if (pNode->children[i]->id == string[0]) {
-            return node_add(pNode->children[i], n, &string[1]);
-        }
+    if (string[0] < (*pNode)->id) {
+        return node_add(&(*pNode)->left,n,string);
     }
-    if (pNode->length > 52) return -3;
-    if (slen == 1) {
-        pNode->children[pNode->length] = create_node(string[0], n);
-    } else {
-        pNode->children[pNode->length] = create_node(string[0], 0);
-        node_add((pNode->children[pNode->length]), n, &string[1]);
-
+    if (string[0] > (*pNode)->id) {
+        return node_add(&(*pNode)->right,n,string);
     }
-    pNode->length++;
+    if (len > 1) {
+        return node_add(&(*pNode)->middle, n, string + 1);
+    }
+    (*pNode)->data = n;
     return 0;
 }
 
@@ -229,13 +214,9 @@ int node_add(node *pNode, int n, char *string) {
  * @param t The storage tree.
  * @return the size of the tree.
  */
-int tree_size(tree *t) {
-    if (t == NULL) return 0;
-    int size = 0;
-    for (int i = 0; i < t->length; i++) {
-        size += node_size(t->children[i]);
-    }
-    return size;
+int tree_size(Tree *t) {
+    if (t->root == NULL) return 0;
+    return node_size(t->root);
 }
 
 /**
@@ -244,12 +225,12 @@ int tree_size(tree *t) {
  * @param pNode the root of the sub-tree.
  * @return the size of the sub-tree.
  */
-int node_size(node *pNode) {
+int node_size(Node *n) {
+    if (n == NULL) return 0;
     int size = 0;
-    for (int i = 0; i < pNode->length; i++) {
-        size += node_size(pNode->children[i]);
-    }
-    printf("\n Deleting node: %c", pNode->id);
+    size += node_size(n->left);
+    size += node_size(n->middle);
+    size += node_size(n->right);
     return ++size;
 }
 
@@ -258,12 +239,11 @@ int node_size(node *pNode) {
  *
  * @param n the sub-tree's root.
  */
-void node_free(node *n) {
+void node_free(Node * n) {
     if (n == NULL) return;
-    for (int i = 0; i < n->length; i++) {
-        node_free(n->children[i]);
-    }
-    printf("\n Deleting node: %c", n->id);
+    node_free(n->left);
+    node_free(n->middle);
+    node_free(n->right);
     free(n);
 }
 
@@ -272,11 +252,8 @@ void node_free(node *n) {
  *
  * @param t the storage tree.
  */
-void tree_free(tree *t) {
-    if (t == NULL) return;
-    for (int i = 0; i < t->length; i++) {
-        node_free(t->children[i]);
-    }
+void tree_free(Tree * t) {
+    node_free(t->root);
     free(t);
 }
 
