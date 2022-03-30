@@ -4,13 +4,21 @@
 
 #include "unbounded_int.h"
 
+#define NUM (48)
+#define UNBOUNDED_INT_ERROR ((unbounded_int) {.len = 0, .dernier = NULL, .premier = NULL, .signe = '*'})
+
+
+static int isNum(char c) {
+    return (int) c >= NUM && (int) c <= NUM + 9;
+}
+
 /**
  * Convertis un string en type unbounded_int
  * @param e : le string à convertir
  * @return unbounded_int la paramètre comme nouvelle structure
  */
-unbounded_int string2unbounded_int (const char *e) {
-    return NULL;
+unbounded_int string2unbounded_int(const char *e) {
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**
@@ -19,7 +27,7 @@ unbounded_int string2unbounded_int (const char *e) {
  * @return unbounded_int : paramètre comme nouvelle struct
  */
 unbounded_int ll2unbounded_int (long long i) {
-    return NULL;
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**
@@ -58,7 +66,7 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
  * @return la somme sous forme de struct unbounded_int 
  */
 unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
-    return NULL;
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**
@@ -68,7 +76,7 @@ unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
  * @return la différence sous forme de struct unbounded_int 
  */
 unbounded_int unbounded_int_difference (unbounded_int a, unbounded_int b) {
-    return NULL;
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**
@@ -78,7 +86,7 @@ unbounded_int unbounded_int_difference (unbounded_int a, unbounded_int b) {
  * @return le produit sous forme de struct unbounded_int 
  */
 unbounded_int unbounded_int_produit (unbounded_int a, unbounded_int b) {
-    return NULL;
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**

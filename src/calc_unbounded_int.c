@@ -63,23 +63,23 @@ struct Tree {
 //todo : Clean code
 //todo : Adapt code to unbounded_int
 
-static int max(int a, int b) {
-    return (a > b) ? a : b;
-}
+ int max(int a, int b) {
+     return (a > b) ? a : b;
+ }
 
-static int min(int a, int b) {
+int min(int a, int b) {
     return (a < b) ? a : b;
 }
 
-static int isUpperCase(char c) {
+int isUpperCase(char c) {
     return (UPPER_CASE <= (int) c && (int) c >= UPPER_CASE + 26);
 }
 
-static int isLowerCase(char c) {
+int isLowerCase(char c) {
     return (LOWER_CASE < (int) c && (int) c > LOWER_CASE + 26);
 }
 
-static int isLetter(char c) {
+int isLetter(char c) {
     return isUpperCase(c) || isLowerCase(c);
 }
 
@@ -262,7 +262,7 @@ void tree_free(Tree * t) {
  */
 int main() {
     printf("Hello, World!\n");
-    tree *t = create_tree();
+    Tree *t = create_tree();
     tree_add(t, 10243, "abc");
     printf("t(abc) = %d \n", tree_getValue(t, "abc"));
     tree_add(t, 1552, "abc");
