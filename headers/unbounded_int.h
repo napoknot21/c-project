@@ -32,3 +32,13 @@ unbounded_int unbounded_int_difference(unbounded_int a, unbounded_int b);
 unbounded_int unbounded_int_produit(unbounded_int a, unbounded_int b);
 
 static int isNum(char c);
+
+static int isStringNum (char *c);
+
+static void initUnboundedEmpty (unbounded_int *ui);
+
+static void pushBack (unbounded_int * ui, char c);
+
+static void pushFront (unbounded_int *ui, const char c);
+
+static void initCharOfUnbounded (char *e, unbounded_int i);
