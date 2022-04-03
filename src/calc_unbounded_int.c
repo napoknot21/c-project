@@ -260,6 +260,8 @@ void tree_free(Tree * t) {
 /**
  * Some tests
  */
+
+/* //C (sur CLion) n'admet pas plusieurs mains, dc pour tester ce fichier, décommenter ce main et commenter le main de calc_unbounded_int.c
 int main() {
     printf("Hello, World!\n");
     Tree *t = create_tree();
@@ -289,4 +291,4 @@ int main() {
     return 0;
 }
 
-
+*/

@@ -14,12 +14,8 @@
  * @return unbounded_int la paramètre comme nouvelle structure
  */
 unbounded_int string2unbounded_int(const char *e) {
-    unbounded_int *res = malloc(sizeof(unbounded_int));
-    if (res == NULL || isAStringNum(e) == 0) {
-        perror("Pas de mémoire pour stocker la struct unbounded_int ou le char n'est pas un nombre\n");
-        exit(EXIT_FAILURE);
-    }
-    initUnboundedEmpty(res);
+    if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
+    unbounded_int *res = initUnboundedEmpty();
     int i;
     if (*e == '-') {
         res->len = strlen(e) - 2;
@@ -31,10 +27,11 @@ unbounded_int string2unbounded_int(const char *e) {
         i = 0;
     }
     for (int j = i; j < res->len; j++) {
-        pushBack(res,*(e+j));
+        res = pushBack(res,*(e+j));
     }
     return *res;
 }
+
 
 /**
  * Convertis un long en type unbounded_int
@@ -49,6 +46,7 @@ unbounded_int ll2unbounded_int (long long i) {
     */
     return UNBOUNDED_INT_ERROR;
 }
+
 
 /**
  * Convertis un type unbounded_int en string
@@ -77,6 +75,7 @@ char * unbounded_int2string (unbounded_int i) {
     return e;
 }
 
+
 /**
  * Vérifie si la struct a est plus grande que celle de b (ou à l'inverse)
  * @param a struct unbounded_int
@@ -94,6 +93,7 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
     return 0;
 }
 
+
 /**
  * Vérifie si la struct a est plus grande que long b (ou à l'inverse)
  * @param a struct unbounded_int
@@ -104,6 +104,7 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
     unbounded_int b_ll = ll2unbounded_int(b);
     return unbounded_int_cmp_unbounded_int(a,b_ll);
 }
+
 
 /**
  * Fais la somme de deux struct unbounded_int
@@ -118,6 +119,7 @@ unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
     return UNBOUNDED_INT_ERROR;
 }
 
+
 /**
  * Fais la différence des deux struct struct unbounded_int
  * @param a struct unbounded_int
@@ -127,6 +129,7 @@ unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
 unbounded_int unbounded_int_difference (unbounded_int a, unbounded_int b) {
     return UNBOUNDED_INT_ERROR;
 }
+
 
 /**
  * Fais la multiplication de deux structs unbounded_int
@@ -138,10 +141,10 @@ unbounded_int unbounded_int_produit (unbounded_int a, unbounded_int b) {
     return UNBOUNDED_INT_ERROR;
 }
 
+
 /**
  * fonction main (tests)
  */
- /*  /* C n'admet pas plusieurs main, donc pour tester ce fichier, décommenter ce main et commenter le main de calc_unbounded_int.c
 int main (int argc, char *argv[]) {
 
     //isNum() test
@@ -187,7 +190,8 @@ int main (int argc, char *argv[]) {
 
     return 0;
 }
-*/
+
+
 
 /**
  * vérifie si le code ASCII du char est un nombre (entre 48 et 57)
@@ -198,21 +202,6 @@ static int isNum(char c) {
     return (int) c >= NUM && (int) c <= NUM + 9;
 }
 
-/**
- * Initialise un *char (signe et allocation) à partir d'un unbounded_int
- * @param e char à initialiser
- * @param i unbounded_int source
- */
-static void initCharOfUnbounded (char *e, unbounded_int i) {
-    if (i.signe == '-') {
-        e = malloc(i.len + 2);
-        if (e == NULL) exit(EXIT_FAILURE);
-        *(e+0) = '-';
-    } else {
-        e = malloc(i.len + 1);
-        if (e == NULL) exit(EXIT_FAILURE);
-    }
-}
 
 /**
  * Vérifie que le string est bien composé de nombres
@@ -234,50 +223,102 @@ static int isAStringNum (const char *c) {
     return 1;
 }
 
+
+static int isUnboundedIntEmpty () {
+    return 0;
+}
+
+/**
+ * Initialise un *char (signe et allocation) à partir d'un unbounded_int
+ * @param e char à initialiser
+ * @param i unbounded_int source
+ */
+static void initCharOfUnbounded (char *e, unbounded_int i) {
+    if (i.signe == '-') {
+        e = malloc(i.len + 2);
+        if (e == NULL) exit(EXIT_FAILURE);
+        *(e+0) = '-';
+    } else {
+        e = malloc(i.len + 1);
+        if (e == NULL) exit(EXIT_FAILURE);
+    }
+}
+
+
+/**
+ * Initialise une struct chiffre à partir d'un char
+ * @param c valeur de l'argument c de la struct chiffre
+ * @return une nouvelle instance de chiffre
+ */
+static chiffre * initChiffre (const char c) {
+    if (isNum(c) == 0) return NULL;
+    chiffre *ch = malloc(sizeof (chiffre));
+    if (ch == NULL) {
+        perror("Pas de mémoire pour allouer la struct chiffre\n");
+        return NULL;
+    }
+    ch->suivant = NULL;
+    ch->precedent = NULL;
+    ch->c = c;
+    return ch;
+}
+
+
 /**
  * On initialise les pointeurs d'un unbounded_int à NULL
  * @param ui structure affectée
  */
-static void initUnboundedEmpty (unbounded_int *ui) {
+static unbounded_int * initUnboundedEmpty () {
+    unbounded_int *ui = malloc (sizeof (unbounded_int));
+    if (ui == NULL) {
+        perror("Pas de mémoire pour allouer la struct unbounded_int\n");
+        exit(EXIT_FAILURE);
+    }
     ui->premier = NULL;
     ui->dernier = NULL;
+    ui->signe = '*';
+    ui->len = 0;
+    return ui;
 }
+
 
 /**
  * Ajoute d'une nouvelle struct Chiffre à la fin de la liste
  * @param ui struct source
  * @param c valeur de la nouvelle struct chiffre ajouté
  */
-static void pushBack (unbounded_int *ui, const char c) {
-    chiffre *ch = malloc(sizeof(chiffre));
-    if (ch == NULL) exit(EXIT_FAILURE);
-    ch->c = c;
+static unbounded_int * pushFront (unbounded_int *ui, const char c) {
+    chiffre *ch = initChiffre(c);
     ch->precedent = ui->dernier;
     ch->suivant = NULL;
     if (ui->dernier != NULL) {
         ui->dernier->suivant = ch;
-    } else {
-        ui->dernier = ch;
+    } else if (ui->dernier == NULL && ui->premier == NULL) {
+        ui->premier = ch;
     }
+    ui->dernier = ch;
+    return ui;
 }
+
 
 /**
  * Ajoute d'une nouvelle struct Chiffre au début de la liste
  * @param ui struct source
  * @param c valeur de la nouvelle struct chiffre ajouté
  */
-static void pushFront (unbounded_int *ui, const char c) {
-    chiffre *ch = malloc(sizeof(chiffre));
-    if (ch == NULL) exit (EXIT_FAILURE);
-    ch->c = c;
+static unbounded_int * pushBack (unbounded_int *ui, const char c) {
+    chiffre *ch = initChiffre(c);
     ch->precedent = NULL;
     ch->suivant = ui->premier;
     if (ui->premier != NULL) {
         ui->premier->precedent = ch;
-    } else {
-        ui->premier = ch;
+    } else if (ui->dernier == NULL && ui->premier == NULL) {
+       ui->dernier = ch;
     }
+    ui->premier = ch;
+    return ui;
 }
+
 
 /*
 static void print_unbounded_int (unbounded_int ui) {

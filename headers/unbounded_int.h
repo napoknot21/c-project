@@ -35,12 +35,16 @@ static int isNum(char c);
 
 static int isAStringNum (const char *c);
 
-static void initUnboundedEmpty (unbounded_int *ui);
+static int isUnboundedIntEmpty ();
 
-static void pushBack (unbounded_int * ui, char c);
-
-static void pushFront (unbounded_int *ui, const char c);
+static unbounded_int * initUnboundedEmpty ();
 
 static void initCharOfUnbounded (char *e, unbounded_int i);
+
+static chiffre * initChiffre (const char c);
+
+static unbounded_int * pushBack (unbounded_int * ui, char c);
+
+static unbounded_int * pushFront (unbounded_int *ui, const char c);
 
 static void print_unbounded_int (unbounded_int ui);
