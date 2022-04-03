@@ -2,15 +2,11 @@
 #include<stdlib.h>
 #include<string.h>
 
-#include "unbounded_int.h"
+#include "../headers/unbounded_int.h"
 
 #define NUM (48)
 #define UNBOUNDED_INT_ERROR ((unbounded_int) {.len = 0, .dernier = NULL, .premier = NULL, .signe = '*'})
 
-
-static int isNum(char c) {
-    return (int) c >= NUM && (int) c <= NUM + 9;
-}
 
 /**
  * Convertis un string en type unbounded_int
@@ -19,7 +15,10 @@ static int isNum(char c) {
  */
 unbounded_int string2unbounded_int(const char *e) {
     unbounded_int *res = malloc(sizeof(unbounded_int));
-    if (res == NULL) exit(EXIT_FAILURE);
+    if (res == NULL || isAStringNum(e) == 0) {
+        perror("Pas de mémoire pour stocker la struct unbounded_int ou le char n'est pas un nombre\n");
+        exit(EXIT_FAILURE);
+    }
     initUnboundedEmpty(res);
     int i;
     if (*e == '-') {
@@ -44,8 +43,9 @@ unbounded_int string2unbounded_int(const char *e) {
  */
 unbounded_int ll2unbounded_int (long long i) {
     /*
-    const char *e = malloc()
-    const char *e = lltoa(i,)
+    const char *e = malloc(sizeof (char));
+    e = lltoa(i,e,10);
+    return string2unbounded_int(e);
     */
     return UNBOUNDED_INT_ERROR;
 }
@@ -139,13 +139,63 @@ unbounded_int unbounded_int_produit (unbounded_int a, unbounded_int b) {
 }
 
 /**
- * fonction main
- * @param argc taille du tableau de argv
- * @param argv tableau de string
- * @return int etat de sortie
+ * fonction main (tests)
  */
+ /*  /* C n'admet pas plusieurs main, donc pour tester ce fichier, décommenter ce main et commenter le main de calc_unbounded_int.c
 int main (int argc, char *argv[]) {
+
+    //isNum() test
+    char a = '2';
+    char b = 'm';
+
+    printf("%c => is a a number ? %s\n",a, isNum(a) ? "True" : "False");
+    printf("%c => is a a number ? %s\n",b, isNum(b) ? "True" : "False");
+
+    printf("===========\n");
+
+    //isAStringNum() test
+    char *st_n = malloc(sizeof(char)*6+1);
+    char *st_p = malloc(sizeof(char)*5+1);
+    char *stn_err = malloc(sizeof(char)*6+1);
+    char *stp_err = malloc(sizeof(char)*5+1);
+    st_n = strcpy(st_n,"-45612");
+    st_p = strcpy(st_p,"31245");
+    stn_err = strcpy(stn_err,"-548ff");
+    stp_err = strcpy(stp_err,"542df");
+
+    printf("%s => is a a number ? %s\n",st_n, isAStringNum(st_n) ? "True" : "False");
+    printf("%s => is a a number ? %s\n",st_p, isAStringNum(st_p) ? "True" : "False");
+    printf("%s => is a a number ? %s\n",stn_err, isAStringNum(stn_err) ? "True" : "False");
+    printf("%s => is a a number ? %s\n",stp_err, isAStringNum(stp_err) ? "True" : "False");
+
+
+    //free(st_n);
+    //free(st_p);
+    //free(stn_err);
+    //free(stp_err)
+
+
+    printf("===========\n");
+
+    //print_unbounded_int() test
+    unbounded_int ui1 = string2unbounded_int(st_n);
+    unbounded_int ui2 = string2unbounded_int(st_p);
+
+    //print_Unbounded_int(ui1);
+    //print_Unbounded_int(ui2);
+
+
     return 0;
+}
+*/
+
+/**
+ * vérifie si le code ASCII du char est un nombre (entre 48 et 57)
+ * @param c char à tester
+ * @return 1 si c est un nombre, 0 sinon
+ */
+static int isNum(char c) {
+    return (int) c >= NUM && (int) c <= NUM + 9;
 }
 
 /**
@@ -169,15 +219,15 @@ static void initCharOfUnbounded (char *e, unbounded_int i) {
  * @param c String à tester
  * @return 1 = true, et 0 sinon
  */
-static int isStringNum (char *c) {
+static int isAStringNum (const char *c) {
     int i;
     if (*(c+0) == '-') {
         i = 1;
     } else {
         i = 0;
     }
-    while (*(c+i) != '\0') {
-        if (!isNum(*(c+i))) {
+    for (int j = i; j < strlen(c); j++) {
+        if (!isNum(*(c+j))) {
             return 0;
         }
     }
@@ -228,3 +278,25 @@ static void pushFront (unbounded_int *ui, const char c) {
         ui->premier = ch;
     }
 }
+
+/*
+static void print_unbounded_int (unbounded_int ui) {
+    unbounded_int tmp = UNBOUNDED_INT_ERROR;
+    if (ui.signe == tmp.signe && ui.len == tmp.len && ui.premier == tmp.premier && ui.dernier == tmp.dernier) {
+        printf("L'unbounded_int est vide\n");
+        return;
+    }
+    if (ui.signe == '-') {
+        printf("-");
+    }
+    chiffre *p = ui.premier;
+    for (int i = 0; i < ui.len; i++) {
+        if (p == ui.dernier) {
+            printf("%c\n", p->c);
+            return;
+        }
+        printf("%c", p->c);
+        p = p->suivant;
+    }
+}
+*/
