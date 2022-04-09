@@ -11,6 +11,7 @@
 #define SUBSTRACTION(a, b) ((a)-(b))
 #define DIVISION(a, b) ((a)/(b))
 #define EQUALS(t, a, b) (tree_add((t),(a),(b)))
+#define MODULO(a, b) ((a)%(b))
 static int MALLOC_COUNTER = 0;
 
 /**
@@ -302,28 +303,18 @@ int main() {
     AST *op = AST_new();
     AST_add(op, t, "a");
     AST_add(op, t, "=");
-    AST_add(op, t, "5");
-    AST_add(op, t, "+");
-    AST_add(op, t, "2");
-    AST_add(op, t, "*");
-    AST_add(op, t, "7");
-    AST_add(op, t, "*");
-    AST_add(op, t, "7");
-    AST_add(op, t, "+");
+    AST_add(op, t, "101");
+    AST_add(op, t, "%");
     AST_add(op, t, "100");
-    AST_add(op, t, "*");
-    AST_add(op, t, "5");
     AST_apply(t, op);
     printf(" a = 5 + 2 * 7 * 7 + 100 * 5 = %d \n", tree_getValue(t, "a"));
     AST_free(op);
     tree_free(t);
-    printf("MALLOC_COUNTER = %d", MALLOC_COUNTER);
+    printf("MALLOC_COUNTER = %d \n", MALLOC_COUNTER);
     return 0;
 }
 
-/**
- * Variables storage node.
- */
+
 struct Node {
     char id;
     int data;
@@ -332,9 +323,7 @@ struct Node {
     Node *right;
 };
 
-/**
- * Variables storage tree.
- */
+
 struct Tree {
     Node *root;
 };
@@ -403,7 +392,7 @@ static ASN *ASN_new(Tree *t, char *s) {
 }
 
 static int isAnOperator(const char s) {
-    return s == '*' || s == '/' || s == '+' || s == '-' || s == '=';
+    return s == '*' || s == '/' || s == '+' || s == '-' || s == '=' || s == '%';
 }
 
 
@@ -446,7 +435,6 @@ static int op(ASN *asn, Tree *storage, int left, int right) {
             EQUALS(storage, right, asn->left->token.data);
             return right;
         case '*':
-
             return MULTIPLICATION(right, left);
         case '-' :
             return SUBSTRACTION(left, right);
@@ -455,6 +443,8 @@ static int op(ASN *asn, Tree *storage, int left, int right) {
             return ADDITION(left, right);
         case '/':
             return DIVISION(left, right);
+        case '%':
+            return MODULO(left, right);
         default:
             return asn->result;
     }
@@ -595,6 +585,7 @@ static unsigned short priority(const char a) {
             return 2;
         case '/':
         case '*':
+        case '%':
             return 3;
         default:
             return 0;
