@@ -37,6 +37,12 @@ static int isAStringNum (const char *c);
 
 static int isUnboundedIntEmpty ();
 
+static char * lltoa (long long value, char *buffer, int base);
+
+static void swap (char *x, char *y);
+
+static char * reverse (char *buffer, int i, int j);
+
 static unbounded_int * initUnboundedEmpty ();
 
 static void initCharOfUnbounded (char *e, unbounded_int i);
