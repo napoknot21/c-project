@@ -39,12 +39,8 @@ unbounded_int string2unbounded_int(const char *e) {
  * @return unbounded_int : paramètre comme nouvelle struct
  */
 unbounded_int ll2unbounded_int (long long i) {
-    /*
-    const char *e = malloc(sizeof (char));
-    e = lltoa(i,e,10);
-    return string2unbounded_int(e);
-    */
-    return UNBOUNDED_INT_ERROR;
+    char buffer[100];
+    return string2unbounded_int(lltoa(i,buffer,10));
 }
 
 
