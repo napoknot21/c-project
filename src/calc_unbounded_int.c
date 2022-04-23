@@ -6,6 +6,17 @@
 #include <time.h>
 //#include "unbounded_int.h"
 
+enum ERROR {
+    INVALID_OPERATOR, INVALID_SYNTAX, MISSING_BLANK, UNKNOWN_CHARACTER, INTERNAL
+};
+
+static char *error_getMessage(enum ERROR error);
+
+static char *FILE_NAME = "stdin";
+static int FILE_LINE = 1;
+static int MALLOC_COUNTER = 0;
+
+#define pERROR(error) (fprintf(stderr,"%s in file %s in line %d\n", error_getMessage(error) ,FILE_NAME,FILE_LINE))
 #define printErr(c) (fprintf(stderr,"%s in file %s in line %d\n %s\n", strerror(errno) ,__FILE__,__LINE__, (c)))
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b) ((a)*(b))
@@ -17,9 +28,6 @@
 
 #define BUFFER_SIZE 256
 
-static char *FILE_NAME = "stdin";
-static int FILE_LINE = 1;
-static int MALLOC_COUNTER = 0;
 
 /**
  * Token types.
@@ -226,14 +234,14 @@ static AST *AST_new();
  * @param storage. The storage ast.
  * @param s The node value.
  */
-static void AST_add(AST *ast, Tree *storage, Token token);
+static int AST_add(AST *ast, Tree *storage, Token token);
 
 /**
  * Apply the arithmetic expression stored in the ast.
  * @param storage The storage tree.
  * @param ast The AST.
  */
-static void AST_apply(Tree *storage, AST *ast);
+static int AST_apply(Tree *storage, AST *ast);
 
 /**
  * Abstract syntax node used for arithmetic evaluations.
@@ -254,7 +262,7 @@ static ASN *ASN_new(Tree *t, Token token);
  * @param storage. The storage tree.
  * @param s The node value.
  */
-static void ASN_add(Tree *storage, ASN **asn, Token token);
+static int ASN_add(Tree *storage, ASN **asn, Token token);
 
 /**
  * Free the ASN.
@@ -354,7 +362,7 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage);
 
 AST *AST_clear(AST *ast);
 
-int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type);
+int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print, FILE *out);
 
 struct Node {
     char id;
@@ -411,12 +419,13 @@ int main(int argc, char **argv) {
     int err = run(in, out, ast, storage);
     AST_free(ast);
     tree_free(storage);
+    printf("MALLOC_COUNTER = %d\n", MALLOC_COUNTER);
     disconnect(&in, &out);
-    printf("MALLOC_COUNTER = %d", MALLOC_COUNTER);
     exit((err) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
+    int print = 0;
     TokenType last, current;
     last = current = VOID;
     Stack *stack = stack_new();
@@ -427,11 +436,13 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
     int c;
     while ((c = fgetc(in)) != EOF) {
         if ((char) c == '\n') {
-            treatment(stack, ast, storage, current);
+            int val = treatment(stack, ast, storage, current, &print, out);
+            if (val == 0 || (val > 0 && !AST_apply(storage, ast))) {
+                stack_free(stack);
+                return 0;
+            }
             stack = stack_clear(stack);
-            AST_apply(storage, ast);
             ast = AST_clear(ast);
-            FILE_LINE += 1;
             if (stack == NULL) {
                 return 0;
             }
@@ -441,12 +452,17 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
         } else if (isalpha(c)) {
             current = VAR;
         } else if (isAnOperator((char) c)) {
+            if (last == OPERATOR) {
+                pERROR(INVALID_SYNTAX);
+                stack_free(stack);
+                return 0;
+            }
             current = OPERATOR;
         } else if (isdigit(c) && (current == VOID || current == OPERATOR)) {
             current = NUMBER;
         }
         if (current != last && last != VOID) {
-            if (!treatment(stack, ast, storage, last)) {
+            if (!treatment(stack, ast, storage, last, &print, out)) {
                 stack_free(stack);
                 return 0;
             }
@@ -471,20 +487,55 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
      if print apply puis fprintf(out, a = getValue())
      1er temps, if print, recherche du nom de la variable ->fprintf(out, a = getValue())
      Lecture par block ?
-     if (error), print return false
+     if (ERROR), print return false
      */
     return 1;
 }
 
+static char *error_getMessage(enum ERROR error) {
+    switch (error) {
+        case INVALID_SYNTAX:
+            return "An invalid syntax was found";
+        case INVALID_OPERATOR:
+            return "An unknown operator was found";
+        case INTERNAL:
+            return "Internal error occurred during the execution";
+        case MISSING_BLANK:
+            return "A blank is missing";
+        case UNKNOWN_CHARACTER:
+            return "An Unknown character was found";
+        default:
+            return "";
+    }
+}
+
 //Todo: gestion des erreurs du parser
 //todo: gestion du print (type = VAR avec str_equals)
-int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type) {
+int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print, FILE *out) {
     if (type == VOID) {
         return 1;
     }
-    Token token = token_new(stack->buffer, stack->length, type);
-    AST_add(ast, storage, token);
-    return 1;
+    if (*print) {
+        char *c = trim(stack->buffer, stack->length);
+        if (c == NULL) {
+            printErr("");
+            return 0; //error return value
+        }
+        int value = tree_getValue(storage, c);
+        fprintf(out, "%s = %d\n", c, value);
+        free(c);
+        MALLOC_COUNTER--;
+        *print = 0;
+        return -1; //print return value
+    } else if (str_equals(stack->buffer, "print")) {
+        *print = 1;
+    } else {
+        Token token = token_new(stack->buffer, stack->length, type);
+        if (!AST_add(ast, storage, token)) {
+            return 0; //error return value
+        }
+    }
+    return 1; //add return value
 }
 
 AST *AST_clear(AST *ast) {
@@ -608,26 +659,33 @@ static int isAnOperator(const char s) {
 }
 
 
-static void ASN_add(Tree *storage, ASN **asn, Token token) {
+static int ASN_add(Tree *storage, ASN **asn, Token token) {
     if (*asn == NULL) {
         *asn = ASN_new(storage, token_new("", 0, OPERATOR));
         (*asn)->left = ASN_new(storage, token);
     } else if ((*asn)->token.data[0] == DEFAULT_OP) {
+        if ((*asn)->token.type != token.type) {
+            pERROR(INVALID_SYNTAX);
+            return 0;
+        }
         strncpy((*asn)->token.data, token.data, strlen(token.data));
+        token_free(token);
     } else if ((*asn)->right == NULL || token.type == NUMBER || !isHigher((*asn)->token.data[0], token.data[0])) {
-        ASN_add(storage, &(*asn)->right, token);
+        return ASN_add(storage, &(*asn)->right, token);
     } else {
         ASN *tmp = *asn;
         *asn = ASN_new(storage, token);
         (*asn)->left = tmp;
     }
+    return 1;
 }
 
-static void AST_add(AST *ast, Tree *storage, Token token) {
+static int AST_add(AST *ast, Tree *storage, Token token) {
     if (ast == NULL || storage == NULL || isspace(token.data[0]) || token.type == VOID) {
-        return;
+        pERROR(INTERNAL);
+        return 0;
     }
-    ASN_add(storage, &ast->root, token);
+    return ASN_add(storage, &ast->root, token);
 }
 
 static ASN *ASN_free(ASN *n) {
@@ -669,9 +727,22 @@ static int ASN_apply(Tree *storage, ASN *asn) {
     return asn->result = op(asn, storage, left, right);
 }
 
-static void AST_apply(Tree *storage, AST *ast) {
-    if (storage == NULL || ast == NULL) return;
+static int AST_apply(Tree *storage, AST *ast) {
+    if (storage == NULL || ast == NULL) {
+        errno = 22;     //Invalid arguments
+        printErr("Internal Error");
+        return 0;
+    }
+    if (ast->root == NULL) {
+        pERROR(INVALID_SYNTAX);
+        return 0;
+    }
+    if (ast->root->token.data[0] == DEFAULT_OP) {
+        pERROR(INVALID_OPERATOR);
+        return 0;
+    }
     ASN_apply(storage, ast->root);
+    return 1;
 }
 
 static Tree *tree_new() {
@@ -816,19 +887,23 @@ static char *trim(const char *s, size_t len) {
     }
     char *ret = malloc(size * sizeof(char) + 1);
     MALLOC_COUNTER++;
-    if (ret == NULL) return NULL;
+    if (ret == NULL) {
+        printErr("");
+        return NULL;
+    }
     char *tmp = memmove(ret, s, sizeof(char) * size);
-    if (tmp == NULL) return NULL;
+    if (tmp == NULL) {
+        printErr("");
+        return NULL;
+    }
     ret = tmp;
     ret[size] = '\0';
     return ret;
 }
 
 static AST *AST_free(AST *ast) {
-    if (ast != NULL) {
-        ASN_free(ast->root);
-        free(ast);
-        MALLOC_COUNTER--;
-    }
+    ASN_free(ast->root);
+    free(ast);
+    MALLOC_COUNTER--;
     return NULL;
 }
