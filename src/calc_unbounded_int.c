@@ -26,7 +26,7 @@ static int MALLOC_COUNTER = 0;
 #define EQUALS(t, a, b) (tree_add((t),(a),(b)))
 #define MODULO(a, b) ((a)%(b))
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 16
 
 
 /**
@@ -152,15 +152,6 @@ static int tree_add(Tree *t, int n, char *string);
 static int tree_getValue(Tree *t, char *string);
 
 /**
- * Calculates the size of the tree.
- *
- * @param t The storage tree.
- * @return the size of the tree.
- */
-static int tree_size(Tree *t);
-
-
-/**
  * Variables storage node.
  */
 typedef struct Node Node;
@@ -201,14 +192,6 @@ static int node_add(Node **pNode, int n, const char *string);
  *          0 otherwise.
  */
 static int node_getValue(Node **node, char *string);
-
-/**
- * Calculate the size of the sub-tree.
- *
- * @param pNode the root of the sub-tree.
- * @return the size of the sub-tree.
- */
-static int node_size(Node *node);
 
 /**
  * Abstract syntax tree used for arithmetic evaluations.
@@ -276,7 +259,7 @@ static ASN *ASN_free(ASN *asn);
  * @param storage The storage tree.
  * @param asn The root of the sub AST.
  */
-static int ASN_apply(Tree *storage, ASN *asn);
+static long long ASN_apply(Tree *storage, ASN *asn, int *pInt);
 
 
 /**
@@ -342,13 +325,6 @@ static char *trim(const char *s, size_t len);
  */
 
 /**
- * Indicate if the string is a number.
- * @param string The string which will be tested.
- * @return true if the string is a number, false otherwise.
- */
-static int isNum(char *string);
-
-/**
  * Some tests
  */
 
@@ -366,7 +342,7 @@ int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print,
 
 struct Node {
     char id;
-    int data;
+    long long data;
     Node *left;
     Node *middle;
     Node *right;
@@ -379,7 +355,7 @@ struct Tree {
 
 struct ASN {
     Token token;
-    int result;
+    long long result;
     ASN *left;
     ASN *right;
 };
@@ -435,7 +411,7 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
     }
     int c;
     while ((c = fgetc(in)) != EOF) {
-        if ((char) c == '\n') {
+        if ((char) c == '\n' || (char) c == '\r') {
             int val = treatment(stack, ast, storage, current, &print, out);
             if (val == 0 || (val > 0 && !AST_apply(storage, ast))) {
                 stack_free(stack);
@@ -446,6 +422,7 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
             if (stack == NULL) {
                 return 0;
             }
+            FILE_LINE++;
             last = current = VOID;
         } else if (isspace(c)) {
             current = VOID;
@@ -479,16 +456,14 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
         }
         last = current;
     }
-    /*Lecture -> detection de token et sauvegarde de la position, si token change, sauvegarde de la longueur parcourue
-    relecture du token avec puis trim et direction l'AST
-     Fin de ligne ? AST_apply(), AST_clear()
-     Boucle
-     If EOF, retour a la derniere position connue, mis dans l'AST apply(), puis sortie fonction.
-     if print apply puis fprintf(out, a = getValue())
-     1er temps, if print, recherche du nom de la variable ->fprintf(out, a = getValue())
-     Lecture par block ?
-     if (ERROR), print return false
-     */
+    if (stack != NULL) {
+        int val = treatment(stack, ast, storage, current, &print, out);
+        if (val == 0 || (val > 0 && !AST_apply(storage, ast))) {
+            stack_free(stack);
+            return 0;
+        }
+        stack_free(stack);
+    }
     return 1;
 }
 
@@ -509,14 +484,24 @@ static char *error_getMessage(enum ERROR error) {
     }
 }
 
-//Todo: gestion des erreurs du parser
-//todo: gestion du print (type = VAR avec str_equals)
+
 int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print, FILE *out) {
+    char *buffer = stack->buffer;
+    size_t len = stack->length;
     if (type == VOID) {
         return 1;
     }
+    if (type == NUMBER && buffer[0] == '=') {
+        Token token = token_new(buffer, 1, type);
+        if (!AST_add(ast, storage, token)) {
+            token_free(token);
+            return 0; //error return value
+        }
+        buffer++;
+        len--;
+    }
     if (*print) {
-        char *c = trim(stack->buffer, stack->length);
+        char *c = trim(buffer, len);
         if (c == NULL) {
             printErr("");
             return 0; //error return value
@@ -527,11 +512,12 @@ int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print,
         MALLOC_COUNTER--;
         *print = 0;
         return -1; //print return value
-    } else if (str_equals(stack->buffer, "print")) {
+    } else if (str_equals(buffer, "print")) {
         *print = 1;
     } else {
-        Token token = token_new(stack->buffer, stack->length, type);
+        Token token = token_new(buffer, len, type);
         if (!AST_add(ast, storage, token)) {
+            token_free(token);
             return 0; //error return value
         }
     }
@@ -608,16 +594,6 @@ static void token_free(Token t) {
     MALLOC_COUNTER--;
 }
 
-static int isNum(char *string) {
-    size_t len = strlen(string);
-    for (int i = 0; i < len; i++) {
-        if (!isdigit(string[i])) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 static AST *AST_new() {
     AST *tree = malloc(sizeof(AST));
     MALLOC_COUNTER++;
@@ -670,7 +646,8 @@ static int ASN_add(Tree *storage, ASN **asn, Token token) {
         }
         strncpy((*asn)->token.data, token.data, strlen(token.data));
         token_free(token);
-    } else if ((*asn)->right == NULL || token.type == NUMBER || !isHigher((*asn)->token.data[0], token.data[0])) {
+    } else if ((*asn)->right == NULL || token.type == NUMBER || token.type == VAR ||
+               !isHigher((*asn)->token.data[0], token.data[0])) {
         return ASN_add(storage, &(*asn)->right, token);
     } else {
         ASN *tmp = *asn;
@@ -720,10 +697,16 @@ static int op(ASN *asn, Tree *storage, int left, int right) {
     }
 }
 
-static int ASN_apply(Tree *storage, ASN *asn) {
+static long long ASN_apply(Tree *storage, ASN *asn, int *err) {
     if (asn == NULL) return 0;
-    int left = ASN_apply(storage, asn->left);
-    int right = ASN_apply(storage, asn->right);
+    long long left = ASN_apply(storage, asn->left, err);
+    long long right = ASN_apply(storage, asn->right, err);
+    if ((asn->token.data[0] != DEFAULT_OP && asn->token.type == OPERATOR)
+        && ((asn->left == NULL) || (asn->right == NULL))) {
+        if (*err) pERROR(INVALID_SYNTAX);
+        *err = 0;
+        return 0;
+    }
     return asn->result = op(asn, storage, left, right);
 }
 
@@ -741,8 +724,9 @@ static int AST_apply(Tree *storage, AST *ast) {
         pERROR(INVALID_OPERATOR);
         return 0;
     }
-    ASN_apply(storage, ast->root);
-    return 1;
+    int err = 1;
+    ASN_apply(storage, ast->root, &err);
+    return err;
 }
 
 static Tree *tree_new() {
@@ -819,23 +803,6 @@ static int node_add(Node **pNode, const int n, const char *string) {
     return 0;
 }
 
-
-static int tree_size(Tree *t) {
-    if (t->root == NULL) return 0;
-    return node_size(t->root);
-}
-
-
-static int node_size(Node *node) {
-    if (node == NULL) return 0;
-    int size = 0;
-    size += node_size(node->left);
-    size += node_size(node->middle);
-    size += node_size(node->right);
-    return ++size;
-}
-
-
 static void node_free(Node *n) {
     if (n == NULL) return;
     node_free(n->left);
@@ -894,6 +861,8 @@ static char *trim(const char *s, size_t len) {
     char *tmp = memmove(ret, s, sizeof(char) * size);
     if (tmp == NULL) {
         printErr("");
+        free(ret);
+        MALLOC_COUNTER--;
         return NULL;
     }
     ret = tmp;
