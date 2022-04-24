@@ -1,40 +1,66 @@
 #include <stdio.h>
+
 #include <malloc.h>
+
 #include <string.h>
+
 #include <stdlib.h>
+
 #include <ctype.h>
-#include <time.h>
+
 //#include "unbounded_int.h"
 
+/**
+ * Parser and lexer errors.
+ */
 enum ERROR {
     INVALID_OPERATOR, INVALID_SYNTAX, MISSING_BLANK, UNKNOWN_CHARACTER, INTERNAL
 };
 
+/**
+ * Print on the stderr the corresponding message according to the code given in argument.
+ * @param error The error's code.
+ * @return The error's message.
+ */
 static char *error_getMessage(enum ERROR error);
 
+/**
+ * Name of the open file.
+ */
 static char *FILE_NAME = "stdin";
+/**
+ * Line position of the reader in the open file.
+ */
 static int FILE_LINE = 1;
 static int MALLOC_COUNTER = 0;
 
-#define pERROR(error) (fprintf(stderr,"%s in file %s in line %d\n", error_getMessage(error) ,FILE_NAME,FILE_LINE))
-#define printErr(c) (fprintf(stderr,"%s in file %s in line %d\n %s\n", strerror(errno) ,__FILE__,__LINE__, (c)))
+#define pERROR(error)(fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE))
+#define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 #define DEFAULT_OP '\0'
-#define MULTIPLICATION(a, b) ((a)*(b))
-#define ADDITION(a, b) ((a)+(b))
-#define SUBSTRACTION(a, b) ((a)-(b))
-#define DIVISION(a, b) ((a)/(b))
-#define EQUALS(t, a, b) (tree_add((t),(a),(b)))
-#define MODULO(a, b) ((a)%(b))
+#define MULTIPLICATION(a, b)((a) * (b))
+#define ADDITION(a, b)((a) + (b))
+#define SUBSTRACTION(a, b)((a) - (b))
+#define DIVISION(a, b)((a) / (b))
+#define EQUALS(t, a, b)(tree_add((t), (a), (b)))
+#define MODULO(a, b)((a) % (b))
 
 #define BUFFER_SIZE 16
 
 
-/**
- * Token types.
+
+
+
+/* #####################################################################################################################
+ * Token's functions.
  */
+
+/**
+* Token types.
+*/
 typedef enum TokenType {
     NUMBER, VAR, OPERATOR, VOID
 } TokenType;
+
 /**
  * Lexers Tokens.
  */
@@ -43,73 +69,71 @@ typedef struct Token {
     enum TokenType type;
 } Token;
 
-typedef struct Stack {
+/**
+ * Free a token.
+ * @param t The token which will be free
+ */
+static void token_free(Token t);
+
+/**
+ * Create a new token according to the string given in argument and the type.
+ * @param s The token' data.
+ * @param type The token's type.
+ * @return The created Token.
+ */
+static Token token_new(char *s, size_t len, enum TokenType type);
+
+
+
+
+/* #####################################################################################################################
+ * Parser's buffer's functions.
+*/
+
+/**
+ * Parser Buffer.
+*/
+typedef struct Buffer {
     char *buffer;
     int capacity;
     int length;
-} Stack;
+} Buffer;
 
-Stack *stack_new() {
-    Stack *stack = malloc(sizeof(Stack));
-    MALLOC_COUNTER++;
-    if (stack == NULL) {
-        printErr("");
-        MALLOC_COUNTER--;
-        return NULL;
-    }
-    stack->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    MALLOC_COUNTER++;
-    if (stack->buffer == NULL) {
-        printErr("");
-        free(stack);
-        MALLOC_COUNTER -= 2;
-        return NULL;
-    }
-    stack->capacity = BUFFER_SIZE;
-    stack->length = 0;
-    return stack;
-}
+/**
+ * Create a dynamic buffer.
+ * @return The buffer pointer.
+ */
+static Buffer *buffer_new();
 
-Stack *stack_clear(Stack *stack) {
-    free(stack->buffer);
-    MALLOC_COUNTER--;
-    stack->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    MALLOC_COUNTER++;
-    if (stack->buffer == NULL) {
-        printErr("");
-        free(stack);
-        MALLOC_COUNTER -= 2;
-        return NULL;
-    }
-    stack->capacity = BUFFER_SIZE;
-    stack->length = 0;
-    return stack;
-}
+/**
+ * Clear the buffer and puts its capacity to the BUFFER_SIZE.
+ * @param buffer The buffer pointer.
+ * @return the buffer if everything went fine, NULL otherwise
+ */
+static Buffer *buffer_clear(Buffer *buffer);
 
-Stack *stack_free(Stack *stack) {
-    free(stack->buffer);
-    free(stack);
-    MALLOC_COUNTER -= 2;
-    return NULL;
-}
+/**
+ * Free the buffer.
+ *
+ * @param buffer The buffer which will be free.
+ * @return NULL.
+ */
+static Buffer *buffer_free(Buffer *buffer);
 
-int stack_add(Stack *stack, const char e) {
-    if (stack == NULL) {
-        printErr("");
-        return 0;
-    }
-    if (stack->length + 1 >= stack->capacity) {
-        char *tmp = realloc(stack->buffer, 2 * stack->capacity);
-        if (tmp == NULL) {
-            printErr("");
-            return 0;
-        }
-        stack->capacity *= 2;
-        stack->buffer = tmp;
-    }
-    stack->buffer[stack->length++] = e;
-    return 1;
-}
+/**
+ * Add the given element in the given buffer
+ * @param buffer The buffer
+ * @param e The element which will be added to the buffer
+ * @return 1 if the element is added to the buffer, 0 otherwise
+ */
+static int buffer_add(Buffer *buffer, char e);
+
+
+
+
+/* #####################################################################################################################
+ * Storage tree's functions.
+ */
 
 /**
  * Variables storage tree.
@@ -160,10 +184,9 @@ typedef struct Node Node;
  * Create a node in a tree.
  *
  * @param id the node's id
- * @param data the node's data.
  * @return the pointer of the created node.
  */
-static Node *node_new(char id, int data);
+static Node *node_new(char id);
 
 /**
  * free the sub-tree.
@@ -192,6 +215,13 @@ static int node_add(Node **pNode, int n, const char *string);
  *          0 otherwise.
  */
 static int node_getValue(Node **node, char *string);
+
+
+
+
+/* #####################################################################################################################
+ * AST functions.
+ */
 
 /**
  * Abstract syntax tree used for arithmetic evaluations.
@@ -227,6 +257,13 @@ static int AST_add(AST *ast, Tree *storage, Token token);
 static int AST_apply(Tree *storage, AST *ast);
 
 /**
+ *
+ * @param ast
+ * @return
+ */
+static AST *AST_clear(AST *ast);
+
+/**
  * Abstract syntax node used for arithmetic evaluations.
  */
 typedef struct ASN ASN;
@@ -259,34 +296,98 @@ static ASN *ASN_free(ASN *asn);
  * @param storage The storage tree.
  * @param asn The root of the sub AST.
  */
-static long long ASN_apply(Tree *storage, ASN *asn, int *pInt);
-
-
-/**
- * Free a token.
- * @param t The token which will be free
- */
-static void token_free(Token t);
-
-/**
- * Create a new token according to the string given in argument and the type.
- * @param s The token' data.
- * @param type The token's type.
- * @return The created Token.
- */
-static Token token_new(char *s, size_t len, enum TokenType type);
+static long long ASN_apply(Tree *storage, ASN *asn, int *err);
 
 /**
  * Realize the operation represented by the node.
+ *
  * @param asn The current node.
  * @param storage The storage tree.
- * @param left The left AST's result.
- * @param right The right ATS's result
+ * @param left The left AST result.
+ * @param right The right AST result
  * @return The value of the operation. <br>
  *         The DEFAULT_OP(empty node) is considered as an addition.<br>
  *         if the node is not an operator, return the result of the node.
  */
 static int op(ASN *asn, Tree *storage, int left, int right);
+
+
+
+
+/* #####################################################################################################################
+ * Parser functions.
+ */
+/**
+ * Open files according to the arguments given to the program. By default, in = stdin and out = stdout
+ *
+ * @param in The input file stream.
+ * @param out The output file stream.
+ * @param argc The argv length.
+ * @param argv The args which will be treated.
+ */
+static void connect(FILE **in, FILE **out, int argc, char **argv);
+
+/**
+ * Disconnect the input and output file stream.
+ *
+ * @param in the input file stream.
+ * @param out The output file stream.
+ */
+static void disconnect(FILE **in, FILE **out);
+
+/**
+ * Check is the strings given in arguments are equals.
+ *
+ * @param s1 The first string
+ * @param s2 The second string
+ * @return true if the string are equals, false otherwise.
+ */
+static int str_equals(const char *s1, const char *s2);
+
+/**
+ * Parse the input file stream, do the instruction and print the result on the output file stream.
+ *
+ * @param in The input file stream.
+ * @param out The output file stream.
+ * @param ast The AST.
+ * @param storage The storage tree.
+ * @return true if everything went fine, false otherwise.
+ */
+static int parse(FILE *in, FILE *out, AST *ast, Tree *storage);
+
+/**
+ * Treats the token stored in the buffer.
+ *
+ * @param pBuffer The parser's buffer.
+ * @param ast The AST.
+ * @param storage The storage tree.
+ * @param type The token's type
+ * @param print An address to a int
+ * @param out The output file stream.
+ * @return 0 if an error occurred. <br>
+ *         -1 if something was printed on the output file stream. <br>
+ *         -2 if the token is empty or the token's type is VOID <br>
+ *         1 otherwise.
+ */
+static int treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *print, FILE *out);
+
+/**
+ * Prints the token according to its type on the output file stream.
+ * @param out The output file stream.
+ * @param buffer The parser's buffer.
+ * @param len The buffer length.
+ * @param storage The Storage tree.
+ * @param type The token type.
+ * @return -1 if the token is correctly printed, 0 otherwise.
+ */
+static int printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type);
+
+
+
+
+/* #####################################################################################################################
+ * Other functions.
+ */
 
 /**
  * Indicate if the char given in argument is an operator
@@ -319,27 +420,16 @@ static unsigned short priority(char a);
 static char *trim(const char *s, size_t len);
 
 /**
- * Indicate if the char is a number.
- * @param a The char which will be tested.
- * @return true if the char is a number, false otherwise.
+ * Check is the given character is a sign symbol (+ or -) or is a number
+ * @param c The character that will be tested.
+ * @return true if its the case, false otherwise.
  */
+static int isSignOrNumber(char c);
 
-/**
- * Some tests
+
+/* #####################################################################################################################
+ * struct definitions
  */
-
-static void connect(FILE **in, FILE **out, int argc, char **argv);
-
-static void disconnect(FILE **in, FILE **out);
-
-static int str_equals(char *s1, char *s2);
-
-int run(FILE *in, FILE *out, AST *ast, Tree *storage);
-
-AST *AST_clear(AST *ast);
-
-int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print, FILE *out);
-
 struct Node {
     char id;
     long long data;
@@ -347,7 +437,6 @@ struct Node {
     Node *middle;
     Node *right;
 };
-
 
 struct Tree {
     Node *root;
@@ -364,7 +453,10 @@ struct AST {
     ASN *root;
 };
 
-//C (sur CLion) n'admet pas plusieurs mains, dc pour tester ce fichier, décommenter ce main et commenter le main de calc_unbounded_int.c
+
+/* #####################################################################################################################
+ * Main function.
+ */
 int main(int argc, char **argv) {
     FILE *in = NULL, *out = NULL;
     connect(&in, &out, argc, argv);
@@ -392,7 +484,7 @@ int main(int argc, char **argv) {
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
-    int err = run(in, out, ast, storage);
+    int err = parse(in, out, ast, storage);
     AST_free(ast);
     tree_free(storage);
     printf("MALLOC_COUNTER = %d\n", MALLOC_COUNTER);
@@ -400,24 +492,29 @@ int main(int argc, char **argv) {
     exit((err) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
-int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
+
+/* #####################################################################################################################
+ *  parser's functions.
+ */
+static int parse(FILE *in, FILE *out, AST *ast, Tree *storage) {
     int print = 0;
     TokenType last, current;
     last = current = VOID;
-    Stack *stack = stack_new();
+    Buffer *stack = buffer_new();
     if (stack == NULL) {
         printErr("");
         return 0;
     }
     int c;
+
     while ((c = fgetc(in)) != EOF) {
         if ((char) c == '\n' || (char) c == '\r') {
             int val = treatment(stack, ast, storage, current, &print, out);
             if (val == 0 || (val > 0 && !AST_apply(storage, ast))) {
-                stack_free(stack);
+                buffer_free(stack);
                 return 0;
             }
-            stack = stack_clear(stack);
+            stack = buffer_clear(stack);
             ast = AST_clear(ast);
             if (stack == NULL) {
                 return 0;
@@ -428,29 +525,29 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
             current = VOID;
         } else if (isalpha(c)) {
             current = VAR;
+        } else if (isdigit(c) && (current == VOID || current == OPERATOR)) {
+            last = current = NUMBER;
         } else if (isAnOperator((char) c)) {
             if (last == OPERATOR) {
                 pERROR(INVALID_SYNTAX);
-                stack_free(stack);
+                buffer_free(stack);
                 return 0;
             }
             current = OPERATOR;
-        } else if (isdigit(c) && (current == VOID || current == OPERATOR)) {
-            current = NUMBER;
         }
         if (current != last && last != VOID) {
             if (!treatment(stack, ast, storage, last, &print, out)) {
-                stack_free(stack);
+                buffer_free(stack);
                 return 0;
             }
-            stack = stack_clear(stack);
+            stack = buffer_clear(stack);
             if (stack == NULL) {
                 return 0;
             }
         }
         if (current != VOID) {
-            if (!stack_add(stack, (char) c)) {
-                stack_free(stack);
+            if (!buffer_add(stack, (char) c)) {
+                buffer_free(stack);
                 return 0;
             }
         }
@@ -459,77 +556,67 @@ int run(FILE *in, FILE *out, AST *ast, Tree *storage) {
     if (stack != NULL) {
         int val = treatment(stack, ast, storage, current, &print, out);
         if (val == 0 || (val > 0 && !AST_apply(storage, ast))) {
-            stack_free(stack);
+            buffer_free(stack);
             return 0;
         }
-        stack_free(stack);
+        buffer_free(stack);
     }
     return 1;
 }
 
-static char *error_getMessage(enum ERROR error) {
-    switch (error) {
-        case INVALID_SYNTAX:
-            return "An invalid syntax was found";
-        case INVALID_OPERATOR:
-            return "An unknown operator was found";
-        case INTERNAL:
-            return "Internal error occurred during the execution";
-        case MISSING_BLANK:
-            return "A blank is missing";
-        case UNKNOWN_CHARACTER:
-            return "An Unknown character was found";
-        default:
-            return "";
-    }
-}
-
-
-int treatment(Stack *stack, AST *ast, Tree *storage, TokenType type, int *print, FILE *out) {
-    char *buffer = stack->buffer;
-    size_t len = stack->length;
+static int treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *print, FILE *out) {
+    char *buffer = pBuffer->buffer;
+    size_t len = pBuffer->length;
     if (type == VOID) {
-        return 1;
+        return -2;  //void value
+    }
+    if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
+        pERROR(MISSING_BLANK);
+        return 0;   //error value
     }
     if (type == NUMBER && buffer[0] == '=') {
         Token token = token_new(buffer, 1, type);
         if (!AST_add(ast, storage, token)) {
             token_free(token);
-            return 0; //error return value
+            return 0; //error value
         }
         buffer++;
         len--;
     }
     if (*print) {
-        char *c = trim(buffer, len);
-        if (c == NULL) {
-            printErr("");
-            return 0; //error return value
-        }
-        int value = tree_getValue(storage, c);
-        fprintf(out, "%s = %d\n", c, value);
-        free(c);
-        MALLOC_COUNTER--;
         *print = 0;
-        return -1; //print return value
+        return printOut(out, buffer, len, storage, type);
     } else if (str_equals(buffer, "print")) {
         *print = 1;
     } else {
         Token token = token_new(buffer, len, type);
         if (!AST_add(ast, storage, token)) {
             token_free(token);
-            return 0; //error return value
+            return 0; //error value
         }
     }
-    return 1; //add return value
+    return 1; //add value
 }
 
-AST *AST_clear(AST *ast) {
-    if (ast->root != NULL) {
-        ASN_free(ast->root);
+static int printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type) {
+    if (type == VOID || type == OPERATOR) {
+        pERROR(INVALID_SYNTAX);
+        return 0;   //error value
     }
-    ast->root = NULL;
-    return ast;
+    char *c = trim(buffer, len);
+    if (c == NULL) {
+        printErr("");
+        return 0; //error value
+    }
+    if (type == NUMBER) {
+        fprintf(out, "%s \n", c);
+    } else {
+        int value = tree_getValue(storage, c);
+        fprintf(out, "%s = %d\n", c, value);
+    }
+    free(c);
+    MALLOC_COUNTER--;
+    return -1;  //print value
 }
 
 static void connect(FILE **in, FILE **out, int argc, char **argv) {
@@ -572,17 +659,27 @@ static void disconnect(FILE **in, FILE **out) {
     }
 }
 
-static int str_equals(char *s1, char *s2) {
-    int l1 = (int) strlen(s1);
-    int l2 = (int) strlen(s2);
-    if (l1 != l2) return 0;
-    for (int i = 0; i < l1; i++) {
-        if (s1[i] != s2[i]) {
-            return 0;
-        }
+static char *error_getMessage(enum ERROR error) {
+    switch (error) {
+        case INVALID_SYNTAX:
+            return "An invalid syntax was found";
+        case INVALID_OPERATOR:
+            return "An unknown operator was found";
+        case INTERNAL:
+            return "Internal error occurred during the execution";
+        case MISSING_BLANK:
+            return "A blank is missing";
+        case UNKNOWN_CHARACTER:
+            return "An Unknown character was found";
+        default:
+            return "";
     }
-    return 1;
 }
+
+
+/* #####################################################################################################################
+ * Token's functions.
+ */
 
 static Token token_new(char *s, size_t len, enum TokenType type) {
     Token token = {.data = trim(s, len), .type = type};
@@ -593,6 +690,78 @@ static void token_free(Token t) {
     free(t.data);
     MALLOC_COUNTER--;
 }
+
+
+/* #####################################################################################################################
+ * Parser buffer function
+ */
+
+static Buffer *buffer_new() {
+    Buffer *buffer = malloc(sizeof(Buffer));
+    MALLOC_COUNTER++;
+    if (buffer == NULL) {
+        printErr("");
+        MALLOC_COUNTER--;
+        return NULL;
+    }
+    buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
+    MALLOC_COUNTER++;
+    if (buffer->buffer == NULL) {
+        printErr("");
+        free(buffer);
+        MALLOC_COUNTER -= 2;
+        return NULL;
+    }
+    buffer->capacity = BUFFER_SIZE;
+    buffer->length = 0;
+    return buffer;
+}
+
+static Buffer *buffer_clear(Buffer *buffer) {
+    free(buffer->buffer);
+    MALLOC_COUNTER--;
+    buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
+    MALLOC_COUNTER++;
+    if (buffer->buffer == NULL) {
+        printErr("");
+        free(buffer);
+        MALLOC_COUNTER -= 2;
+        return NULL;
+    }
+    buffer->capacity = BUFFER_SIZE;
+    buffer->length = 0;
+    return buffer;
+}
+
+static Buffer *buffer_free(Buffer *buffer) {
+    free(buffer->buffer);
+    free(buffer);
+    MALLOC_COUNTER -= 2;
+    return NULL;
+}
+
+static int buffer_add(Buffer *buffer, const char e) {
+    if (buffer == NULL) {
+        printErr("");
+        return 0;
+    }
+    if (buffer->length + 1 >= buffer->capacity) {
+        char *tmp = realloc(buffer->buffer, 2 * buffer->capacity);
+        if (tmp == NULL) {
+            printErr("");
+            return 0;
+        }
+        buffer->capacity *= 2;
+        buffer->buffer = tmp;
+    }
+    buffer->buffer[buffer->length++] = e;
+    return 1;
+}
+
+
+/* #####################################################################################################################
+ * AST functions
+ */
 
 static AST *AST_new() {
     AST *tree = malloc(sizeof(AST));
@@ -630,10 +799,13 @@ static ASN *ASN_new(Tree *t, Token token) {
     return node;
 }
 
-static int isAnOperator(const char s) {
-    return s == '*' || s == '/' || s == '+' || s == '-' || s == '=' || s == '%';
+static int AST_add(AST *ast, Tree *storage, Token token) {
+    if (ast == NULL || storage == NULL || isspace(token.data[0]) || token.type == VOID) {
+        pERROR(INTERNAL);
+        return 0;
+    }
+    return ASN_add(storage, &ast->root, token);
 }
-
 
 static int ASN_add(Tree *storage, ASN **asn, Token token) {
     if (*asn == NULL) {
@@ -657,12 +829,19 @@ static int ASN_add(Tree *storage, ASN **asn, Token token) {
     return 1;
 }
 
-static int AST_add(AST *ast, Tree *storage, Token token) {
-    if (ast == NULL || storage == NULL || isspace(token.data[0]) || token.type == VOID) {
-        pERROR(INTERNAL);
-        return 0;
+static AST *AST_clear(AST *ast) {
+    if (ast->root != NULL) {
+        ASN_free(ast->root);
     }
-    return ASN_add(storage, &ast->root, token);
+    ast->root = NULL;
+    return ast;
+}
+
+static AST *AST_free(AST *ast) {
+    ASN_free(ast->root);
+    free(ast);
+    MALLOC_COUNTER--;
+    return NULL;
 }
 
 static ASN *ASN_free(ASN *n) {
@@ -683,7 +862,7 @@ static int op(ASN *asn, Tree *storage, int left, int right) {
             return right;
         case '*':
             return MULTIPLICATION(right, left);
-        case '-' :
+        case '-':
             return SUBSTRACTION(left, right);
         case DEFAULT_OP:
         case '+':
@@ -693,26 +872,13 @@ static int op(ASN *asn, Tree *storage, int left, int right) {
         case '%':
             return MODULO(left, right);
         default:
-            return asn->result;
+            return (int) asn->result;
     }
-}
-
-static long long ASN_apply(Tree *storage, ASN *asn, int *err) {
-    if (asn == NULL) return 0;
-    long long left = ASN_apply(storage, asn->left, err);
-    long long right = ASN_apply(storage, asn->right, err);
-    if ((asn->token.data[0] != DEFAULT_OP && asn->token.type == OPERATOR)
-        && ((asn->left == NULL) || (asn->right == NULL))) {
-        if (*err) pERROR(INVALID_SYNTAX);
-        *err = 0;
-        return 0;
-    }
-    return asn->result = op(asn, storage, left, right);
 }
 
 static int AST_apply(Tree *storage, AST *ast) {
     if (storage == NULL || ast == NULL) {
-        errno = 22;     //Invalid arguments
+        errno = 22; //Invalid arguments
         printErr("Internal Error");
         return 0;
     }
@@ -729,6 +895,31 @@ static int AST_apply(Tree *storage, AST *ast) {
     return err;
 }
 
+static long long ASN_apply(Tree *storage, ASN *asn, int *err) {
+    if (asn == NULL) return 0;
+    if (asn->token.type == NUMBER || asn->token.type == VAR) {
+        return asn->result;
+    }
+    long long left = ASN_apply(storage, asn->left, err);
+    long long right = ASN_apply(storage, asn->right, err);
+    if (((asn->token.data[0] != DEFAULT_OP) && asn->token.type == OPERATOR) && // missing binary operator argument
+        ((asn->left == NULL) || (asn->right == NULL))) {
+        if (*err) pERROR(INVALID_SYNTAX);
+        *err = 0;
+        return 0;
+    }
+    if (asn->token.data[0] == '=' && asn->left->token.type == NUMBER) { //Invalid assignation
+        if (*err) pERROR(INVALID_SYNTAX);
+        *err = 0;
+        return 0;
+    }
+    return asn->result = op(asn, storage, (int) left, (int) right);
+}
+
+
+/* #####################################################################################################################
+ * Storage tree's functions.
+ */
 static Tree *tree_new() {
     Tree *t = malloc(sizeof(Tree));
     MALLOC_COUNTER++;
@@ -737,43 +928,17 @@ static Tree *tree_new() {
     return t;
 }
 
-
-static Node *node_new(char id, int data) {
+static Node *node_new(char id) {
     Node *n = malloc(sizeof(Node));
     MALLOC_COUNTER++;
     if (n == NULL) {
         return NULL;
     }
     n->id = id;
-    n->data = data;
+    n->data = 0;
     n->left = n->middle = n->right = NULL;
     return n;
 }
-
-
-static int tree_getValue(Tree *t, char *string) {
-    int len = (int) strlen(string);
-    if (len < 1) return 0;
-    return node_getValue(&t->root, string);
-}
-
-
-static int node_getValue(Node **node, char *string) {
-    int len = (int) strlen(string);
-    if (len < 1) return -1;
-    if (node == NULL || *node == NULL) return 0;
-    if (string[0] < (*node)->id) {
-        return node_getValue(&(*node)->left, string);
-    }
-    if (string[0] > (*node)->id) {
-        return node_getValue(&(*node)->right, string);
-    }
-    if (len == 1) {
-        return (*node)->data;
-    }
-    return node_getValue(&(*node)->middle, string + 1);
-}
-
 
 static int tree_add(Tree *t, int n, char *string) {
     if (t == NULL) return -2;
@@ -783,12 +948,11 @@ static int tree_add(Tree *t, int n, char *string) {
     return 0;
 }
 
-
 static int node_add(Node **pNode, const int n, const char *string) {
     int len = (int) strlen(string);
     if (len < 1) return -1;
     if (*pNode == NULL) {
-        *pNode = node_new(string[0], 0);
+        *pNode = node_new(string[0]);
     }
     if (string[0] < (*pNode)->id) {
         return node_add(&(*pNode)->left, n, string);
@@ -803,6 +967,34 @@ static int node_add(Node **pNode, const int n, const char *string) {
     return 0;
 }
 
+static int tree_getValue(Tree *t, char *string) {
+    int len = (int) strlen(string);
+    if (len < 1) return 0;
+    return node_getValue(&t->root, string);
+}
+
+static int node_getValue(Node **node, char *string) {
+    int len = (int) strlen(string);
+    if (len < 1) return -1;
+    if (node == NULL || *node == NULL) return 0;
+    if (string[0] < (*node)->id) {
+        return node_getValue(&(*node)->left, string);
+    }
+    if (string[0] > (*node)->id) {
+        return node_getValue(&(*node)->right, string);
+    }
+    if (len == 1) {
+        return ((int) (*node)->data);
+    }
+    return node_getValue(&(*node)->middle, string + 1);
+}
+
+static void tree_free(Tree *t) {
+    node_free(t->root);
+    free(t);
+    MALLOC_COUNTER--;
+}
+
 static void node_free(Node *n) {
     if (n == NULL) return;
     node_free(n->left);
@@ -813,25 +1005,21 @@ static void node_free(Node *n) {
 }
 
 
-static void tree_free(Tree *t) {
-    node_free(t->root);
-    free(t);
-    MALLOC_COUNTER--;
-}
-
+/* #####################################################################################################################
+ * Other's functions
+ */
 static int isHigher(const char a, const char b) {
     if (!isAnOperator(a)) return 0;
     if (!isAnOperator(b)) return 1;
     return priority(a) > priority(b);
 }
 
-
 static unsigned short priority(const char a) {
     switch (a) {
-        case '=' :
+        case '=':
             return 1;
-        case '+' :
-        case '-' :
+        case '+':
+        case '-':
             return 2;
         case '/':
         case '*':
@@ -870,9 +1058,22 @@ static char *trim(const char *s, size_t len) {
     return ret;
 }
 
-static AST *AST_free(AST *ast) {
-    ASN_free(ast->root);
-    free(ast);
-    MALLOC_COUNTER--;
-    return NULL;
+static int isSignOrNumber(char c) {
+    return c == '+' || c == '-' || isdigit(c);
+}
+
+static int str_equals(const char *s1, const char *s2) {
+    int l1 = (int) strlen(s1);
+    int l2 = (int) strlen(s2);
+    if (l1 != l2) return 0;
+    for (int i = 0; i < l1; i++) {
+        if (s1[i] != s2[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int isAnOperator(const char s) {
+    return s == '*' || s == '/' || s == '+' || s == '-' || s == '=' || s == '%';
 }
