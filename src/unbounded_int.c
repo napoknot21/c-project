@@ -15,20 +15,27 @@
  */
 unbounded_int string2unbounded_int(const char *e) {
     if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
-    unbounded_int *res = initUnboundedEmpty();
+    char *str = cleanNumber(e);
+    unbounded_int *res = malloc (sizeof(unbounded_int));
+    if (res == NULL) return UNBOUNDED_INT_ERROR;
     int i;
-    if (*e == '-') {
-        res->len = strlen(e) - 2;
-        res->signe = '-';
+    if (*(str) == '-' || *str == '+') {
+        res->len = strlen(str) - 1;
+        if (*(str) == '-') {
+            res->signe = '-';    
+        } else {
+            res->signe = '+';
+        }
         i = 1;
     } else {
-        res->len = strlen(e)-1;
+        res->len = strlen(str);
         res->signe = '+';
         i = 0;
     }
-    for (int j = i; j < res->len; j++) {
-        res = pushBack(res,*(e+j));
+    for (int j = i; j < strlen(str); j++) {
+        res = pushFront(res,*(str+j));
     }
+    //free(str);
     return *res;
 }
 
@@ -49,42 +56,57 @@ unbounded_int ll2unbounded_int (long long i) {
  * @param i struct unbounded_int
  * @return char* le paramètre sous en format string
  */
-char * unbounded_int2string (unbounded_int i) {
-    if (i.signe == '*') {
-        return NULL;
+char * unbounded_int2string (unbounded_int ui) {
+    if (isUnboundedIntEmpty(ui) == 1) return NULL;
+    char *e = malloc(sizeof(char)*(ui.len+1) + 1);
+    if (e == NULL) return NULL;
+    int i;
+    if (ui.signe == '-') {
+        e[0] = '-';
+        i = 1;
+    } else i = 0;
+    chiffre *tmp = ui.premier;
+    for (int j = 0; j < ui.len; j++) {
+        *(e+i+j) = tmp->c;
+        tmp = tmp->suivant;
     }
-    char *e;
-    initCharOfUnbounded(e,i);
-    int j;
-    if (i.signe == '-') {
-        j = 1;
-    } else {
-        j = 0;
-    }
-    chiffre *pElem = i.premier;
-    while (pElem != NULL) {
-        *(e+j) = pElem->c;
-        pElem = pElem->suivant;
-        j++;
-    }
-    *(e+j) = '\0';
-    return e;
+    free(tmp);
+    return cleanNumber(e);
 }
 
 
 /**
- * Vérifie si la struct a est plus grande que celle de b (ou à l'inverse)
+ * Vérifie si la struct a est plus grande que celle de b (ou à l'inverse) 
+ * On va supposer que les struct sont pas vides (UNBOUNDED_INT_ERROR)
  * @param a struct unbounded_int
  * @param b struct unbounded_int
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
 int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
     /*
-    if (a.len > b.len && a.signe == '+') {
-        return 1;
-    } else if (b.len > a.len && b.signe == '+') {
+    if (a.signe == b.signe) {
+        if (a.len == b.len) {
+
+        } else {
+            if (a.signe == '-') {
+                return (a.len > b.len) ? -1 : 1;
+            } 
+            return (a.len > b.len) ? 1 : -1;
+        }
+        
+    }
+    */
+    /*
+    char *stra = unbounded_int2string(a);
+    char *strb = unbounded_int2string(b);
+
+    int int_a = atoi(stra);
+    int int_b = atoi(strb);
+    if (int_a == int_b) return 0;
+    if (int_a < int_b) {
         return -1;
     }
+    return 1;
     */
     return 0;
 }
@@ -109,9 +131,11 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
  * @return la somme sous forme de struct unbounded_int 
  */
 unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
+    /*
     if (a.signe == '+' && b.signe == '+' || a.signe == '-' && b.signe == '-') {
         return UNBOUNDED_INT_ERROR;
     }
+    */
     return UNBOUNDED_INT_ERROR;
 }
 
@@ -183,14 +207,32 @@ int main (int argc, char *argv[]) {
     printf("%s\n", lltoa(i,buffer,10));
     printf("%s\n", lltoa(j,buffer,10));
 
-    //print_unbounded_int() test
+    printf("===========\n");
+
+    //STRING2UNBOUNDED_INT () TEST
     unbounded_int ui1 = string2unbounded_int(st_n);
     unbounded_int ui2 = string2unbounded_int(st_p);
 
-    //print_Unbounded_int(ui1);
-    //print_Unbounded_int(ui2);
+    print_unbounded_int(ui1);
+    print_unbounded_int(ui2);
 
+    printf("===========\n");
 
+    //LL2UNBOUNDED_INT() TEST
+    unbounded_int ui3 = ll2unbounded_int(i);
+    unbounded_int ui4 = ll2unbounded_int(j);
+
+    print_unbounded_int(ui3);
+    print_unbounded_int(ui4);
+
+    printf("===========\n");
+
+    //UNBOUNDED_INT2STRING() TEST
+    printf("%s\n",unbounded_int2string(ui1));
+    printf("%s\n",unbounded_int2string(ui2));
+    printf("%s\n",unbounded_int2string(ui3));
+    printf("%s\n",unbounded_int2string(ui4));
+    
     return 0;
 }
 
@@ -212,13 +254,16 @@ static int isNum(char c) {
  * @return 1 = true, et 0 sinon
  */
 static int isAStringNum (const char *c) {
+    size_t len = strlen(c);
+    if (len == 0) return 0;
     int i;
-    if (*(c+0) == '-') {
+    if (*c == '-' || *c == '+') {
+        if (len == 1) return 0;
         i = 1;
     } else {
         i = 0;
     }
-    for (int j = i; j < strlen(c); j++) {
+    for (size_t j = i; j < strlen(c); j++) {
         if (!isNum(*(c+j))) {
             return 0;
         }
@@ -227,8 +272,59 @@ static int isAStringNum (const char *c) {
 }
 
 
-static int isUnboundedIntEmpty () {
-    return 0;
+/**
+ * Verifie si la struct est une UNBOUNDED_INT_ERROR
+ * @param une struct unbounded_int
+ * @return 0 si c'est le cas, et 1 sinon
+ */
+static int isUnboundedIntEmpty (unbounded_int ui) {
+    return (ui.signe == '*' || ui.len == 0 || ui.premier == NULL || ui.dernier == NULL);
+}
+
+
+/**
+ * Fonction qui permet de "nettoyer" un nombre
+ * @param str le nombre passé en paramètre sous forme de string
+ * @return le nombre sans 0 ou d'autres characters de plus 
+ */
+static char * cleanNumber (char *str) {
+    size_t len = strlen(str);
+    int i;
+    if (*str == '-' || *str == '+') {
+        if (len == 2) {
+            return (*(str+1) == '0') ? "0" : str;
+        }
+        i = 1;
+    } else {
+        if (len == 1) return str;
+        i = 0;
+    }
+    int index = i;
+    for (size_t j = i; j < len; j++) {
+        if (*(str+j) != '0') {
+            break;
+        }
+        index++;
+    }
+    if (index == i) return str;
+    if (index == len) return "0";
+    int newLen = len - index + 1;
+    char *newStr = malloc (sizeof(char)*newLen + 1);
+    if (i == 1) newStr[0] = str[0];
+    for (size_t j = index; j < len; j++) {
+        newStr[i] = str[j];
+    }
+    return newStr;
+}
+
+
+/**
+ * Fonction qui permet de "nettoyer" une structure unbounded_int
+ * @param ui struct à néttoyer
+ * @return un pointeur vers la structure ou une nouvelle
+ */
+static unbounded_int * cleanUnbounded_int (unbounded_int ui) {
+    return NULL;
 }
 
 
@@ -239,7 +335,7 @@ static int isUnboundedIntEmpty () {
  * @param base base de conversion
  * @return char* 
  */
- static char * lltoa (long long value, char *buffer, int base) {
+static char * lltoa (long long value, char *buffer, int base) {
      if (base < 2 || base > 32) {
         return buffer;
     }
@@ -255,7 +351,33 @@ static int isUnboundedIntEmpty () {
     if (value < 0 && base == 10) buffer[i++] = '-';
     buffer[i] = '\0'; // null terminate string
     return reverse(buffer, 0, i - 1);
- }
+}
+
+
+/**
+ * Fonction qui permet de transformer un long long en String
+ * @param value long long à transformer
+ * @param buffer allocation du string
+ * @param base base de conversion
+ * @return char* 
+ */
+static char * itoa (int value, char *buffer, int base) {
+     if (base < 2 || base > 32) {
+        return buffer;
+    }
+    int n = abs(value);
+    int i = 0;
+    while (n) {
+        int r = n % base;
+        if (r >= 10) buffer[i++] = 65 + (r - 10);
+        else buffer[i++] = 48 + r;
+        n = n / base;
+    }
+    if (i == 0) buffer[i++] = '0';
+    if (value < 0 && base == 10) buffer[i++] = '-';
+    buffer[i] = '\0'; // null terminate string
+    return reverse(buffer, 0, i - 1);
+}
 
 
 /**
@@ -266,6 +388,7 @@ static int isUnboundedIntEmpty () {
 static void swap(char *x, char *y) {
     char t = *x; *x = *y; *y = t;
 }
+
 
 /**
  * 
@@ -279,23 +402,6 @@ static char* reverse(char *buffer, int i, int j) {
         swap(&buffer[i++], &buffer[j--]);
     }
     return buffer;
-}
-
-
-/**
- * Initialise un *char (signe et allocation) à partir d'un unbounded_int
- * @param e char à initialiser
- * @param i unbounded_int source
- */
-static void initCharOfUnbounded (char *e, unbounded_int i) {
-    if (i.signe == '-') {
-        e = malloc(i.len + 2);
-        if (e == NULL) exit(EXIT_FAILURE);
-        *(e+0) = '-';
-    } else {
-        e = malloc(i.len + 1);
-        if (e == NULL) exit(EXIT_FAILURE);
-    }
 }
 
 
@@ -315,24 +421,6 @@ static chiffre * initChiffre (const char c) {
     ch->precedent = NULL;
     ch->c = c;
     return ch;
-}
-
-
-/**
- * On initialise les pointeurs d'un unbounded_int à NULL
- * @param ui structure affectée
- */
-static unbounded_int * initUnboundedEmpty () {
-    unbounded_int *ui = malloc (sizeof (unbounded_int));
-    if (ui == NULL) {
-        perror("Pas de mémoire pour allouer la struct unbounded_int\n");
-        exit(EXIT_FAILURE);
-    }
-    ui->premier = NULL;
-    ui->dernier = NULL;
-    ui->signe = '*';
-    ui->len = 0;
-    return ui;
 }
 
 
@@ -374,7 +462,10 @@ static unbounded_int * pushBack (unbounded_int *ui, const char c) {
 }
 
 
-/*
+/**
+ * Fonction auxiliaire pour afficher une structure unbounded_int
+ * @param ui structure unbounded_int
+ */
 static void print_unbounded_int (unbounded_int ui) {
     unbounded_int tmp = UNBOUNDED_INT_ERROR;
     if (ui.signe == tmp.signe && ui.len == tmp.len && ui.premier == tmp.premier && ui.dernier == tmp.dernier) {
@@ -394,4 +485,3 @@ static void print_unbounded_int (unbounded_int ui) {
         p = p->suivant;
     }
 }
-*/

@@ -37,7 +37,13 @@ static int isAStringNum (const char *c);
 
 static int isUnboundedIntEmpty ();
 
+static char * cleanNumber (char *str);
+
+static unbounded_int * cleanUnbounded_int (unbounded_int ui);
+
 static char * lltoa (long long value, char *buffer, int base);
+
+static char * itoa (int value, char *buffer, int base);
 
 static void swap (char *x, char *y);
 
@@ -54,3 +60,5 @@ static unbounded_int * pushBack (unbounded_int * ui, char c);
 static unbounded_int * pushFront (unbounded_int *ui, const char c);
 
 static void print_unbounded_int (unbounded_int ui);
+
+static char * cleanNumber (char *str);
