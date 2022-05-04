@@ -37,6 +37,8 @@ static int isAStringNum (const char *c);
 
 static int isUnboundedIntEmpty ();
 
+static int isUnboundedZero (unbounded_int ui);
+
 static char * cleanNumber (char *str);
 
 static unbounded_int * cleanUnbounded_int (unbounded_int ui);
@@ -62,3 +64,5 @@ static unbounded_int * pushFront (unbounded_int *ui, const char c);
 static void print_unbounded_int (unbounded_int ui);
 
 static char * cleanNumber (char *str);
+
+static unbounded_int sumPositifUnbounded (unbounded_int a, unbounded_int b);
