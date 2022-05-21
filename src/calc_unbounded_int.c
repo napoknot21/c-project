@@ -39,9 +39,8 @@ static size_t FILE_LINE = 1;
 static int MALLOC_COUNTER = 0;
 static FILE *OUT;
 static int EXIT_REQUEST = 0;
-static char *FUNCTION_NAME_ERR = "";
 
-#define pERROR(error)(fprintf(stderr, "%s in file %s in line %li\n", error_getMessage(error), FILE_NAME, FILE_LINE))
+#define pERROR(error)(fprintf(stderr, "%s in file %s in line %i\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b)((a) * (b))
@@ -246,7 +245,7 @@ static int node_getValue(Node **node, char *string);
  * Function's functions
  */
 typedef enum FuncType {
-    STD, DEF, DUMMY, NONE, CALL
+    STD, DUMMY, NONE, CALL
 } FuncType;
 
 typedef enum RetType {
@@ -272,11 +271,13 @@ function_new(char *name, RetType type, int (*function)(int, int *, char **), uns
 
 static void function_free(Function f);
 
+#define FUNCTION_NULL (Function) {.name = NULL, .requested = 0, .argc = 0, .retType= VOID_TYPE, .argv = NULL, .argn = NULL}
+
 /* #####################################################################################################################
 * funcHashMap's declaration
 */
-#define DUMMY_DATA(h) ((HashMapData) {.hash = h, .function = NULL, .type=DUMMY})
-#define NONE_DATA ((HashMapData) {.hash = 0,.function = NULL, .type=NONE})
+#define DUMMY_DATA(h) ((HashMapData) {.hash = (h), .function = FUNCTION_NULL, .type=DUMMY})
+#define NONE_DATA ((HashMapData) {.hash = 0,.function = FUNCTION_NULL, .type=NONE})
 
 typedef struct HashMap HashMap;
 typedef struct HashMapData HashMapData;
@@ -311,8 +312,6 @@ static long long hash2(long long hash);
 static long long find(HashMap *map, const char *name, int flag);
 
 static int hashMap_put(HashMap *map, Function function, FuncType type);
-
-static void resize(HashMap *map, size_t newSize);
 
 static void hashMap_free(HashMap *map);
 
@@ -475,17 +474,6 @@ static int
 treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,
           int *argsStart);
 
-/**
- * Prints the token according to its type on the output file stream.
- * @param out The output file stream.
- * @param buffer The parser's buffer.
- * @param len The buffer length.
- * @param storage The Storage tree.
- * @param type The token type.
- * @return -1 if the token is correctly printed, 0 otherwise.
- */
-static int __OLD__printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type);
-
 
 /* #####################################################################################################################
  * Other functions.
@@ -538,7 +526,7 @@ static Function buildCalledFunction(HashMapData data, char *buffer);
 static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function);
 
-static void function_setup(Function *f);
+static int AST_hasVoidFunction(AST *ast);
 
 /* #####################################################################################################################
  * struct definitions
@@ -649,11 +637,8 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
         int val = treatment(stack, ast, storage, *current, isFunc, map, function, argStart);
         if (*isFunc) {
             functionTreatment(c, stack, argAst, storage, isFunc, argStart, map, function);
-            hashMap_put(map, *function, CALL);
-            val = 1;
         }
-
-        if (val == 0 || (val > 0 && !AST_apply(storage, ast, map))) {
+        if (val == 0 || !AST_apply(storage, ast, map)) {
             return 0;
         }
         stack = buffer_clear(stack);
@@ -710,7 +695,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
         *argsStart = 1;
         return 1;
     }
-    if (*argsStart == 1 && c == ')' || (char) c == '\n' || (char) c == '\r') {
+    if ((*argsStart == 1 && c == ')') || ((char) c == '\n') || ((char) c == '\r')) {
         *argsStart = 0; //End of function
         *isFunc = 0;
         c = ',';
@@ -738,6 +723,10 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
         if (buffer == NULL || ast == NULL) {
             printErr("");
             return 0;
+        }
+        if (!*isFunc) {
+            hashMap_put(map, *function, CALL);
+            *function = NONE_DATA.function;
         }
         return 1;
     }
@@ -857,7 +846,7 @@ treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, H
     char *buffer = pBuffer->buffer;
     size_t len = pBuffer->length;
     if (type == VOID) {
-        return -2;  //void value
+        return (AST_hasVoidFunction(ast)) ? 1 : -2;  //void value
     }
     HashMapData data = hashMap_get(map, buffer);
     if (data.type != NONE) {
@@ -893,6 +882,10 @@ treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, H
         return 0; //error value
     }
     return 1; //add value
+}
+
+static int AST_hasVoidFunction(AST *ast) {
+    return (ast != NULL && ast->root != NULL && ast->root->left != NULL && ast->root->left->token.type == FUNCTION);
 }
 
 static Function buildCalledFunction(HashMapData data, char *buffer) {
@@ -1130,27 +1123,6 @@ static int std_fact(int argc, int *argv, char **argn) {
     }
     argv[argc] = result;
     return 1;
-}
-
-static int __OLD__printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type) {
-    if (type == VOID || type == OPERATOR) {
-        pERROR(INVALID_SYNTAX);
-        return 0;   //error value
-    }
-    char *c = trim(buffer, len);
-    if (c == NULL) {
-        printErr("");
-        return 0; //error value
-    }
-    if (type == NUMBER) {
-        fprintf(out, "%s \n", c);
-    } else {
-        int value = tree_getValue(storage, c);
-        fprintf(out, "%s = %d\n", c, value);
-    }
-    free(c);
-    MALLOC_COUNTER--;
-    return -1;  //print value
 }
 
 
@@ -1418,15 +1390,13 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
     if (f.requested > f.argc) {
         pERROR(MISSING_ARGUMENTS);
         EXIT_REQUEST = -1;
-        FUNCTION_NAME_ERR = f.name;
         return 0;
     } else if (f.requested < f.argc) {
         pERROR(TOO_MANY_ARGUMENTS);
         EXIT_REQUEST = -1;
-        FUNCTION_NAME_ERR = f.name;
         return 0;
     }
-    int retVal = f.func(f.argc, f.argv, f.argn);
+    f.func(f.argc, f.argv, f.argn);
     if (node != NULL) node->result = f.argv[f.argc];
     HashMap_remove(map, f.name);
     return 1;
@@ -1436,7 +1406,7 @@ static Function
 function_new(char *name, RetType type, int (*function)(int, int *, char **), unsigned short requestedArguments) {
     Function f = {.name = trim(name,
                                strlen(name)), .requested = requestedArguments, .func = function, .argc = 0, .retType = type, .argv = calloc(
-            requestedArguments + 1, sizeof(int)), .argn = malloc(sizeof(char *))};
+            requestedArguments + 1, sizeof(int)), .argn = malloc(requestedArguments * sizeof(char *))};
     MALLOC_COUNTER += 2;
     return f;
 }
@@ -1447,7 +1417,7 @@ static void function_free(Function f) {
         MALLOC_COUNTER--;
     }
     free(f.name);
-    //free(f.argn);
+    free(f.argn);
     free(f.argv);
     MALLOC_COUNTER -= 3;
 }
@@ -1525,9 +1495,14 @@ static int hashMap_put(HashMap *map, Function function, FuncType type) {
     long long empty = find(map, function.name, 1);
     if (empty == -1) return 0;
     HashMapData new = {.function = function, .type = type, .hash = hashVal};
-    if (map->data[empty].type == DUMMY) map->dummyNumber--;
+    if (map->data[empty].type == DUMMY) {
+        map->dummyNumber--;
+        map->keyNumber++;
+    }
+    if (map->data[empty].type == NONE) {
+        map->keyNumber++;
+    }
     map->data[empty] = new;
-    map->keyNumber++;
     if (map->dummyNumber + map->keyNumber >= (long long) ((double) map->capacity * map->maxRatio)) {
         int ratio = (map->dummyNumber < map->keyNumber) ? 2 : 1;
         resize(map, ratio * map->capacity);
@@ -1618,15 +1593,20 @@ static unsigned short priority(const char a) {
 }
 
 static char *trim(const char *s, size_t len) {
-    int size = 0;
-    int i = 0;
-    for (; i < len; i++) {
-        if (!isspace(s[i])) break;
+    int start = 0, end = 0;
+    for (int i = 0; i < (int) len; i++) {
+        if (!isspace(s[i])) {
+            start = i;
+            break;
+        }
     }
-    for (; i < len; i++) {
-        if (isspace(s[i])) break;
-        size++;
+    for (int i = (int) len; i >= 0; i--) {
+        if (!isspace(s[i])) {
+            end = i;
+            break;
+        }
     }
+    int size = end - start;
     char *ret = malloc((size) * sizeof(char));
     MALLOC_COUNTER++;
     if (ret == NULL) {
