@@ -557,7 +557,7 @@ struct AST {
 
 
 void load_stdlib(HashMap *map) {
-    Function print = {.name="print", .retType = VOID_TYPE, .func=std_print, .argc = 2};
+    Function print = {.name="print", .retType = VOID_TYPE, .func=std_print, .argc = 1};
     Function pow = {.name = "pow", .retType = NUM_TYPE, .func = std_pow, .argc = 2};
     Function exit = {.name = "exit", .retType= VOID_TYPE, .func=std_exit, .argc = 0};
     Function abs = {.name = "abs", .retType=NUM_TYPE, .func=std_abs, .argc = 1};
@@ -608,10 +608,11 @@ int main(int argc, char **argv) {
     load_stdlib(map);
     char *n[1] = {"ab"};
     char *v[1] = {"5"};
-    function_apply(map, "print", 1, n, v, NULL);
+    function_apply(map, "print", 1, v, n, NULL);
     int err = parse(in, out, ast, storage);
     AST_free(ast);
     tree_free(storage);
+    hashMap_free(map);
     printf("MALLOC_COUNTER = %d\n", MALLOC_COUNTER);
     disconnect(&in, &out);
     exit((err) ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -1325,7 +1326,6 @@ __attribute__((unused)) static int HashMap_remove(HashMap *map, char *name) {
 
 static void hashMap_free(HashMap *map) {
     if (map == NULL) return;
-    for (int i = 0; i < map->capacity; i++) hashMapData_free(map->data[i]);
     free(map->data);
     free(map);
     MALLOC_COUNTER -= 2;
