@@ -8,13 +8,23 @@
 
 #include <ctype.h>
 
+#include <math.h>
+
 //#include "unbounded_int.h"
 
 /**
  * Parser and lexer errors.
  */
 enum ERROR {
-    INVALID_OPERATOR, INVALID_SYNTAX, MISSING_BLANK, UNKNOWN_CHARACTER, INTERNAL
+    INVALID_OPERATOR,
+    INVALID_SYNTAX,
+    MISSING_BLANK,
+    UNKNOWN_CHARACTER,
+    INTERNAL,
+    TOO_MANY_ARGUMENTS,
+    MISSSING_ARGUMENTS,
+    INCORRECT_TYPE,
+    ERR
 };
 
 /**
@@ -33,6 +43,10 @@ static char *FILE_NAME = "stdin";
  */
 static int FILE_LINE = 1;
 static int MALLOC_COUNTER = 0;
+static FILE *OUT;
+static int EXIT_REQUEST = 0;
+static int FUNCTION_ERROR = 0;
+static char *FUNCTION_NAME = "";
 
 #define pERROR(error)(fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
@@ -45,6 +59,10 @@ static int MALLOC_COUNTER = 0;
 #define MODULO(a, b)((a) % (b))
 
 #define BUFFER_SIZE 16
+#define HASHMAP_INITIAL_SIZE 10
+#define HASHMAP_MIN_RATIO ((float)0.25)
+#define HASHMAP_MAX_RATIO ((float)0.75)
+#define HASH_A ((sqrt(5)-1)/2)
 
 
 
@@ -128,6 +146,20 @@ static Buffer *buffer_free(Buffer *buffer);
  */
 static int buffer_add(Buffer *buffer, char e);
 
+
+/* ####################################################################################################################
+ * STD functions
+ */
+
+static int std_print(int argc, char **argv, char **argn);
+
+static int std_pow(int argc, char **argv, char **argn);
+
+static int std_exit(int argc, char **argv, char **argn);
+
+static int std_abs(int argc, char **argv, char **argn);
+
+static int std_fact(int argc, char **argv, char **argn);
 
 
 
@@ -311,9 +343,79 @@ static long long ASN_apply(Tree *storage, ASN *asn, int *err);
  */
 static int op(ASN *asn, Tree *storage, int left, int right);
 
+/*#####################################################################################################################
+ * Function's functions
+ */
+typedef enum FuncType {
+    STD, DEF, DUMMY, NONE
+} FuncType;
+
+typedef enum RetType {
+    NUM_TYPE, CHAR_TYPE, STRING_TYPE, VOID_TYPE
+} RetType;
 
 
+typedef struct Function Function;
 
+struct Function {
+    char *name;
+    unsigned short argc;
+    RetType retType;
+    char **argv;
+
+    int (*func)(int, char **, char **);
+};
+
+static void function_free(Function function);
+
+/* #####################################################################################################################
+* funcHashMap's declaration
+*/
+
+typedef struct HashMap HashMap;
+typedef struct HashMapData HashMapData;
+
+struct HashMapData {
+    long long hash;
+    Function function;
+    FuncType type;
+};
+struct HashMap {
+    HashMapData *data;
+    size_t capacity;
+    size_t keyNumber;
+    size_t dummyNumber;
+    float minRatio, maxRatio;
+};
+
+static void resize(HashMap *map, size_t new);
+
+static HashMapData hashMap_get(HashMap *map, const char *name);
+
+static HashMap *HashMap_new();
+
+static void hashMapData_free(HashMapData data);
+
+static long long hash(const char *name);
+
+static long long hash1(double capacity, long long hash);
+
+static long long hash2(long long hash);
+
+static long long find(HashMap *map, const char *name, int flag);
+
+static int hashMap_put(HashMap *map, Function function, FuncType type);
+
+static void resize(HashMap *map, size_t newSize);
+
+static void hashMap_free(HashMap *map);
+
+__attribute__((unused)) static int HashMap_remove(HashMap *map, char *name);
+
+#define DUMMY_DATA ((HashMapData){.function = NULL, .type=DUMMY})
+#define NONE_DATA ((HashMapData){.function = NULL, .type=NONE})
+
+static int function_apply(HashMap *map, char *name, int argc, char **argv, char **argn, ASN *node);
 /* #####################################################################################################################
  * Parser functions.
  */
@@ -380,7 +482,7 @@ static int treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, i
  * @param type The token type.
  * @return -1 if the token is correctly printed, 0 otherwise.
  */
-static int printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type);
+static int __OLD__printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type);
 
 
 
@@ -454,12 +556,23 @@ struct AST {
 };
 
 
+void load_stdlib(HashMap *map) {
+    Function print = {.name="print", .retType = VOID_TYPE, .func=std_print, .argc = 2};
+    Function pow = {.name = "pow", .retType = NUM_TYPE, .func = std_pow, .argc = 2};
+    Function exit = {.name = "exit", .retType= VOID_TYPE, .func=std_exit, .argc = 0};
+    Function abs = {.name = "abs", .retType=NUM_TYPE, .func=std_abs, .argc = 1};
+    hashMap_put(map, print, STD);
+    hashMap_put(map, pow, STD);
+    hashMap_put(map, exit, STD);
+}
+
 /* #####################################################################################################################
  * Main function.
  */
 int main(int argc, char **argv) {
     FILE *in = NULL, *out = NULL;
     connect(&in, &out, argc, argv);
+    OUT = out;
     if (in == NULL) {
         if (out != NULL) fclose(out);
         printErr("Can't open the source file");
@@ -484,6 +597,18 @@ int main(int argc, char **argv) {
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
+    HashMap *map = HashMap_new();
+    if (map == NULL) {
+        printErr("");
+        AST_free(ast);
+        free(storage);
+        disconnect(&in, &out);
+        exit(EXIT_FAILURE);
+    }
+    load_stdlib(map);
+    char *n[1] = {"ab"};
+    char *v[1] = {"5"};
+    function_apply(map, "print", 1, n, v, NULL);
     int err = parse(in, out, ast, storage);
     AST_free(ast);
     tree_free(storage);
@@ -498,6 +623,7 @@ int main(int argc, char **argv) {
  */
 static int parse(FILE *in, FILE *out, AST *ast, Tree *storage) {
     int print = 0;
+    int firstToken = 1;
     TokenType last, current;
     last = current = VOID;
     Buffer *stack = buffer_new();
@@ -585,7 +711,7 @@ static int treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, i
     }
     if (*print) {
         *print = 0;
-        return printOut(out, buffer, len, storage, type);
+        return __OLD__printOut(out, buffer, len, storage, type);
     } else if (str_equals(buffer, "print")) {
         *print = 1;
     } else {
@@ -598,26 +724,6 @@ static int treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, i
     return 1; //add value
 }
 
-static int printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type) {
-    if (type == VOID || type == OPERATOR) {
-        pERROR(INVALID_SYNTAX);
-        return 0;   //error value
-    }
-    char *c = trim(buffer, len);
-    if (c == NULL) {
-        printErr("");
-        return 0; //error value
-    }
-    if (type == NUMBER) {
-        fprintf(out, "%s \n", c);
-    } else {
-        int value = tree_getValue(storage, c);
-        fprintf(out, "%s = %d\n", c, value);
-    }
-    free(c);
-    MALLOC_COUNTER--;
-    return -1;  //print value
-}
 
 static void connect(FILE **in, FILE **out, int argc, char **argv) {
     if (argc < 2) {
@@ -756,6 +862,69 @@ static int buffer_add(Buffer *buffer, const char e) {
     }
     buffer->buffer[buffer->length++] = e;
     return 1;
+}
+
+/* ####################################################################################################################
+ * STD functions
+ */
+
+static int std_print(int argc, char **argv, char **argn) {
+    fprintf(OUT, "%s = %s\n", argn[0], argv[0]);
+    return 0;
+}
+
+static int std_pow(int argc, char **argv, char **argn) {
+    int n = atoi(argv[1]);
+    int x = atoi(argv[0]);
+    int result = 1;
+    while (n > 0) {
+        if (n % 2 == 1) {
+            result *= x;
+            n--;
+        }
+        x *= x;
+        n /= 2;
+    }
+    return result;
+
+}
+
+static int std_abs(int argc, char **argv, char **argn) {
+    return abs(atoi(argv[0]));
+}
+
+static int std_exit(int argc, char **argv, char **argn) {
+    return EXIT_REQUEST = 1;
+}
+
+static int std_fact(int argc, char **argv, char **argn) {
+    int n = atoi(argv[0]);
+    int result = 1;
+    for (int i = 0; i < n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+static int __OLD__printOut(FILE *out, char *buffer, size_t len, Tree *storage, TokenType type) {
+    if (type == VOID || type == OPERATOR) {
+        pERROR(INVALID_SYNTAX);
+        return 0;   //error value
+    }
+    char *c = trim(buffer, len);
+    if (c == NULL) {
+        printErr("");
+        return 0; //error value
+    }
+    if (type == NUMBER) {
+        fprintf(out, "%s \n", c);
+    } else {
+        int value = tree_getValue(storage, c);
+        fprintf(out, "%s = %d\n", c, value);
+    }
+    free(c);
+    MALLOC_COUNTER--;
+    return -1;  //print value
 }
 
 
@@ -1002,6 +1171,164 @@ static void node_free(Node *n) {
     node_free(n->right);
     free(n);
     MALLOC_COUNTER--;
+}
+
+/* #####################################################################################################################
+ * Function's functions
+ */
+static void function_free(Function function) {
+    free(function.name);
+    free(function.argv);
+}
+
+static int function_apply(HashMap *map, char *name, int argc, char **argv, char **argn, ASN *node) {
+    HashMapData data = hashMap_get(map, name);
+    if (data.type == NONE) return 0;
+    Function f = data.function;
+    if (argc < f.argc) {
+        pERROR(MISSSING_ARGUMENTS);
+        EXIT_REQUEST = -1;
+        return 0;
+    } else if (argc > f.argc) {
+        pERROR(TOO_MANY_ARGUMENTS);
+        EXIT_REQUEST = -1;
+        return 0;
+    }
+    int retVal = f.func(argc, argv, argn);
+    if (node != NULL) node->result = retVal;
+    return 1;
+}
+
+/* #####################################################################################################################
+ * HashMap's function
+ */
+static long long hash(const char *name) {
+    double value = 0;
+    double len = (double) strlen(name);
+    for (int i = 0; i < len; i++) {
+        value += (int) name[i] * (pow(31, len - i));
+    }
+    return (long long) value;
+}
+
+static long long hash1(double capacity, long long hash) {
+    return (long long) (((double) (hash) / HASH_A) * capacity);
+}
+
+static long long hash2(long long hash) {
+    return (long long) (2 * hash + 1);
+}
+
+static HashMap *HashMap_new() {
+    HashMap *map = malloc(sizeof(HashMap));
+    MALLOC_COUNTER++;
+    if (map == NULL) {
+        printErr("");
+        return NULL;
+    }
+    map->minRatio = HASHMAP_MIN_RATIO;
+    map->maxRatio = HASHMAP_MAX_RATIO;
+    map->capacity = HASHMAP_INITIAL_SIZE;
+    map->data = malloc(sizeof(HashMapData) * map->capacity);
+    for (int i = 0; i < map->capacity; i++) {
+        map->data[i] = NONE_DATA;
+    }
+    MALLOC_COUNTER++;
+    if (map->data == NULL) {
+        printErr("");
+        free(map);
+        MALLOC_COUNTER -= 2;
+        return NULL;
+    }
+    map->keyNumber = 0;
+    map->dummyNumber = 0;
+    return map;
+}
+
+static long long find(HashMap *map, const char *name, int flag) {
+    long long hashVal = hash(name);
+    long long ind = hash1((double) map->capacity, hashVal) % (long long) map->capacity;
+    long long step = hash2(hashVal);
+    long long dummy = -1;
+    for (int i = 0; i < map->capacity; i++) {
+        if (map->data[ind].type == NONE) {
+            if (dummy == -1) dummy = ind;
+            break;
+        }
+        if (map->data[ind].type == DUMMY) {
+            if (dummy == -1) dummy = ind;
+        } else if (map->data[ind].hash == hashVal && str_equals(map->data[ind].function.name, name)) {
+            return (flag) ? -1 : ind;
+        }
+        ind = (ind + step) % (long long) map->capacity;
+    }
+    return (flag) ? dummy : -1;
+}
+
+static int hashMap_put(HashMap *map, Function function, FuncType type) {
+    long long hashVal = hash(function.name);
+    long long empty = find(map, function.name, 1);
+    if (empty == -1) return 0;
+    HashMapData new = {.function = function, .type = type, .hash = hashVal};
+    if (map->data[empty].type == DUMMY) map->dummyNumber--;
+    map->data[empty] = new;
+    map->keyNumber++;
+    if (map->dummyNumber + map->keyNumber >= (long long) ((double) map->capacity * map->maxRatio)) {
+        int ratio = (map->dummyNumber < map->keyNumber) ? 2 : 1;
+        resize(map, ratio * map->capacity);
+    }
+    return 1;
+}
+
+static HashMapData hashMap_get(HashMap *map, const char *name) {
+    long long pos = find(map, name, 0);
+    if (pos == -1) return NONE_DATA;
+    return map->data[pos];
+}
+
+static void resize(HashMap *map, size_t newSize) {
+    HashMapData *old = map->data;
+    size_t oldLen = map->capacity;
+    HashMapData *new = malloc(newSize * sizeof(HashMapData));
+    MALLOC_COUNTER++;
+    if (new == NULL) {
+        printErr("");
+        return;
+    }
+    map->data = new;
+    map->capacity = newSize;
+    for (int i = 0; i < oldLen; i++) {
+        if (old[i].type == NONE || old[i].type == DUMMY) continue;
+        else hashMap_put(map, old[i].function, old[i].type);
+    }
+    free(old);
+    MALLOC_COUNTER--;
+}
+
+static void hashMapData_free(HashMapData data) {
+    if (data.type == NONE || data.type == DUMMY) return;
+    function_free(data.function);
+}
+
+__attribute__((unused)) static int HashMap_remove(HashMap *map, char *name) {
+    long long pos = find(map, name, 0);
+    if (pos == -1) return -1;
+    hashMapData_free(map->data[pos]);
+    map->data[pos] = DUMMY_DATA;
+    map->dummyNumber++;
+    map->keyNumber--;
+    if (map->dummyNumber + map->keyNumber <= (long long) ((double) map->capacity * map->minRatio)) {
+        resize(map, (map->capacity / 2));
+    }
+    return 1;
+}
+
+static void hashMap_free(HashMap *map) {
+    if (map == NULL) return;
+    for (int i = 0; i < map->capacity; i++) hashMapData_free(map->data[i]);
+    free(map->data);
+    free(map);
+    MALLOC_COUNTER -= 2;
 }
 
 
