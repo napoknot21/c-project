@@ -76,7 +76,7 @@ unbounded_int string2unbounded_int(char *e) {
 
 
 /**
- * Convertis un long en type unbounded_int
+ * Convertit un long en type unbounded_int
  * @param i variable à convertir
  * @return unbounded_int : paramètre comme nouvelle struct
  */
@@ -131,13 +131,21 @@ int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
                 tmp1 = tmp1->suivant;
                 tmp2 = tmp2->suivant;
             }
+            unbounded_int_free(a_c);
+            unbounded_int_free(b_c);
             return 0;
         } else {
             if (a_c.signe == '-') return (a_c.len > b_c.len) ? -1 : 1;
-            return (a_c.len > b_c.len) ? 1 : -1;
+            int ret = (a_c.len > b_c.len) ? 1 : -1;
+            unbounded_int_free(a_c);
+            unbounded_int_free(b_c);
+            return ret;
         }
     }
-    return (a_c.signe == '-') ? -1 : 1;
+    int ret = (a_c.signe == '-') ? -1 : 1;
+    unbounded_int_free(a_c);
+    unbounded_int_free(b_c);
+    return ret;
 }
 
 
@@ -148,7 +156,10 @@ int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
 int unbounded_int_cmp_ll(unbounded_int a, long long b) {
-    return unbounded_int_cmp_unbounded_int(a, ll2unbounded_int(b));
+    unbounded_int num = ll2unbounded_int(b);
+    int bool = unbounded_int_cmp_unbounded_int(a, num);
+    unbounded_int_free(num);
+    return bool;
 }
 
 
@@ -163,14 +174,18 @@ unbounded_int unbounded_int_somme(unbounded_int a_ui, unbounded_int b_ui) {
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
     if (isUnboundedZero(a) || isUnboundedZero(b)) {
-        if (isUnboundedZero(a) && isUnboundedZero(b)) return a;
-        else if (isUnboundedZero(a)) return b;
-        else return a;
+        if (isUnboundedZero(a) && !isUnboundedZero(b)) {
+            unbounded_int_free(a);
+            return b;
+        } else {
+            unbounded_int_free(b);
+            return a;
+        }
     }
-    if (a.signe == b.signe) {
-        return sumPositifUnbounded(a, b);
-    }
-    return sumNegatifUnbounded(a, b);
+    unbounded_int res = (a.signe == b.signe) ? sumPositifUnbounded(a, b) : sumNegatifUnbounded(a, b);
+    unbounded_int_free(a);
+    unbounded_int_free(b);
+    return res;
 }
 
 
@@ -238,6 +253,8 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
         res = sumPositifUnbounded(res, tmp_p);
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
+    unbounded_int_free(a);
+    unbounded_int_free(b);
     return res;
 }
 
