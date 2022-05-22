@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-#include "../headers/unbounded_int.h"
+#include "unbounded_int.h"
 
 #define NUM (48)
 

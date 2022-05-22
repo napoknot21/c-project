@@ -12,7 +12,7 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "../headers/unbounded_int.h"
+#include "unbounded_int.h"
 
 /**
  * Parser and lexer errors.
@@ -1094,7 +1094,6 @@ static int std_abs(int argc, unbounded_int *argv, char **argn) {
 }
 
 static int std_exit(int argc, unbounded_int *argv, char **argn) {
-    printf("%s \n", "here");
     argv[argc] = UNBOUNDED_INT_ERROR;
     EXIT_REQUEST = 1;
     return 1;
