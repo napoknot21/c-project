@@ -1,8 +1,8 @@
 
 typedef struct chiffre {
-	struct chiffre *suivant;
-	char c; //Pour stocker un chiffre ('0', '1', '2', ..., '9')
-	struct chiffre *precedent;
+    struct chiffre *suivant;
+    char c; //Pour stocker un chiffre ('0', '1', '2', ..., '9')
+    struct chiffre *precedent;
 } chiffre;
 
 

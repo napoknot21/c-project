@@ -835,9 +835,8 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
 }
 
 static int treatment
-(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,int *argsStart)
-
-{
+        (Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,
+         int *argsStart) {
     char *buffer = pBuffer->buffer;
     size_t len = pBuffer->length;
     if (type == VOID || buffer[0] == '\0') {
@@ -886,8 +885,8 @@ static int AST_hasFunction(AST *ast) {
 
 static int ASN_hasFunction(ASN *asn) {
     if (asn->token.type == FUNCTION) return 1;
-    int left = (asn->left == NULL)? 0 : ASN_hasFunction(asn->left);
-    int right = (asn->right == NULL)? 0 : ASN_hasFunction(asn->right);
+    int left = (asn->left == NULL) ? 0 : ASN_hasFunction(asn->left);
+    int right = (asn->right == NULL) ? 0 : ASN_hasFunction(asn->right);
     return left || right;
 }
 
