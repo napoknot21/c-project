@@ -7,6 +7,54 @@
 #define NUM (48)
 #define UNBOUNDED_INT_ERROR ((unbounded_int) {.len = 0, .dernier = NULL, .premier = NULL, .signe = '*'})
 
+/*************Headers**************/
+
+static int isNum(char c);
+
+static int isAStringNum (const char *c);
+
+static int isUnboundedIntEmpty ();
+
+static int isUnboundedZero (unbounded_int *ui);
+
+static int isUnboundedUnity (unbounded_int *ui);
+
+static const char * cleanNumber (const char *str);
+
+static unbounded_int * cleanUnbounded_int (unbounded_int *ui);
+
+static char * lltoa (long long value, char *buffer, int base);
+
+static char * itoa (int value, char *buffer, int base);
+
+static void swap (char *x, char *y);
+
+static char * reverse (char *buffer, int i, int j);
+
+static chiffre * initChiffre (const char c);
+
+static unbounded_int * pushBack (unbounded_int * ui, char c);
+
+static unbounded_int * pushFront (unbounded_int *ui, const char c);
+
+static unbounded_int * deleteFirstElem (unbounded_int *ui);
+
+static unbounded_int * deleteLastElem (unbounded_int *ui);
+
+static void print_unbounded_int (unbounded_int ui);
+
+//static char * cleanNumber (char *str);
+
+static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b);
+
+static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b);
+
+static int plusGrandAbs (unbounded_int a, unbounded_int b);
+
+static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui);
+
+static long long puissance (int base, int puissance);
+
 
 /**
  * Convertis un string en type unbounded_int
@@ -15,7 +63,7 @@
  */
 unbounded_int string2unbounded_int(const char *e) {
     if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
-    char *str = cleanNumber(e);
+    const char *str = cleanNumber(e);
     unbounded_int *res = malloc (sizeof(unbounded_int));
     if (res == NULL) return UNBOUNDED_INT_ERROR;
     int i;
@@ -51,7 +99,7 @@ unbounded_int ll2unbounded_int (long long i) {
  * @param i struct unbounded_int
  * @return char* le paramètre sous en format string
  */
-char * unbounded_int2string (unbounded_int ui) {
+const char * unbounded_int2string (unbounded_int ui) {
     if (isUnboundedIntEmpty(ui)) return NULL;
     char *e = malloc(sizeof(char)*(ui.len+1) + 1);
     if (e == NULL) return NULL;
@@ -65,7 +113,6 @@ char * unbounded_int2string (unbounded_int ui) {
         *(e+i+j) = tmp->c;
         tmp = tmp->suivant;
     }
-    //free(tmp);
     return cleanNumber(e);
 }
 
@@ -89,8 +136,6 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
                 tmp1 = tmp1->suivant;
                 tmp2 = tmp2->suivant;
             }
-            //free(tmp1);
-            //free(tmp2);
             return 0;
         } else {
             if (a.signe == '-') return (a.len > b.len) ? -1 : 1;
@@ -250,7 +295,7 @@ int main (int argc, char *argv[]) {
 
     //lltoa() test
     printf("==LLTOA() TEST==\n");
-    char *buffer [100];
+    char buffer [100];
     long long i = 45526229262;
     long long j = -893636383;
     printf("format long long: %lld => format string: %s\n",i ,lltoa(i,buffer,10));
@@ -372,7 +417,7 @@ int main (int argc, char *argv[]) {
     //UNBOUNDED_INT_DIVISION() TEST
     printf("==UNBOUNDED_INT_DIVISION() TEST==\n");
 
-    
+
     return 0;
 }
 
@@ -447,7 +492,7 @@ static int isUnboundedUnity (unbounded_int *ui) {
  * @param str le nombre passé en paramètre sous forme de string
  * @return le nombre sans 0 ou d'autres characters de plus 
  */
-static char * cleanNumber (char *str) {
+static const char * cleanNumber (const char *str) {
     size_t len = strlen(str);
     int i;
     if (*str == '-' || *str == '+') {
@@ -485,16 +530,16 @@ static char * cleanNumber (char *str) {
  * @return un pointeur vers la structure ou une nouvelle
  */
  
-static unbounded_int * cleanUnbounded_int (unbounded_int ui) {
+static unbounded_int * cleanUnbounded_int (unbounded_int *ui) {
     /*
     if (ui->len <= 1) return ui;
-    int index = 0;
+    
     chiffre *tmp;// = ui->premier;
     for (tmp = ui->premier; tmp != NULL; tmp = tmp->suivant) {
         if (tmp->c != '0') {
             break;
         }
-        index++;
+        
     }
     if (tmp == NULL) {
         for (int i = 0; i < ui->len - 1; i++) {
@@ -510,7 +555,7 @@ static unbounded_int * cleanUnbounded_int (unbounded_int ui) {
 
     
 
-
+/*
     
     int len = ui.len;
     if (len == 1) {
