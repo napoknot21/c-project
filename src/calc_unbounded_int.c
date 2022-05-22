@@ -82,6 +82,12 @@ typedef struct Token {
 } Token;
 
 /**
+ * Free a token.
+ * @param t The token which will be free
+ */
+static void token_free(Token t);
+
+/**
  * Create a new token according to the string given in argument and the type.
  * @param s The token' data.
  * @param type The token's type.
@@ -856,6 +862,7 @@ static int treatment
         hashMap_put(map, new, CALL);
         Token token = token_new(new.name, strlen(new.name), FUNCTION);
         if (!AST_add(ast, storage, token)) {
+            token_free(token);
             return 0; //error value
         }
         *argsStart = 1;
@@ -865,6 +872,7 @@ static int treatment
     if (type == NUMBER && buffer[0] == '=') {
         Token token = token_new(buffer, 1, OPERATOR);
         if (!AST_add(ast, storage, token)) {
+            token_free(token);
             return 0; //error value
         }
         buffer++;
@@ -876,6 +884,7 @@ static int treatment
     }
     Token token = token_new(buffer, len, type);
     if (!AST_add(ast, storage, token)) {
+        token_free(token);
         return 0; //error value
     }
     return 1; //add value
@@ -1008,6 +1017,12 @@ static Token token_new(char *s, size_t len, enum TokenType type) {
     return token;
 }
 
+static void token_free(Token t) {
+    if (t.type == FUNCTION) return;
+    free(t.data);
+    MALLOC_COUNTER--;
+}
+
 
 /* #####################################################################################################################
  * Parser buffer function
@@ -1082,7 +1097,10 @@ static int buffer_add(Buffer *buffer, const char e) {
 static int std_print(int argc, unbounded_int *argv, char **argn) {
     char *result = unbounded_int2string(argv[0]);
     fprintf(OUT, "%s = %s \n", argn[0], result);
-    //argv[argc] = ll2unbounded_int(0);
+    argv[argc] = UNBOUNDED_INT_ERROR;
+    free(result);
+    unbounded_int_free(argv[0]);
+    free(argn[0]);
     return 0;
 }
 
@@ -1094,18 +1112,22 @@ static int std_pow(int argc, unbounded_int *argv, char **argn) {
 
 static int std_abs(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_abs(argv[0]);
+    free(argn[0]);
+    unbounded_int_free(argv[0]);
     return 1;
 }
 
 static int std_exit(int argc, unbounded_int *argv, char **argn) {
     printf("%s \n", "here");
-    argv[argc] = ll2unbounded_int(0);
+    argv[argc] = UNBOUNDED_INT_ERROR;
     EXIT_REQUEST = 1;
     return 1;
 }
 
 static int std_fact(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_fact(argv[0]);
+    unbounded_int_free(argv[0]);
+    free(argn[0]);
     return 1;
 }
 
@@ -1202,6 +1224,7 @@ static ASN *ASN_free(ASN *n) {
     if (n != NULL) {
         ASN_free(n->right);
         ASN_free(n->left);
+        unbounded_int_free(n->result);
         free(n);
         MALLOC_COUNTER--;
     }
@@ -1357,6 +1380,7 @@ static void node_free(Node *n) {
     node_free(n->left);
     node_free(n->middle);
     node_free(n->right);
+    unbounded_int_free(n->data);
     free(n);
     MALLOC_COUNTER--;
 }
@@ -1370,16 +1394,16 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
     if (data.type == NONE) return 0;
     Function f = data.function;
     if (f.requested > f.argc) {
-        pERROR(MISSING_ARGUMENTS);
+        if (!EXIT_REQUEST) pERROR(MISSING_ARGUMENTS);
         EXIT_REQUEST = -1;
         return 0;
     } else if (f.requested < f.argc) {
-        pERROR(TOO_MANY_ARGUMENTS);
+        if (!EXIT_REQUEST) pERROR(TOO_MANY_ARGUMENTS);
         EXIT_REQUEST = -1;
         return 0;
     }
     f.func(f.argc, f.argv, f.argn);
-    if (node != NULL) node->result = f.argv[f.argc];
+    if (node != NULL && f.retType != VOID_TYPE) node->result = f.argv[f.argc];
     HashMap_remove(map, f.name);
     return 1;
 }
@@ -1399,9 +1423,9 @@ function_new(char *name, RetType type, int (*function)(int, unbounded_int *, cha
 }
 
 static void function_free(Function f) {
+    free(f.argv);
+    free(f.argn);
     free(f.name);
-    //free(f.argn);
-    //free(f.argv);
     MALLOC_COUNTER -= 3;
 }
 
@@ -1591,21 +1615,13 @@ static char *trim(const char *s, size_t len) {
         }
     }
     int size = end - start;
-    char *ret = malloc((size) * sizeof(char));
+    char *ret = malloc((size + 1) * sizeof(char));
     MALLOC_COUNTER++;
     if (ret == NULL) {
         printErr("");
         return NULL;
     }
-    char *tmp = memmove(ret, s + start, sizeof(char) * size);
-    if (tmp == NULL) {
-        printErr("");
-        free(ret);
-        MALLOC_COUNTER--;
-        return NULL;
-    }
-    ret = tmp;
-    ret[size] = '\0';
+    strncpy(ret, s, size);
     return ret;
 }
 

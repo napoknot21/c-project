@@ -240,8 +240,10 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
         for (int j = 0; j < i; j++) {
             tmp_p = pushFront(tmp_p, '0');
         }
-
-        res = sumPositifUnbounded(res, tmp_p);
+        unbounded_int s = sumPositifUnbounded(res, tmp_p);
+        unbounded_int_free(tmp_p);
+        //unbounded_int_free(res);
+        res = s;
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
     return res;
@@ -286,8 +288,12 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
     unbounded_int decr = ll2unbounded_int(1);
     unbounded_int result = ll2unbounded_int(1);
     while (unbounded_int_cmp_ll(n, 0) > 0) {
-        result = unbounded_int_produit(result, n);
-        n = unbounded_int_difference(n, decr);
+        unbounded_int tmp = unbounded_int_produit(result, n);
+        unbounded_int_free(result);
+        result = tmp;
+        tmp = unbounded_int_difference(n, decr);
+        unbounded_int_free(n);
+        n = tmp;
     }
     unbounded_int_free(decr);
     return result;
@@ -295,6 +301,7 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
 
 unbounded_int unbounded_int_free(unbounded_int u) {
     chiffre *c = u.premier;
+    if (c == NULL) return UNBOUNDED_INT_ERROR;
     u.premier = NULL;
     u.dernier = NULL;
     while (c->suivant != NULL) {
