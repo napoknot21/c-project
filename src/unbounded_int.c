@@ -20,11 +20,9 @@ static int isUnboundedUnity (unbounded_int *ui);
 
 static const char * cleanNumber (const char *str);
 
-__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int *ui);
+static unbounded_int cleanUnbounded_int(unbounded_int *ui);
 
 static char *unbounded_int_lltoa(long long value, char *buffer, int base);
-
-__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base);
 
 static void swap (char *x, char *y);
 
@@ -36,7 +34,7 @@ static unbounded_int * pushBack (unbounded_int * ui, char c);
 
 static unbounded_int *pushFront(unbounded_int *ui, char c);
 
-__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui);
+static unbounded_int *deleteFirstElem(unbounded_int *ui);
 
 __attribute__((unused)) static unbounded_int *deleteLastElem(unbounded_int *ui);
 
@@ -120,12 +118,14 @@ const char * unbounded_int2string (unbounded_int ui) {
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
 int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
-    if ((a.premier->c == '0' && a.len == 1) && (b.premier->c == '0' && b.len == 1)) return 0;
-    if (a.signe == b.signe) {
-        if (a.len == b.len) {
-            chiffre *tmp1 = a.premier;
-            chiffre *tmp2 = b.premier; 
-            for (int i = 0; i < a.len; i++) {
+    if ((isUnboundedZero(&a) && isUnboundedZero(&b)) || (isUnboundedUnity(&a) && isUnboundedUnity(&b))) return 0;
+    unbounded_int a_c = cleanUnbounded_int(&a);
+    unbounded_int b_c = cleanUnbounded_int(&b);
+    if (a_c.signe == b_c.signe) {
+        if (a_c.len == b_c.len) {
+            chiffre *tmp1 = a_c.premier;
+            chiffre *tmp2 = b_c.premier; 
+            for (int i = 0; i < a_c.len; i++) {
                 if (tmp1->c > tmp2->c) return 1;
                 if (tmp1->c < tmp2->c) return -1;
                 tmp1 = tmp1->suivant;
@@ -133,11 +133,11 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
             }
             return 0;
         } else {
-            if (a.signe == '-') return (a.len > b.len) ? -1 : 1;
-            return (a.len > b.len) ? 1 : -1;
+            if (a_c.signe == '-') return (a_c.len > b_c.len) ? -1 : 1;
+            return (a_c.len > b_c.len) ? 1 : -1;
         }
     } 
-    return (a.signe == '-') ? -1 : 1;
+    return (a_c.signe == '-') ? -1 : 1;
 }
 
 
@@ -158,8 +158,10 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
  * @param b struct unbounded_int
  * @return la somme sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
-    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+unbounded_int unbounded_int_somme (unbounded_int a_ui, unbounded_int b_ui) {
+    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
+    unbounded_int a = cleanUnbounded_int(&a_ui);
+    unbounded_int b = cleanUnbounded_int(&b_ui);
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
         else if (isUnboundedZero(&a)) return b;
@@ -178,8 +180,10 @@ unbounded_int unbounded_int_somme (unbounded_int a, unbounded_int b) {
  * @param b struct unbounded_int
  * @return la différence sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_difference (unbounded_int a, unbounded_int b) {
-    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+unbounded_int unbounded_int_difference (unbounded_int a_ui, unbounded_int b_ui) {
+    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
+    unbounded_int a = cleanUnbounded_int(&a_ui);
+    unbounded_int b = cleanUnbounded_int(&b_ui);
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
         else if (isUnboundedZero(&a)) {
@@ -200,8 +204,10 @@ unbounded_int unbounded_int_difference (unbounded_int a, unbounded_int b) {
  * @param b struct unbounded_int
  * @return le produit sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_produit (unbounded_int a, unbounded_int b) {
-    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+unbounded_int unbounded_int_produit (unbounded_int a_ui, unbounded_int b_ui) {
+    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
+    unbounded_int a = cleanUnbounded_int(&a_ui);
+    unbounded_int b = cleanUnbounded_int(&b_ui);
     unbounded_int *res = malloc (sizeof (unbounded_int));
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         chiffre *c = initChiffre('0');
@@ -557,65 +563,30 @@ static const char * cleanNumber (const char *str) {
  * @return un pointeur vers la structure ou une nouvelle
  */
 
-__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int *ui) {
-    /*
-    if (ui->len <= 1) return ui;
-
+static unbounded_int cleanUnbounded_int (unbounded_int *ui) {
+    
+    if (ui->len <= 1) return *ui;
+    if (ui->premier->c != '0') return *ui;
+    int index = 0;
     chiffre *tmp;// = ui->premier;
     for (tmp = ui->premier; tmp != NULL; tmp = tmp->suivant) {
         if (tmp->c != '0') {
             break;
         }
-
+        index += 1;
     }
     if (tmp == NULL) {
         for (int i = 0; i < ui->len - 1; i++) {
             ui = deleteFirstElem (ui);
         }
-        return ui;
+        return *ui;
     }
 
     for (int i = 0; i < index; i++) {
+        ui = deleteFirstElem(ui);
+    }
+    return *ui;
 
-    }
-
-
-    
-    int len = ui.len;
-    if (len == 1) {
-        return ui;
-    }
-    int index = 0;
-    chiffre *tmp = ui.premier;
-    for (int j = index; j < len; j++) {
-        if (tmp->c != '0') {
-            break;
-        }
-        tmp = tmp->suivant;
-        index++
-    }
-    if (index == 0) return *ui;
-    unbounded_int newUi= malloc(sizeof(unbounded_int));
-    if (index == len && tmp == NULL) {
-        newUi.len = 1;
-        chiffre ch = {
-            .precedent = NULL,
-            .c = '0',
-            .suivant = NULL 
-        };
-        newUi.premier = ch;
-        newUi.dernier = ch;
-        return newUi;
-    }
-    newUi.len = len-index;
-    
-    newUi.premier = ch;
-    newUi.dernier = ch;
-    return newUi;
-    return newUi;
-    
-    */
-    return NULL;//UNBOUNDED_INT_ERROR;
 }
 
 
@@ -646,32 +617,6 @@ static char *unbounded_int_lltoa(long long value, char *buffer, int base) {
 
 
 /**
- * Fonction qui permet de transformer un long long en String
- * @param value long long à transformer
- * @param buffer allocation du string
- * @param base base de conversion
- * @return char* 
- */
-__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base) {
-    if (base < 2 || base > 32) {
-        return buffer;
-    }
-    int n = abs(value);
-    int i = 0;
-    while (n) {
-        int r = n % base;
-        if (r >= 10) buffer[i++] = 65 + (r - 10);
-        else buffer[i++] = 48 + r;
-        n = n / base;
-    }
-    if (i == 0) buffer[i++] = '0';
-    if (value < 0 && base == 10) buffer[i++] = '-';
-    buffer[i] = '\0'; // null terminate string
-    return reverse(buffer, 0, i - 1);
-}
-
-
-/**
  * Echange la valeur de deux pointeurs
  * @param x pointeur 1
  * @param y pointeur 2
@@ -683,7 +628,7 @@ static void swap(char *x, char *y) {
 
 /**
  * 
- * @param buffer allocationo du string
+ * @param buffer allocation du string
  * @param i 
  * @param j 
  * @return char* 
@@ -759,13 +704,12 @@ static unbounded_int * pushBack (unbounded_int *ui, const char c) {
  * Supprime le premier élément
  * @param la structure à modifier
  */
-__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui) {
+static unbounded_int *deleteFirstElem(unbounded_int *ui) {
     if (ui->len <= 1) return NULL;
     chiffre *tmp;
     tmp = ui->premier;
     ui->premier = ui->premier->suivant;
     ui->premier->precedent = NULL;
-    //free(tmp->c);
     free(tmp);
     ui->len--;
     return ui;
@@ -776,13 +720,12 @@ __attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui)
  * Delete last elem
  *
  */
-static unbounded_int * deleteLastElem (unbounded_int *ui) {
+__attribute__((unused)) static unbounded_int * deleteLastElem (unbounded_int *ui) {
     if (ui->len <= 1) return NULL;
     chiffre *tmp;
     tmp = ui->dernier;
     ui->dernier = ui->dernier->precedent;
     ui->dernier->suivant = NULL;
-    //free(tmp->c);
     free(tmp);
     ui->len--;
     return ui;
@@ -856,7 +799,7 @@ static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
     if (ret >= 1) {
         res = pushBack(res, (char)ret+'0');
     }
-    return *res;
+    return cleanUnbounded_int(res);
     
 }
 
@@ -913,7 +856,7 @@ static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b) {
 
     } 
 
-    return *res;
+    return cleanUnbounded_int(res);
 }
 
 
