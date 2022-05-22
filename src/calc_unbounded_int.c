@@ -44,10 +44,10 @@ static int CALL_ID = 0;
 #define pERROR(error)(fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 #define DEFAULT_OP '\0'
-#define MULTIPLICATION(a, b)(unbounded_int_produit(a,b))
-#define ADDITION(a, b)(unbounded_int_somme(a,b))
-#define SUBSTRACTION(a, b)(unbounded_int_difference(a,b))
-#define DIVISION(a, b)(unbounded_int_division(a, b))
+#define MULTIPLICATION(a, b)((a) * (b))
+#define ADDITION(a, b)((a) + (b))
+#define SUBSTRACTION(a, b)((a) - (b))
+#define DIVISION(a, b)((a)/ (b))
 #define EQUALS(t, a, b)(tree_add((t), (a), (b)))
 #define MODULO(a, b)((a) % (b))
 
@@ -145,15 +145,15 @@ static int buffer_add(Buffer *buffer, char e);
  * STD functions
  */
 
-static int std_print(int argc, unbounded_int *argv, char **argn);
+static int std_print(int argc, int *argv, char **argn);
 
-static int std_pow(int argc, unbounded_int *argv, char **argn);
+//static int std_pow(int argc, int *argv, char **argn);
 
-static int std_exit(int argc, unbounded_int *argv, char **argn);
+static int std_exit(int argc, int *argv, char **argn);
 
-static int std_abs(int argc, unbounded_int *argv, char **argn);
+//static int std_abs(int argc, int *argv, char **argn);
 
-static int std_fact(int argc, unbounded_int *argv, char **argn);
+//static int std_fact(int argc, int *argv, char **argn);
 
 
 
@@ -189,7 +189,7 @@ static void tree_free(Tree *t);
  *          -1 if the name is empty. <br>
  *          -2 if the tree is NULL.
  */
-static int tree_add(Tree *t, unbounded_int n, char *string);
+static int tree_add(Tree *t, int n, char *string);
 
 /**
  * Gets the value of the given variable.
@@ -199,7 +199,7 @@ static int tree_add(Tree *t, unbounded_int n, char *string);
  * @return the data value if the value is found. <br>
  *          0 otherwise
  */
-static unbounded_int tree_getValue(Tree *t, char *string);
+static int tree_getValue(Tree *t, char *string);
 
 /**
  * Variables storage node.
@@ -230,7 +230,7 @@ static void node_free(Node *n);
  * @return  0 if the variable was normally added. <br>
  *          -1 if the variable's name is empty
  */
-static int node_add(Node **pNode, unbounded_int n, const char *string);
+static int node_add(Node **pNode, int n, const char *string);
 
 /**
  * Gets the value of the given variable.
@@ -240,7 +240,7 @@ static int node_add(Node **pNode, unbounded_int n, const char *string);
  * @return the data value if the value is found. <br>
  *          0 otherwise.
  */
-static unbounded_int node_getValue(Node **node, char *string);
+static int node_getValue(Node **node, char *string);
 
 
 /*#####################################################################################################################
@@ -262,14 +262,14 @@ struct Function {
     unsigned short requested;
     unsigned short argc;
     RetType retType;
-    unbounded_int *argv;
+    int *argv;
     char **argn;
 
-    int (*func)(int, unbounded_int *, char **);
+    int (*func)(int, int *, char **);
 };
 
 static Function
-function_new(char *name, RetType type, int (*function)(int, unbounded_int *, char **),
+function_new(char *name, RetType type, int (*function)(int, int *, char **),
              unsigned short requestedArguments);
 
 static void function_free(Function f);
@@ -400,7 +400,7 @@ static ASN *ASN_free(ASN *asn);
  * @param storage The storage tree.
  * @param asn The root of the sub AST.
  */
-static unbounded_int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map);
+static int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map);
 
 /**
  * Realize the operation represented by the node.
@@ -413,7 +413,7 @@ static unbounded_int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map);
  *         The DEFAULT_OP(empty node) is considered as an addition.<br>
  *         if the node is not an operator, return the result of the node.
  */
-static unbounded_int op(ASN *asn, Tree *storage, unbounded_int left, unbounded_int right);
+static int op(ASN *asn, Tree *storage, int left, int right);
 
 
 /* #####################################################################################################################
@@ -457,7 +457,7 @@ static int str_equals(const char *s1, const char *s2);
  */
 static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map);
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounded_int *astResult);
+static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, int *astResult);
 
 /**
  * Treats the token stored in the buffer.
@@ -538,7 +538,7 @@ static int ASN_hasFunction(ASN *asn);
  */
 struct Node {
     char id;
-    unbounded_int data;
+    int data;
     Node *left;
     Node *middle;
     Node *right;
@@ -550,7 +550,7 @@ struct Tree {
 
 struct ASN {
     Token token;
-    unbounded_int result;
+    int result;
     ASN *left;
     ASN *right;
 };
@@ -562,15 +562,15 @@ struct AST {
 
 void load_stdlib(HashMap *map) {
     Function print = function_new("print", VOID_TYPE, std_print, 1);
-    Function pow = function_new("pow", NUM_TYPE, std_pow, 2);
+    //Function pow = function_new("pow", NUM_TYPE, std_pow, 2);
     Function exit = function_new("exit", VOID_TYPE, std_exit, 0);
-    Function abs = function_new("abs", NUM_TYPE, std_abs, 1);
-    Function fact = function_new("fact", NUM_TYPE, std_fact, 1);
+    //Function abs = function_new("abs", NUM_TYPE, std_abs, 1);
+    //Function fact = function_new("fact", NUM_TYPE, std_fact, 1);
     hashMap_put(map, print, STD);
-    hashMap_put(map, pow, STD);
+    //hashMap_put(map, pow, STD);
     hashMap_put(map, exit, STD);
-    hashMap_put(map, abs, STD);
-    hashMap_put(map, fact, STD);
+    //hashMap_put(map, abs, STD);
+    //hashMap_put(map, fact, STD);
 }
 
 /* #####################################################################################################################
@@ -632,7 +632,7 @@ int main(int argc, char **argv) {
 
 static int
 parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
-      int *argStart, Function *function, AST *argAst, unbounded_int *astResult) {
+      int *argStart, Function *function, AST *argAst, int *astResult) {
     if (c == 4) {
         EXIT_REQUEST = 1;
         return 0;
@@ -715,7 +715,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
         return 1;
     }
     if (c == ',') {
-        unbounded_int astResult = UNBOUNDED_INT_ERROR;
+        int astResult = 0;
         char *in = trim(buffer->buffer, buffer->length);
         function->argn[function->argc] = in;
         int val = parseString(in, ast, storage, map, &astResult);
@@ -738,7 +738,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
     return 1;
 }
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounded_int *astResult) {
+static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, int *astResult) {
     int len = (int) strlen(in);
     if (len == 0) {
         return 0;
@@ -1094,35 +1094,35 @@ static int buffer_add(Buffer *buffer, const char e) {
  * STD functions
  */
 
-static int std_print(int argc, unbounded_int *argv, char **argn) {
-    char *result = unbounded_int2string(argv[0]);
-    fprintf(OUT, "%s = %s \n", argn[0], result);
-    free(result);
+static int std_print(int argc, int *argv, char **argn) {
+    int result = (argv[0]);
+    fprintf(OUT, "%s = %d \n", argn[0], result);
+    //free(result);
     return 0;
 }
 
-static int std_pow(int argc, unbounded_int *argv, char **argn) {
-    argv[argc] = unbounded_int_pow(argv[0], argv[1]);
+/*static int std_pow(int argc, int *argv, char **argn) {
+    //argv[argc] = unbounded_int_pow(argv[0], argv[1]);
     return 1;
 
-}
+}*/
 
-static int std_abs(int argc, unbounded_int *argv, char **argn) {
+/*static int std_abs(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_abs(argv[0]);
     return 1;
-}
+}*/
 
-static int std_exit(int argc, unbounded_int *argv, char **argn) {
+static int std_exit(int argc, int *argv, char **argn) {
     printf("%s \n", "here");
-    argv[argc] = UNBOUNDED_INT_ERROR;
+    argv[argc] = 0;
     EXIT_REQUEST = 1;
     return 1;
 }
 
-static int std_fact(int argc, unbounded_int *argv, char **argn) {
+/*static int std_fact(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_fact(argv[0]);
     return 1;
-}
+}*/
 
 
 /* #####################################################################################################################
@@ -1143,12 +1143,12 @@ static ASN *ASN_new(Tree *t, Token token) {
     if (node == NULL) return NULL;
     switch (token.type) {
         case OPERATOR:
-            node->result = ll2unbounded_int(0);
+            node->result = 0;
             node->token = token;
             break;
         case NUMBER:
             node->token = token;
-            node->result = string2unbounded_int(token.data);
+            node->result = atoi(token.data);
             break;
         case VAR:
             node->result = tree_getValue(t, token.data);
@@ -1156,10 +1156,10 @@ static ASN *ASN_new(Tree *t, Token token) {
             break;
             node->token = token;
         case FUNCTION:
-            node->result = UNBOUNDED_INT_ERROR;
+            node->result = 0;
 
         default:
-            node->result = UNBOUNDED_INT_ERROR;
+            node->result = 0;
             node->token = token;
             break;
     }
@@ -1187,7 +1187,7 @@ static int ASN_add(Tree *storage, ASN **asn, Token token) {
             return 0;
         }
         strncpy((*asn)->token.data, token.data, strlen(token.data));
-        token_free(token);
+        //token_free(token);
     } else if ((*asn)->right == NULL || token.type == NUMBER || token.type == FUNCTION || token.type == VAR ||
                !isHigher((*asn)->token.data[0], token.data[0])) {
         return ASN_add(storage, &(*asn)->right, token);
@@ -1225,7 +1225,7 @@ static ASN *ASN_free(ASN *n) {
     return n = NULL;
 }
 
-static unbounded_int op(ASN *asn, Tree *storage, unbounded_int left, unbounded_int right) {
+static int op(ASN *asn, Tree *storage, int left, int right) {
     switch (asn->token.data[0]) {
         case '=':
             EQUALS(storage, right, asn->left->token.data);
@@ -1265,23 +1265,23 @@ static int AST_apply(Tree *storage, AST *ast, HashMap *map) {
     return err;
 }
 
-static unbounded_int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map) {
-    if (asn == NULL) return ll2unbounded_int(0);
+static int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map) {
+    if (asn == NULL) return 0;
     if (asn->token.type == NUMBER || asn->token.type == VAR) {
         return asn->result;
     }
-    unbounded_int left = ASN_apply(storage, asn->left, err, map);
-    unbounded_int right = ASN_apply(storage, asn->right, err, map);
+    int left = ASN_apply(storage, asn->left, err, map);
+    int right = ASN_apply(storage, asn->right, err, map);
     if (((asn->token.data[0] != DEFAULT_OP) && asn->token.type == OPERATOR) && // missing binary operator argument
         ((asn->left == NULL) || (asn->right == NULL))) {
         if (*err) pERROR(INVALID_SYNTAX);
         *err = 0;
-        return UNBOUNDED_INT_ERROR;
+        return 0;
     }
     if (asn->token.data[0] == '=' && asn->left->token.type == NUMBER) { //Invalid assignation
         if (*err) pERROR(INVALID_SYNTAX);
         *err = 0;
-        return UNBOUNDED_INT_ERROR;
+        return 0;
     }
     if (asn->token.type == FUNCTION) {
         *err = function_apply(map, asn->token.data, asn);
@@ -1309,12 +1309,12 @@ static Node *node_new(char id) {
         return NULL;
     }
     n->id = id;
-    n->data = UNBOUNDED_INT_ERROR;
+    n->data = 0;
     n->left = n->middle = n->right = NULL;
     return n;
 }
 
-static int tree_add(Tree *t, unbounded_int n, char *string) {
+static int tree_add(Tree *t, int n, char *string) {
     if (t == NULL) return -2;
     int len = (int) strlen(string);
     if (len < 1) return -1;
@@ -1322,7 +1322,7 @@ static int tree_add(Tree *t, unbounded_int n, char *string) {
     return 0;
 }
 
-static int node_add(Node **pNode, const unbounded_int n, const char *string) {
+static int node_add(Node **pNode, const int n, const char *string) {
     int len = (int) strlen(string);
     if (len < 1) return -1;
     if (*pNode == NULL) {
@@ -1341,16 +1341,16 @@ static int node_add(Node **pNode, const unbounded_int n, const char *string) {
     return 0;
 }
 
-static unbounded_int tree_getValue(Tree *t, char *string) {
+static int tree_getValue(Tree *t, char *string) {
     int len = (int) strlen(string);
-    if (len < 1) return UNBOUNDED_INT_ERROR;
+    if (len < 1) return 0;
     return node_getValue(&t->root, string);
 }
 
-static unbounded_int node_getValue(Node **node, char *string) {
+static int node_getValue(Node **node, char *string) {
     int len = (int) strlen(string);
-    if (len < 1) return UNBOUNDED_INT_ERROR;
-    if (node == NULL || *node == NULL) return UNBOUNDED_INT_ERROR;
+    if (len < 1) return 0;
+    if (node == NULL || *node == NULL) return 0;
     if (string[0] < (*node)->id) {
         return node_getValue(&(*node)->left, string);
     }
@@ -1402,7 +1402,7 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
 }
 
 static Function
-function_new(char *name, RetType type, int (*function)(int, unbounded_int *, char **),
+function_new(char *name, RetType type, int (*function)(int, int *, char **),
              unsigned short requestedArguments) {
     Function f = {.name = trim(name, strlen(name)),
             .requested = requestedArguments,
