@@ -9,7 +9,6 @@
 #include <ctype.h>
 
 #include <math.h>
-#include <time.h>
 #include <limits.h>
 
 //#include "unbounded_int.h"
@@ -1103,6 +1102,10 @@ static int std_pow(int argc, int *argv, char **argn) {
     int n = argv[1];
     int x = argv[0];
     int result = 1;
+    if (n == 0) {
+        argv[argc] = 1;
+        return 1;
+    }
     while (n > 0) {
         if (n % 2 == 1) {
             result *= x;
@@ -1111,7 +1114,8 @@ static int std_pow(int argc, int *argv, char **argn) {
         x *= x;
         n /= 2;
     }
-    return result;
+    argv[argc] = result;
+    return 1;
 
 }
 
