@@ -14,8 +14,6 @@ int main(int argc, char *argv[]) {
     st_n = strcpy(st_n,"-45612");
     st_p = strcpy(st_p,"31245");
 
-
-    char buffer [100];
     long long i = 45526229262;
     long long j = -893636383;
 
