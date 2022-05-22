@@ -257,7 +257,62 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
  * @return le quotient entier de la division
  */
 unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b) {
-    return UNBOUNDED_INT_ERROR;
+    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
+    unbounded_int a = cleanUnbounded_int(a_ui);
+    unbounded_int b = cleanUnbounded_int(b_ui);
+    unbounded_int res = UNBOUNDED_INT_ERROR;
+    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
+        if (isUnboundedZero(&b)) return UNBOUNDED_INT_ERROR;
+        else {
+            chiffre *c = initChiffre('0');
+            res.len = 1;
+            res.premier = c;
+            res.dernier = c;
+            res.signe = '+';
+            return res;
+        }
+    }
+    if (isUnboundedUnity(a) || isUnboundedUnity(b)) {
+        if (isUnboundedUnity(a) && isUnboundedUnity(b)) {
+            chiffre *c = initChiffre('1');
+            res.len = 1;
+            res.premier = c;
+            res.dernier = c;
+            res.signe = (a.signe == b.signe) ? '+' : '-'; 
+            return res;
+        } else if (isUnboundedUnity(b)) {
+            a.signe = (a.signe == b.signe) ? '+' : '-';
+            return a;
+        } 
+        chiffre *c = initChiffre('0');
+        res.len = 1;
+        res.premier = c;
+        res.dernier = c;
+        res.signe = (a.signe == b.signe) ? '+' : '-';
+        return res;
+    }
+
+    if (plusGrandAbs(a, b) == -1) {
+        chiffre *c = initChiffre('0');
+        res.len = 1;
+        res.premier = c;
+        res.dernier = c;
+        res.signe = (a.signe == b.signe) ? '+' : '-';
+        return res;
+    } else if (plusGrandAbs(a, b) == 0) {
+        chiffre *c = initChiffre('1');
+        res.len = 1;
+        res.premier = c;
+        res.dernier = c;
+        res.signe = (a.signe == b.signe) ? '+' : '-';
+        return res;
+    }
+    long long cmpt = 0;
+    unbounded_int qo = unbounded_int_difference(a, b);
+    while (unbounded_int_cmp_unbounded_int(qo, b) != -1) {
+        cmpt++;
+    }
+    return ll2unbounded_int(cmpt);
 }
 
 unbounded_int unbounded_int_pow(unbounded_int x, unbounded_int n) {
