@@ -59,6 +59,7 @@ unbounded_int string2unbounded_int(char *e) {
     const char *str = cleanNumber(e);
     unbounded_int *res = malloc (sizeof(unbounded_int));
     if (res == NULL) return UNBOUNDED_INT_ERROR;
+    *res = UNBOUNDED_INT_ERROR;
     int i;
     res->len = 0;
     if (*(str) == '-' || *str == '+') {
@@ -210,6 +211,7 @@ unbounded_int unbounded_int_produit (unbounded_int a_ui, unbounded_int b_ui) {
     unbounded_int a = cleanUnbounded_int(&a_ui);
     unbounded_int b = cleanUnbounded_int(&b_ui);
     unbounded_int *res = malloc (sizeof (unbounded_int));
+    *res = UNBOUNDED_INT_ERROR;
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         chiffre *c = initChiffre('0');
         res->len = 1;
@@ -670,7 +672,7 @@ static unbounded_int * pushFront (unbounded_int *ui, const char c) {
     chiffre *ch = initChiffre(c);
     ch->precedent = ui->dernier;
     ch->suivant = NULL;
-    if (ui->dernier != NULL && ui->len != 0) {
+    if (ui->dernier != NULL) {
         ui->dernier->suivant = ch;
     } else if (ui->dernier == NULL && ui->premier == NULL) {
         ui->premier = ch;
@@ -766,6 +768,7 @@ void print_unbounded_int(unbounded_int ui) {
 static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
     
     unbounded_int *res = malloc(sizeof(unbounded_int));
+    *res = UNBOUNDED_INT_ERROR;
     res->signe = a->signe;
     res->len = 0;
     int ret = 0;
@@ -811,6 +814,7 @@ static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
 static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b) {
     int plusgrand = plusGrandAbs(*a, *b);
     unbounded_int *res = malloc(sizeof(unbounded_int));
+    *res = UNBOUNDED_INT_ERROR;
     if (plusgrand == 0) { 
         res = pushBack(res, '0');
         
@@ -878,6 +882,7 @@ static int plusGrandAbs (unbounded_int a, unbounded_int b) {
  */
 static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui) {
     unbounded_int *p = malloc (sizeof(unbounded_int));
+    *p = UNBOUNDED_INT_ERROR;
     int a = c - '0';
     if (a == 1) return ui;
     int ret = 0;
