@@ -1,3 +1,5 @@
+
+
 typedef struct chiffre {
 	struct chiffre *suivant;
 	char c; //Pour stocker un chiffre ('0', '1', '2', ..., '9')
@@ -6,16 +8,18 @@ typedef struct chiffre {
 
 
 typedef struct {
-	char signe; //soit + ou -
-	size_t len; //Taille de la chaine 
+    char signe; //soit + ou -
+    unsigned long long len; //Taille de la chaine
     chiffre *premier; //chiffre le plus élévé
     chiffre *dernier; //Chiffre des unités
 } unbounded_int;
 
+#define UNBOUNDED_INT_ERROR ((unbounded_int) {.len = 0, .dernier = NULL, .premier = NULL, .signe = '*'})
+
 /**
  * Prototypes de fonctions (headers)
  */
-unbounded_int string2unbounded_int(const char *e);
+unbounded_int string2unbounded_int(char *e);
 
 unbounded_int ll2unbounded_int(long long i);
 
@@ -32,3 +36,13 @@ unbounded_int unbounded_int_difference(unbounded_int a, unbounded_int b);
 unbounded_int unbounded_int_produit(unbounded_int a, unbounded_int b);
 
 unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b);
+
+unbounded_int unbounded_int_pow(unbounded_int x, unbounded_int n);
+
+unbounded_int unbounded_int_abs(unbounded_int x);
+
+unbounded_int unbounded_int_fact(unbounded_int n);
+
+
+void print_unbounded_int(unbounded_int ui);
+

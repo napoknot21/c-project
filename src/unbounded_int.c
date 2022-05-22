@@ -5,7 +5,51 @@
 #include "../headers/unbounded_int.h"
 
 #define NUM (48)
-#define UNBOUNDED_INT_ERROR ((unbounded_int) {.len = 0, .dernier = NULL, .premier = NULL, .signe = '*'})
+
+static char *cleanNumber(char *str);
+
+static unbounded_int sumPositifUnbounded(unbounded_int *a, unbounded_int *b);
+
+static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b);
+
+static int plusGrandAbs(unbounded_int a, unbounded_int b);
+
+static unbounded_int *multiplicationPourUnChiffre(char c, unbounded_int *ui);
+
+__attribute__((unused)) static long long puissance(int base, int puissance);
+
+static int isNum(char c);
+
+static int isAStringNum(const char *c);
+
+static int isUnboundedIntEmpty(unbounded_int ui);
+
+static int isUnboundedZero(unbounded_int *ui);
+
+static int isUnboundedUnity(unbounded_int *ui);
+
+
+__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int ui);
+
+static char *unbounded_int_lltoa(long long value, char *buffer, int base);
+
+__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base);
+
+static void swap(char *x, char *y);
+
+static char *reverse(char *buffer, int i, int j);
+
+//static void initCharOfUnbounded (char *e, unbounded_int i);
+
+static chiffre *initChiffre(char c);
+
+static unbounded_int *pushBack(unbounded_int *ui, char c);
+
+static unbounded_int *pushFront(unbounded_int *ui, char c);
+
+__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui);
+
+__attribute__((unused)) static unbounded_int *deleteLastElem(unbounded_int *ui);
 
 /*************Headers**************/
 
@@ -61,7 +105,7 @@ static long long puissance (int base, int puissance);
  * @param e : le string à convertir
  * @return unbounded_int la paramètre comme nouvelle structure
  */
-unbounded_int string2unbounded_int(const char *e) {
+unbounded_int string2unbounded_int(char *e) {
     if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
     const char *str = cleanNumber(e);
     unbounded_int *res = malloc (sizeof(unbounded_int));
@@ -69,7 +113,7 @@ unbounded_int string2unbounded_int(const char *e) {
     int i;
     res->len = 0;
     if (*(str) == '-' || *str == '+') {
-        if (*(str) == '-') res->signe = '-';    
+        if (*(str) == '-') res->signe = '-';
         else res->signe = '+';
         i = 1;
     } else {
@@ -90,7 +134,7 @@ unbounded_int string2unbounded_int(const char *e) {
  */
 unbounded_int ll2unbounded_int (long long i) {
     char buffer[100];
-    return string2unbounded_int(lltoa(i,buffer,10));
+    return string2unbounded_int(unbounded_int_lltoa(i, buffer, 10));
 }
 
 
@@ -251,12 +295,44 @@ unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b) {
     return UNBOUNDED_INT_ERROR;
 }
 
+unbounded_int unbounded_int_pow(unbounded_int x, unbounded_int n) {
+    unbounded_int result = ll2unbounded_int(1);
+    //unbounded_int decr = ll2unbounded_int(1);
+    //unbounded_int mod = ll2unbounded_int(2);
+    if (unbounded_int_cmp_ll(n, 0) == 0) { ;
+        return result;
+    }
+    /*while (unbounded_int_cmp_ll(n, 0) == 1) {
+        //unbounded_int modulo = fun(n,mod);
+        if (unbounded_int_cmp_ll(MODULO(n,mod),1) == 0) { //modulo
+            result = unbounded_int_produit(result,x);
+            n = unbounded_int_difference(n,decr);
+        }
+        x = unbounded_int_produit(x,x);
+        n = unbounded_int_produit(n,mod);
+    }*/
+    return result;
+}
 
+unbounded_int unbounded_int_abs(unbounded_int x) {
+    x.signe = '+';
+    return x;
+}
+
+unbounded_int unbounded_int_fact(unbounded_int n) {
+    unbounded_int decr = ll2unbounded_int(1);
+    unbounded_int result = ll2unbounded_int(1);
+    while (unbounded_int_cmp_ll(n, 0) > 0) {
+        result = unbounded_int_produit(result, n);
+        n = unbounded_int_difference(n, decr);
+    }
+    return result;
+}
 
 /**
  * fonction main (tests)
  */
-int main (int argc, char *argv[]) {
+/*int main (int argc, char *argv[]) {
     
     printf("=AUXILIAR FUNCTIONS=\n");
     //isNum() test
@@ -298,8 +374,8 @@ int main (int argc, char *argv[]) {
     char buffer [100];
     long long i = 45526229262;
     long long j = -893636383;
-    printf("format long long: %lld => format string: %s\n",i ,lltoa(i,buffer,10));
-    printf("format long long: %lld => format string: %s\n",j ,lltoa(j,buffer,10));
+    printf("format long long: %lld => format string: %s\n",i , unbounded_int_lltoa(i,buffer,10));
+    printf("format long long: %lld => format string: %s\n",j ,unbounded_int_lltoa(j,buffer,10));
 
 
     //Puissance test
@@ -419,7 +495,7 @@ int main (int argc, char *argv[]) {
 
 
     return 0;
-}
+}*/
 
 
 
@@ -533,13 +609,13 @@ static const char * cleanNumber (const char *str) {
 static unbounded_int * cleanUnbounded_int (unbounded_int *ui) {
     /*
     if (ui->len <= 1) return ui;
-    
+
     chiffre *tmp;// = ui->premier;
     for (tmp = ui->premier; tmp != NULL; tmp = tmp->suivant) {
         if (tmp->c != '0') {
             break;
         }
-        
+
     }
     if (tmp == NULL) {
         for (int i = 0; i < ui->len - 1; i++) {
@@ -602,8 +678,8 @@ static unbounded_int * cleanUnbounded_int (unbounded_int *ui) {
  * @param base base de conversion
  * @return char* 
  */
-static char * lltoa (long long value, char *buffer, int base) {
-     if (base < 2 || base > 32) {
+static char *unbounded_int_lltoa(long long value, char *buffer, int base) {
+    if (base < 2 || base > 32) {
         return buffer;
     }
     long long n = abs(value);
@@ -628,8 +704,8 @@ static char * lltoa (long long value, char *buffer, int base) {
  * @param base base de conversion
  * @return char* 
  */
-static char * itoa (int value, char *buffer, int base) {
-     if (base < 2 || base > 32) {
+static char *unbounded_int_itoa(int value, char *buffer, int base) {
+    if (base < 2 || base > 32) {
         return buffer;
     }
     int n = abs(value);
@@ -769,7 +845,7 @@ static unbounded_int * deleteLastElem (unbounded_int *ui) {
  * Fonction auxiliaire pour afficher une structure unbounded_int
  * @param ui structure unbounded_int
  */
-static void print_unbounded_int (unbounded_int ui) {
+void print_unbounded_int(unbounded_int ui) {
     unbounded_int tmp = UNBOUNDED_INT_ERROR;
     if (ui.signe == tmp.signe && ui.len == tmp.len && ui.premier == tmp.premier && ui.dernier == tmp.dernier) {
         printf("L'unbounded_int est vide\n");
@@ -815,9 +891,9 @@ static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
         
         int c = (a - '0') + (b - '0') + ret;
 
-        char unité = (char)((c%10) + '0');
-        ret = c/10;
-        res = pushBack(res,unité);
+        char unit = (char) ((c % 10) + '0');
+        ret = c / 10;
+        res = pushBack(res, unit);
         
         if(tmp_a != NULL) {
             tmp_a = tmp_a->precedent;    
@@ -868,24 +944,24 @@ static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b) {
         if(tmp_a == NULL) a = '0';
         else a = tmp_a->c;
         char b;
-        if(tmp_b == NULL) b = '0';
+        if (tmp_b == NULL) b = '0';
         else b = tmp_b->c;
-        
+
         int c = (a - '0') - (b - '0') - ret;
         if (c < 0) {
             c += 10;
             ret = 1;
-        } else ret = 0;   
-        char unité = (char)((c%10) + '0');
-        res = pushBack(res,unité);
-        
-        if(tmp_a != NULL) {
-            tmp_a = tmp_a->precedent;    
-        } 
-        
-        if(tmp_b != NULL) {
-            tmp_b = tmp_b->precedent;    
-        } 
+        } else ret = 0;
+        char unit = (char) ((c % 10) + '0');
+        res = pushBack(res, unit);
+
+        if (tmp_a != NULL) {
+            tmp_a = tmp_a->precedent;
+        }
+
+        if (tmp_b != NULL) {
+            tmp_b = tmp_b->precedent;
+        }
 
     } 
 
