@@ -10,6 +10,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "../headers/unbounded_int.h"
 
@@ -40,7 +41,7 @@ static FILE *OUT;
 static int EXIT_REQUEST = 0;
 static int CALL_ID = 0;
 
-#define pERROR(error)(fprintf(stderr, "%s in file %s in line %i\n", error_getMessage(error), FILE_NAME, FILE_LINE))
+#define pERROR(error)(fprintf(stderr, "%s in file %s in line %li\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b)(unbounded_int_produit(a,b))
