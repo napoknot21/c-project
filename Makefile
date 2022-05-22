@@ -19,5 +19,5 @@ build:
 	mkdir -p build
 
 cleanall:
-	rm -r ./build/* ./calc
+	rm -r ./build ./calc
 
