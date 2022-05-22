@@ -10,7 +10,7 @@
 
 static int isNum(char c);
 
-static int isAStringNum (const char *c);
+static int isAStringNum(const char *c);
 
 static int isUnboundedIntEmpty(unbounded_int ui);
 
@@ -24,9 +24,9 @@ static unbounded_int cleanUnbounded_int(unbounded_int ui);
 
 static char *unbounded_int_lltoa(long long value, char *buffer, int base);
 
-static void swap (char *x, char *y);
+static void swap(char *x, char *y);
 
-static char * reverse (char *buffer, int i, int j);
+static char *reverse(char *buffer, int i, int j);
 
 static chiffre *initChiffre(char c);
 
@@ -42,7 +42,7 @@ static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b);
 
 static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b);
 
-static int plusGrandAbs (unbounded_int a, unbounded_int b);
+static int plusGrandAbs(unbounded_int a, unbounded_int b);
 
 static unbounded_int multiplicationPourUnChiffre(char c, unbounded_int ui);
 
@@ -69,7 +69,7 @@ unbounded_int string2unbounded_int(char *e) {
         i = 0;
     }
     for (int j = i; j < strlen(str); j++) {
-        res = pushFront(res,*(str+j));
+        res = pushFront(res, *(str + j));
     }
     return res;
 }
@@ -80,7 +80,7 @@ unbounded_int string2unbounded_int(char *e) {
  * @param i variable à convertir
  * @return unbounded_int : paramètre comme nouvelle struct
  */
-unbounded_int ll2unbounded_int (long long i) {
+unbounded_int ll2unbounded_int(long long i) {
     char buffer[100];
     return string2unbounded_int(unbounded_int_lltoa(i, buffer, 10));
 }
@@ -102,7 +102,7 @@ char *unbounded_int2string(unbounded_int ui) {
     } else i = 0;
     chiffre *tmp = ui.premier;
     for (int j = 0; j < ui.len; j++) {
-        *(e+i+j) = tmp->c;
+        *(e + i + j) = tmp->c;
         tmp = tmp->suivant;
     }
     e[ui.len] = '\0';
@@ -117,7 +117,7 @@ char *unbounded_int2string(unbounded_int ui) {
  * @param b struct unbounded_int
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
-int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
+int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
     if ((isUnboundedZero(a) && isUnboundedZero(b)) || (isUnboundedUnity(a) && isUnboundedUnity(b))) return 0;
     unbounded_int a_c = cleanUnbounded_int(a);
     unbounded_int b_c = cleanUnbounded_int(b);
@@ -136,7 +136,7 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
             if (a_c.signe == '-') return (a_c.len > b_c.len) ? -1 : 1;
             return (a_c.len > b_c.len) ? 1 : -1;
         }
-    } 
+    }
     return (a_c.signe == '-') ? -1 : 1;
 }
 
@@ -147,8 +147,8 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
  * @param b long 
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
-int unbounded_int_cmp_ll (unbounded_int a, long long b) {
-    return unbounded_int_cmp_unbounded_int(a,ll2unbounded_int(b));
+int unbounded_int_cmp_ll(unbounded_int a, long long b) {
+    return unbounded_int_cmp_unbounded_int(a, ll2unbounded_int(b));
 }
 
 
@@ -158,7 +158,7 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
  * @param b struct unbounded_int
  * @return la somme sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_somme (unbounded_int a_ui, unbounded_int b_ui) {
+unbounded_int unbounded_int_somme(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
@@ -180,7 +180,7 @@ unbounded_int unbounded_int_somme (unbounded_int a_ui, unbounded_int b_ui) {
  * @param b struct unbounded_int
  * @return la différence sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_difference (unbounded_int a_ui, unbounded_int b_ui) {
+unbounded_int unbounded_int_difference(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
@@ -203,7 +203,7 @@ unbounded_int unbounded_int_difference (unbounded_int a_ui, unbounded_int b_ui) 
  * @param b struct unbounded_int
  * @return le produit sous forme de struct unbounded_int 
  */
-unbounded_int unbounded_int_produit (unbounded_int a_ui, unbounded_int b_ui) {
+unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
@@ -214,12 +214,13 @@ unbounded_int unbounded_int_produit (unbounded_int a_ui, unbounded_int b_ui) {
         res.premier = c;
         res.dernier = c;
         res.signe = '+';
+        unbounded_int_free(a);
+        unbounded_int_free(b);
         return res;
     }
 
     if (isUnboundedUnity(a) || isUnboundedUnity(b)) {
-        if (isUnboundedUnity(a) && isUnboundedUnity(b)) return a;
-        else if (isUnboundedUnity(a)) return b;
+        if (isUnboundedUnity(a) && !isUnboundedUnity(b)) return b;
         else return a;
     }
 
@@ -283,6 +284,19 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
         n = unbounded_int_difference(n, decr);
     }
     return result;
+}
+
+unbounded_int unbounded_int_free(unbounded_int u) {
+    chiffre *c = u.premier;
+    u.premier = NULL;
+    u.dernier = NULL;
+    while (c->suivant != NULL) {
+        chiffre *n = c->suivant;
+        free(c);
+        c = n;
+    }
+    free(c);
+    return UNBOUNDED_INT_ERROR;
 }
 
 /**
@@ -470,7 +484,7 @@ static int isNum(char c) {
  * @param c String à tester
  * @return 1 = true, et 0 sinon
  */
-static int isAStringNum (const char *c) {
+static int isAStringNum(const char *c) {
     size_t len = strlen(c);
     if (len == 0) return 0;
     int i;
@@ -481,7 +495,7 @@ static int isAStringNum (const char *c) {
         i = 0;
     }
     for (size_t j = i; j < strlen(c); j++) {
-        if (!isNum(*(c+j))) {
+        if (!isNum(*(c + j))) {
             return 0;
         }
     }
@@ -494,7 +508,7 @@ static int isAStringNum (const char *c) {
  * @param une struct unbounded_int
  * @return 0 si c'est le cas, et 1 sinon
  */
-static int isUnboundedIntEmpty (unbounded_int ui) {
+static int isUnboundedIntEmpty(unbounded_int ui) {
     return (ui.signe == '*' || ui.len == 0 || ui.premier == NULL || ui.dernier == NULL);
 }
 
@@ -538,7 +552,7 @@ static char *cleanNumber(char *str) {
     }
     int index = i;
     for (size_t j = i; j < len; j++) {
-        if (*(str+j) != '0') {
+        if (*(str + j) != '0') {
             break;
         }
         index++;
@@ -546,7 +560,7 @@ static char *cleanNumber(char *str) {
     if (index == i) return str;
     if (index == len) return "0";
     int newLen = len - index + 1;
-    char *newStr = malloc (sizeof(char)*newLen + 1);
+    char *newStr = malloc(sizeof(char) * newLen + 1);
     if (i == 1) newStr[0] = str[0];
     for (size_t j = index; j < len; j++) {
         newStr[i] = str[j];
@@ -621,7 +635,9 @@ static char *unbounded_int_lltoa(long long value, char *buffer, int base) {
  * @param y pointeur 2
  */
 static void swap(char *x, char *y) {
-    char t = *x; *x = *y; *y = t;
+    char t = *x;
+    *x = *y;
+    *y = t;
 }
 
 
@@ -632,7 +648,7 @@ static void swap(char *x, char *y) {
  * @param j 
  * @return char* 
  */
-static char* reverse(char *buffer, int i, int j) {
+static char *reverse(char *buffer, int i, int j) {
     while (i < j) {
         swap(&buffer[i++], &buffer[j--]);
     }
@@ -645,9 +661,9 @@ static char* reverse(char *buffer, int i, int j) {
  * @param c valeur de l'argument c de la struct chiffre
  * @return une nouvelle instance de chiffre
  */
-static chiffre * initChiffre (const char c) {
+static chiffre *initChiffre(const char c) {
     if (isNum(c) == 0) return NULL;
-    chiffre *ch = malloc(sizeof (chiffre));
+    chiffre *ch = malloc(sizeof(chiffre));
     if (ch == NULL) {
         perror("Pas de mémoire pour allouer la struct chiffre\n");
         return NULL;
@@ -786,11 +802,11 @@ static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b) {
 
         if (tmp_a != NULL) {
             tmp_a = tmp_a->precedent;
-        } 
-        
-        if(tmp_b != NULL) {
-            tmp_b = tmp_b->precedent;    
-        } 
+        }
+
+        if (tmp_b != NULL) {
+            tmp_b = tmp_b->precedent;
+        }
 
     }
 
@@ -798,7 +814,7 @@ static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b) {
         res = pushBack(res, (char) (ret + (int) '0'));
     }
     return cleanUnbounded_int(res);
-    
+
 }
 
 
@@ -852,7 +868,7 @@ static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
             tmp_b = tmp_b->precedent;
         }
 
-    } 
+    }
 
     return cleanUnbounded_int(res);
 }
@@ -862,7 +878,7 @@ static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
  * 
  * @return -1 si |a| < |b|, 0 si |a| = |b| et sinon 1 si |a| > |b| 
  */
-static int plusGrandAbs (unbounded_int a, unbounded_int b) {
+static int plusGrandAbs(unbounded_int a, unbounded_int b) {
     a.signe = '+';
     b.signe = '+';
     return unbounded_int_cmp_unbounded_int(a, b);
