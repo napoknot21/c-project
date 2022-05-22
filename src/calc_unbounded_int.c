@@ -39,6 +39,7 @@ static size_t FILE_LINE = 1;
 static int MALLOC_COUNTER = 0;
 static FILE *OUT;
 static int EXIT_REQUEST = 0;
+static int CALL_ID = 0;
 
 #define pERROR(error)(fprintf(stderr, "%s in file %s in line %i\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
@@ -51,10 +52,11 @@ static int EXIT_REQUEST = 0;
 #define MODULO(a, b)((a) % (b))
 
 #define BUFFER_SIZE 16
-#define HASHMAP_INITIAL_SIZE 10
+#define HASHMAP_INITIAL_SIZE 11
 #define HASHMAP_MIN_RATIO ((float)0.25)
 #define HASHMAP_MAX_RATIO ((float)0.75)
 #define HASH_A ((sqrt(5)-1)/2)
+#define INCR_CALL (CALL_ID = CALL_ID + 19 % INT_MAX)
 
 
 
@@ -526,7 +528,9 @@ static Function buildCalledFunction(HashMapData data, char *buffer);
 static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function);
 
-static int AST_hasVoidFunction(AST *ast);
+static int AST_hasFunction(AST *ast);
+
+static int ASN_hasFunction(ASN *asn);
 
 /* #####################################################################################################################
  * struct definitions
@@ -572,7 +576,6 @@ void load_stdlib(HashMap *map) {
  * Main function.
  */
 int main(int argc, char **argv) {
-    srand(time(0));
     FILE *in = NULL, *out = NULL;
     connect(&in, &out, argc, argv);
     OUT = out;
@@ -638,7 +641,7 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
         if (*isFunc) {
             functionTreatment(c, stack, argAst, storage, isFunc, argStart, map, function);
         }
-        if (val == 0 || !AST_apply(storage, ast, map)) {
+        if (val == 0 || ( val > 0 && !AST_apply(storage, ast, map))) {
             return 0;
         }
         stack = buffer_clear(stack);
@@ -763,7 +766,8 @@ static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, int *ast
     }
     for (unsigned int i = 0; i < len; i++) {
         int c = (int) (in[i]);
-        if (!parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, function, argAST, astResult)) {
+        int b = parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, function, argAST, astResult);
+        if (!b) {
             buffer_free(stack);
             AST_free(argAST);
             free(function);
@@ -840,13 +844,14 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
     return 1;
 }
 
-static int
-treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,
-          int *argsStart) {
+static int treatment
+(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,int *argsStart)
+
+{
     char *buffer = pBuffer->buffer;
     size_t len = pBuffer->length;
-    if (type == VOID) {
-        return (AST_hasVoidFunction(ast)) ? 1 : -2;  //void value
+    if (type == VOID || buffer[0] == '\0') {
+        return (AST_hasFunction(ast)) ? 1 : -2;  //void value
     }
     HashMapData data = hashMap_get(map, buffer);
     if (data.type != NONE) {
@@ -863,18 +868,18 @@ treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, H
         buffer_clear(pBuffer);
         return 1;
     }
-    if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
-        pERROR(MISSING_BLANK);
-        return 0;   //error value
-    }
     if (type == NUMBER && buffer[0] == '=') {
-        Token token = token_new(buffer, 1, type);
+        Token token = token_new(buffer, 1, OPERATOR);
         if (!AST_add(ast, storage, token)) {
             token_free(token);
             return 0; //error value
         }
         buffer++;
         len--;
+    }
+    if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
+        pERROR(MISSING_BLANK);
+        return 0;   //error value
     }
     Token token = token_new(buffer, len, type);
     if (!AST_add(ast, storage, token)) {
@@ -884,15 +889,24 @@ treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, H
     return 1; //add value
 }
 
-static int AST_hasVoidFunction(AST *ast) {
-    return (ast != NULL && ast->root != NULL && ast->root->left != NULL && ast->root->left->token.type == FUNCTION);
+static int AST_hasFunction(AST *ast) {
+    if (ast == NULL || ast->root == NULL) return 0;
+    return ASN_hasFunction(ast->root);
+}
+
+static int ASN_hasFunction(ASN *asn) {
+    if (asn->token.type == FUNCTION) return 1;
+    int left = (asn->left == NULL)? 0 : ASN_hasFunction(asn->left);
+    int right = (asn->right == NULL)? 0 : ASN_hasFunction(asn->right);
+    return left || right;
 }
 
 static Function buildCalledFunction(HashMapData data, char *buffer) {
     Function result;
     result.func = NULL;
     int dLen = (int) strlen(data.function.name);
-    char *r = intToString(rand());
+    INCR_CALL;
+    char *r = intToString(CALL_ID);
     int rLen = (int) strlen(r);
     char *line = intToString((int) FILE_LINE);
     int len = (int) strlen(line);
@@ -928,9 +942,6 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
     }
     newName[dLen + len + rLen] = '\0';
     result = function_new(newName, data.function.retType, data.function.func, data.function.requested);
-    //free(r);
-    //free(line);
-    MALLOC_COUNTER -= 2;
     return result;
 }
 
@@ -1118,7 +1129,7 @@ static int std_exit(int argc, int *argv, char **argn) {
 static int std_fact(int argc, int *argv, char **argn) {
     int n = argv[0];
     int result = 1;
-    for (int i = 0; i < n; i++) {
+    for (int i = 1; i <= n; i++) {
         result *= i;
     }
     argv[argc] = result;
