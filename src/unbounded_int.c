@@ -14,7 +14,7 @@ static int isAStringNum(const char *c);
 
 static int isUnboundedIntEmpty(unbounded_int ui);
 
-static int isUnboundedZero(unbounded_int ui);
+static int isUnboundedZero(unbounded_int *ui);
 
 static int isUnboundedUnity(unbounded_int ui);
 
@@ -118,7 +118,7 @@ char *unbounded_int2string(unbounded_int ui) {
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
 int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
-    if ((isUnboundedZero(a) && isUnboundedZero(b)) || (isUnboundedUnity(a) && isUnboundedUnity(b))) return 0;
+    if ((isUnboundedZero(&a) && isUnboundedZero(&b)) || (isUnboundedUnity(a) && isUnboundedUnity(b))) return 0;
     unbounded_int a_c = cleanUnbounded_int(a);
     unbounded_int b_c = cleanUnbounded_int(b);
     if (a_c.signe == b_c.signe) {
@@ -167,8 +167,8 @@ unbounded_int unbounded_int_somme(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
-    if (isUnboundedZero(a) || isUnboundedZero(b)) {
-        if (isUnboundedZero(a) && !isUnboundedZero(b)) {
+    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
+        if (isUnboundedZero(&a) && !isUnboundedZero(&b)) {
             return b;
         } else {
             return a;
@@ -189,9 +189,9 @@ unbounded_int unbounded_int_difference(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
-    if (isUnboundedZero(a) || isUnboundedZero(b)) {
-        if (isUnboundedZero(a) && isUnboundedZero(b)) return a;
-        else if (isUnboundedZero(a)) {
+    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
+        if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
+        else if (isUnboundedZero(&a)) {
             b.signe = (b.signe == '-') ? '+' : '-';
             return b;
         } else {
@@ -216,7 +216,7 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
     unbounded_int res = UNBOUNDED_INT_ERROR;
-    if (isUnboundedZero(a) || isUnboundedZero(b)) {
+    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         chiffre *c = initChiffre('0');
         res.len = 1;
         res.premier = c;
@@ -309,7 +309,7 @@ unbounded_int unbounded_int_free(unbounded_int u) {
 /**
  * fonction main (tests)
  */
-int main(int argc, char *argv[]) {
+/*int main(int argc, char *argv[]) {
 
     printf("=AUXILIAR FUNCTIONS=\n");
     //isNum() test
@@ -472,7 +472,7 @@ int main(int argc, char *argv[]) {
 
 
     return 0;
-}
+}*/
 
 
 
@@ -525,8 +525,9 @@ static int isUnboundedIntEmpty(unbounded_int ui) {
  * @param ui pointeur vers la structure 
  * @return True si la strcutre est un 0 false sinon
  */
-static int isUnboundedZero(unbounded_int ui) {
-    return ((ui.signe == '+' || ui.signe == '-') && ui.len == 1 && ui.premier == ui.dernier && ui.premier->c == '0');
+static int isUnboundedZero(unbounded_int *ui) {
+    return ((ui->signe == '+' || ui->signe == '-') && ui->len == 1 && ui->premier == ui->dernier &&
+            ui->premier->c == '0');
 }
 
 
@@ -832,6 +833,7 @@ static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
     int plusgrand = plusGrandAbs(a, b);
     unbounded_int res = UNBOUNDED_INT_ERROR;
     if (plusgrand == 0) {
+        res.signe = '+';
         res = pushBack(res, '0');
 
         return res;
