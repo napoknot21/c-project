@@ -36,7 +36,6 @@ static char *FILE_NAME = "stdin";
  * Line position of the reader in the open file.
  */
 static int FILE_LINE = 1;
-static int MALLOC_COUNTER = 0;
 static FILE *OUT;
 static int EXIT_REQUEST = 0;
 static int CALL_ID = 0;
@@ -617,10 +616,8 @@ int main(int argc, char **argv) {
     AST_free(ast);
     tree_free(storage);
     hashMap_free(map);
-    printf("MALLOC_COUNTER = %d\n", MALLOC_COUNTER);
-    printf("exit = %d \n", EXIT_REQUEST);
+    printf("MALLOC_COUNTER = %d\n");
     disconnect(&in, &out);
-
     if (EXIT_REQUEST == -1) exit(EXIT_FAILURE);
     exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
@@ -772,7 +769,6 @@ static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounde
             buffer_free(stack);
             AST_free(argAST);
             free(function);
-            MALLOC_COUNTER--;
             return 0;
         }
         last = current;
@@ -783,14 +779,12 @@ static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounde
         buffer_free(stack);
         AST_free(argAST);
         free(function);
-        MALLOC_COUNTER--;
         return 0;
     }
     if (astResult != NULL && ast->root != NULL) *astResult = ast->root->result;
     buffer_free(stack);
     AST_free(argAST);
     free(function);
-    MALLOC_COUNTER--;
     return 1;
 }
 
@@ -811,7 +805,6 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
         return 0;
     }
     Function *function = malloc(sizeof(Function));
-    MALLOC_COUNTER++;
     if (function == NULL) {
         buffer_free(stack);
         AST_free(ast);
@@ -824,7 +817,6 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
             buffer_free(stack);
             AST_free(argAST);
             free(function);
-            MALLOC_COUNTER--;
             return 0;
         }
         last = current;
@@ -835,13 +827,11 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
         buffer_free(stack);
         AST_free(argAST);
         free(function);
-        MALLOC_COUNTER--;
         return 0;
     }
     buffer_free(stack);
     AST_free(argAST);
     free(function);
-    MALLOC_COUNTER--;
     return 1;
 }
 
@@ -911,7 +901,6 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
     char *line = intToString((int) FILE_LINE);
     int len = (int) strlen(line);
     char *newName = malloc((len + dLen + rLen + 1) * sizeof(char));
-    MALLOC_COUNTER++;
     if (newName == NULL) {
         return result;
     }
@@ -920,7 +909,6 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
         free(newName);
         free(line);
         free(r);
-        MALLOC_COUNTER -= 3;
         return result;
     }
     newName = tmp;
@@ -929,7 +917,6 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
         free(newName);
         free(line);
         free(r);
-        MALLOC_COUNTER -= 3;
         return result;
     }
     tmp = memmove(&newName[dLen + len], r, rLen * sizeof(char));
@@ -937,7 +924,6 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
         free(newName);
         free(line);
         free(r);
-        MALLOC_COUNTER -= 3;
         return result;
     }
     newName[dLen + len + rLen] = '\0';
@@ -1020,7 +1006,6 @@ static Token token_new(char *s, size_t len, enum TokenType type) {
 static void token_free(Token t) {
     if (t.type == FUNCTION) return;
     free(t.data);
-    MALLOC_COUNTER--;
 }
 
 
@@ -1030,18 +1015,14 @@ static void token_free(Token t) {
 
 static Buffer *buffer_new() {
     Buffer *buffer = malloc(sizeof(Buffer));
-    MALLOC_COUNTER++;
     if (buffer == NULL) {
         printErr("");
-        MALLOC_COUNTER--;
         return NULL;
     }
     buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    MALLOC_COUNTER++;
     if (buffer->buffer == NULL) {
         printErr("");
         free(buffer);
-        MALLOC_COUNTER -= 2;
         return NULL;
     }
     buffer->capacity = BUFFER_SIZE;
@@ -1051,13 +1032,10 @@ static Buffer *buffer_new() {
 
 static Buffer *buffer_clear(Buffer *buffer) {
     free(buffer->buffer);
-    MALLOC_COUNTER--;
     buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    MALLOC_COUNTER++;
     if (buffer->buffer == NULL) {
         printErr("");
         free(buffer);
-        MALLOC_COUNTER -= 2;
         return NULL;
     }
     buffer->capacity = BUFFER_SIZE;
@@ -1068,7 +1046,6 @@ static Buffer *buffer_clear(Buffer *buffer) {
 static Buffer *buffer_free(Buffer *buffer) {
     free(buffer->buffer);
     free(buffer);
-    MALLOC_COUNTER -= 2;
     return NULL;
 }
 
@@ -1138,7 +1115,6 @@ static int std_fact(int argc, unbounded_int *argv, char **argn) {
 
 static AST *AST_new() {
     AST *tree = malloc(sizeof(AST));
-    MALLOC_COUNTER++;
     if (tree == NULL) return NULL;
     tree->root = NULL;
     return tree;
@@ -1146,7 +1122,6 @@ static AST *AST_new() {
 
 static ASN *ASN_new(Tree *t, Token token) {
     ASN *node = malloc(sizeof(ASN));
-    MALLOC_COUNTER++;
     if (node == NULL) return NULL;
     switch (token.type) {
         case OPERATOR:
@@ -1216,7 +1191,6 @@ static AST *AST_clear(AST *ast) {
 static AST *AST_free(AST *ast) {
     ASN_free(ast->root);
     free(ast);
-    MALLOC_COUNTER--;
     return NULL;
 }
 
@@ -1226,7 +1200,6 @@ static ASN *ASN_free(ASN *n) {
         ASN_free(n->left);
         unbounded_int_free(n->result);
         free(n);
-        MALLOC_COUNTER--;
     }
     return n = NULL;
 }
@@ -1302,7 +1275,6 @@ static unbounded_int ASN_apply(Tree *storage, ASN *asn, int *err, HashMap *map) 
  */
 static Tree *tree_new() {
     Tree *t = malloc(sizeof(Tree));
-    MALLOC_COUNTER++;
     if (t == NULL) return NULL;
     t->root = NULL;
     return t;
@@ -1310,7 +1282,6 @@ static Tree *tree_new() {
 
 static Node *node_new(char id) {
     Node *n = malloc(sizeof(Node));
-    MALLOC_COUNTER++;
     if (n == NULL) {
         return NULL;
     }
@@ -1372,7 +1343,6 @@ static unbounded_int node_getValue(Node **node, char *string) {
 static void tree_free(Tree *t) {
     node_free(t->root);
     free(t);
-    MALLOC_COUNTER--;
 }
 
 static void node_free(Node *n) {
@@ -1382,7 +1352,6 @@ static void node_free(Node *n) {
     node_free(n->right);
     unbounded_int_free(n->data);
     free(n);
-    MALLOC_COUNTER--;
 }
 
 /* #####################################################################################################################
@@ -1418,7 +1387,6 @@ function_new(char *name, RetType type, int (*function)(int, unbounded_int *, cha
             .retType = type,
             .argv = calloc(requestedArguments + 1, sizeof(unbounded_int)),
             .argn = malloc(requestedArguments * sizeof(char *))};
-    MALLOC_COUNTER += 2;
     return f;
 }
 
@@ -1426,7 +1394,6 @@ static void function_free(Function f) {
     free(f.argv);
     free(f.argn);
     free(f.name);
-    MALLOC_COUNTER -= 3;
 }
 
 
@@ -1452,7 +1419,6 @@ static long long hash2(long long hash) {
 
 static HashMap *HashMap_new() {
     HashMap *map = malloc(sizeof(HashMap));
-    MALLOC_COUNTER++;
     if (map == NULL) {
         printErr("");
         return NULL;
@@ -1461,15 +1427,12 @@ static HashMap *HashMap_new() {
     map->maxRatio = HASHMAP_MAX_RATIO;
     map->capacity = HASHMAP_INITIAL_SIZE;
     map->data = malloc(sizeof(HashMapData) * map->capacity);
-    MALLOC_COUNTER++;
     for (int i = 0; i < map->capacity; i++) {
         map->data[i] = NONE_DATA;
     }
-    MALLOC_COUNTER++;
     if (map->data == NULL) {
         printErr("");
         free(map);
-        MALLOC_COUNTER -= 2;
         return NULL;
     }
     map->keyNumber = 0;
@@ -1529,7 +1492,6 @@ static void resize(HashMap *map, size_t newSize) {
     size_t oldLen = map->capacity;
     HashMapData *new = malloc(newSize * sizeof(HashMapData));
     for (int i = 0; i < newSize; i++) new[i] = NONE_DATA;
-    MALLOC_COUNTER++;
     if (new == NULL) {
         printErr("");
         return;
@@ -1543,7 +1505,6 @@ static void resize(HashMap *map, size_t newSize) {
         else hashMap_put(map, old[i].function, old[i].type);
     }
     free(old);
-    MALLOC_COUNTER--;
 }
 
 static void hashMapData_free(HashMapData data) {
@@ -1571,7 +1532,6 @@ static void hashMap_free(HashMap *map) {
         hashMapData_free(map->data[i]);
     }
     free(map);
-    MALLOC_COUNTER--;
 }
 
 
@@ -1616,7 +1576,6 @@ static char *trim(const char *s, size_t len) {
     }
     int size = end - start;
     char *ret = malloc((size + 1) * sizeof(char));
-    MALLOC_COUNTER++;
     if (ret == NULL) {
         printErr("");
         return NULL;
@@ -1633,7 +1592,6 @@ static char *intToString(int n) {
     int len = snprintf(NULL, 0, "%d", n);
     char *s = malloc(len * sizeof(char));
     if (s == NULL) return NULL;
-    MALLOC_COUNTER++;
     snprintf(s, len + 1, "%d", n);
     return s;
 }

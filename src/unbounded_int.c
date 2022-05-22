@@ -242,7 +242,7 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
         }
         unbounded_int s = sumPositifUnbounded(res, tmp_p);
         unbounded_int_free(tmp_p);
-        //unbounded_int_free(res);
+        unbounded_int_free(res);
         res = s;
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
