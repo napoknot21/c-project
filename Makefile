@@ -12,6 +12,8 @@ unbounded_int.o: unbounded_int.c unbounded_int.h
 calc_unbounded_int.o: calc_unbounded_int.c unbounded_int.h
 	$(CC) $(CFLAGS) $(LDLIBS) -c calc_unbounded_int.c -o build/$@
 
+test: unbounded_int.o unbounded_int.h
+	$(CC) $(CFLAGS) $(LDLIBS) -c test_unbounded.c -o build/$@
 
 clean: build
 	rm -rf build
