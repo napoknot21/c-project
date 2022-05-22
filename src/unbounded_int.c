@@ -14,13 +14,13 @@ static int isAStringNum (const char *c);
 
 static int isUnboundedIntEmpty(unbounded_int ui);
 
-static int isUnboundedZero (unbounded_int *ui);
+static int isUnboundedZero(unbounded_int ui);
 
-static int isUnboundedUnity (unbounded_int *ui);
+static int isUnboundedUnity(unbounded_int ui);
 
 static char *cleanNumber(char *str);
 
-static unbounded_int cleanUnbounded_int(unbounded_int *ui);
+static unbounded_int cleanUnbounded_int(unbounded_int ui);
 
 static char *unbounded_int_lltoa(long long value, char *buffer, int base);
 
@@ -30,21 +30,21 @@ static char * reverse (char *buffer, int i, int j);
 
 static chiffre *initChiffre(char c);
 
-static unbounded_int * pushBack (unbounded_int * ui, char c);
+static unbounded_int pushBack(unbounded_int ui, char c);
 
-static unbounded_int *pushFront(unbounded_int *ui, char c);
+static unbounded_int pushFront(unbounded_int ui, char c);
 
-static unbounded_int *deleteFirstElem(unbounded_int *ui);
+static unbounded_int deleteFirstElem(unbounded_int ui);
 
-__attribute__((unused)) static unbounded_int *deleteLastElem(unbounded_int *ui);
+__attribute__((unused)) static unbounded_int deleteLastElem(unbounded_int ui);
 
-static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b);
+static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b);
 
-static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b);
+static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b);
 
 static int plusGrandAbs (unbounded_int a, unbounded_int b);
 
-static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui);
+static unbounded_int multiplicationPourUnChiffre(char c, unbounded_int ui);
 
 __attribute__((unused)) static long long puissance(int base, int puissance);
 
@@ -57,23 +57,21 @@ __attribute__((unused)) static long long puissance(int base, int puissance);
 unbounded_int string2unbounded_int(char *e) {
     if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
     const char *str = cleanNumber(e);
-    unbounded_int *res = malloc (sizeof(unbounded_int));
-    if (res == NULL) return UNBOUNDED_INT_ERROR;
-    *res = UNBOUNDED_INT_ERROR;
+    unbounded_int res = UNBOUNDED_INT_ERROR;
     int i;
-    res->len = 0;
+    res.len = 0;
     if (*(str) == '-' || *str == '+') {
-        if (*(str) == '-') res->signe = '-';
-        else res->signe = '+';
+        if (*(str) == '-') res.signe = '-';
+        else res.signe = '+';
         i = 1;
     } else {
-        res->signe = '+';
+        res.signe = '+';
         i = 0;
     }
     for (int j = i; j < strlen(str); j++) {
         res = pushFront(res,*(str+j));
     }
-    return *res;
+    return res;
 }
 
 
@@ -120,9 +118,9 @@ char *unbounded_int2string(unbounded_int ui) {
  * @return int : −1 si a < b; 0 si a == b et 1 sinon  
  */
 int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
-    if ((isUnboundedZero(&a) && isUnboundedZero(&b)) || (isUnboundedUnity(&a) && isUnboundedUnity(&b))) return 0;
-    unbounded_int a_c = cleanUnbounded_int(&a);
-    unbounded_int b_c = cleanUnbounded_int(&b);
+    if ((isUnboundedZero(a) && isUnboundedZero(b)) || (isUnboundedUnity(a) && isUnboundedUnity(b))) return 0;
+    unbounded_int a_c = cleanUnbounded_int(a);
+    unbounded_int b_c = cleanUnbounded_int(b);
     if (a_c.signe == b_c.signe) {
         if (a_c.len == b_c.len) {
             chiffre *tmp1 = a_c.premier;
@@ -162,17 +160,17 @@ int unbounded_int_cmp_ll (unbounded_int a, long long b) {
  */
 unbounded_int unbounded_int_somme (unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    unbounded_int a = cleanUnbounded_int(&a_ui);
-    unbounded_int b = cleanUnbounded_int(&b_ui);
-    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
-        if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
-        else if (isUnboundedZero(&a)) return b;
+    unbounded_int a = cleanUnbounded_int(a_ui);
+    unbounded_int b = cleanUnbounded_int(b_ui);
+    if (isUnboundedZero(a) || isUnboundedZero(b)) {
+        if (isUnboundedZero(a) && isUnboundedZero(b)) return a;
+        else if (isUnboundedZero(a)) return b;
         else return a;
     }
     if (a.signe == b.signe) {
-        return sumPositifUnbounded(&a, &b);
+        return sumPositifUnbounded(a, b);
     }
-    return sumNegatifUnbounded(&a, &b);
+    return sumNegatifUnbounded(a, b);
 }
 
 
@@ -184,19 +182,18 @@ unbounded_int unbounded_int_somme (unbounded_int a_ui, unbounded_int b_ui) {
  */
 unbounded_int unbounded_int_difference (unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    unbounded_int a = cleanUnbounded_int(&a_ui);
-    unbounded_int b = cleanUnbounded_int(&b_ui);
-    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
-        if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
-        else if (isUnboundedZero(&a)) {
+    unbounded_int a = cleanUnbounded_int(a_ui);
+    unbounded_int b = cleanUnbounded_int(b_ui);
+    if (isUnboundedZero(a) || isUnboundedZero(b)) {
+        if (isUnboundedZero(a) && isUnboundedZero(b)) return a;
+        else if (isUnboundedZero(a)) {
             if (b.signe == '-') b.signe = '+';
             else b.signe = '-';
             return b;
-        }    
-        else return a;
+        } else return a;
     }
-    if ((a.signe == '+' && b.signe == '-') || (a.signe == '-' && b.signe == '+')) return sumPositifUnbounded(&a, &b);
-    return sumNegatifUnbounded(&a, &b);
+    if ((a.signe == '+' && b.signe == '-') || (a.signe == '-' && b.signe == '+')) return sumPositifUnbounded(a, b);
+    return sumNegatifUnbounded(a, b);
 }
 
 
@@ -208,40 +205,39 @@ unbounded_int unbounded_int_difference (unbounded_int a_ui, unbounded_int b_ui) 
  */
 unbounded_int unbounded_int_produit (unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    unbounded_int a = cleanUnbounded_int(&a_ui);
-    unbounded_int b = cleanUnbounded_int(&b_ui);
-    unbounded_int *res = malloc (sizeof (unbounded_int));
-    *res = UNBOUNDED_INT_ERROR;
-    if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
+    unbounded_int a = cleanUnbounded_int(a_ui);
+    unbounded_int b = cleanUnbounded_int(b_ui);
+    unbounded_int res = UNBOUNDED_INT_ERROR;
+    if (isUnboundedZero(a) || isUnboundedZero(b)) {
         chiffre *c = initChiffre('0');
-        res->len = 1;
-        res->premier = c;
-        res->dernier = c;
-        res->signe = '+';
-        return *res;
+        res.len = 1;
+        res.premier = c;
+        res.dernier = c;
+        res.signe = '+';
+        return res;
     }
 
-    if (isUnboundedUnity(&a) || isUnboundedUnity(&b)) {
-        if (isUnboundedUnity(&a) && isUnboundedUnity(&b)) return a;
-        else if (isUnboundedUnity(&a)) return b;
+    if (isUnboundedUnity(a) || isUnboundedUnity(b)) {
+        if (isUnboundedUnity(a) && isUnboundedUnity(b)) return a;
+        else if (isUnboundedUnity(a)) return b;
         else return a;
     }
 
     chiffre *tmp = a.dernier;
 
-    res = multiplicationPourUnChiffre(tmp->c, &b);
+    res = multiplicationPourUnChiffre(tmp->c, b);
     for (int i = 1; i < a.len; i++) {
         tmp = tmp->precedent;
-        unbounded_int *tmp_p = multiplicationPourUnChiffre(tmp->c, &b);
+        unbounded_int tmp_p = multiplicationPourUnChiffre(tmp->c, b);
 
         for (int j = 0; j < i; j++) {
             tmp_p = pushFront(tmp_p, '0');
         }
 
-        *res = sumPositifUnbounded(res, tmp_p);
+        res = sumPositifUnbounded(res, tmp_p);
     }
-    res->signe = (a.signe == b.signe) ? '+' : '-';
-    return *res;
+    res.signe = (a.signe == b.signe) ? '+' : '-';
+    return res;
 }
 
 
@@ -508,8 +504,8 @@ static int isUnboundedIntEmpty (unbounded_int ui) {
  * @param ui pointeur vers la structure 
  * @return True si la strcutre est un 0 false sinon
  */
-static int isUnboundedZero (unbounded_int *ui) {
-    return ((ui->signe == '+' || ui->signe == '-') && ui->len == 1 && ui->premier == ui->dernier && ui->premier->c == '0');
+static int isUnboundedZero(unbounded_int ui) {
+    return ((ui.signe == '+' || ui.signe == '-') && ui.len == 1 && ui.premier == ui.dernier && ui.premier->c == '0');
 }
 
 
@@ -518,8 +514,8 @@ static int isUnboundedZero (unbounded_int *ui) {
  * @param ui pointeur vers la structure 
  * @return True si la strcutre est un 1 (unité) false sinon
  */
-static int isUnboundedUnity (unbounded_int *ui) {
-    return (ui->len == 1 && ui->premier == ui->dernier && ui->premier->c == '1' && (ui->signe == '+' || ui->signe == '-'));
+static int isUnboundedUnity(unbounded_int ui) {
+    return (ui.len == 1 && ui.premier == ui.dernier && ui.premier->c == '1' && (ui.signe == '+' || ui.signe == '-'));
 }
 
 
@@ -566,29 +562,29 @@ static char *cleanNumber(char *str) {
  * @return un pointeur vers la structure ou une nouvelle
  */
 
-static unbounded_int cleanUnbounded_int (unbounded_int *ui) {
+static unbounded_int cleanUnbounded_int(unbounded_int ui) {
 
-    if (ui->len <= 1) return *ui;
-    if (ui->premier->c != '0') return *ui;
+    if (ui.len <= 1) return ui;
+    if (ui.premier->c != '0') return ui;
     int index = 0;
     chiffre *tmp;// = ui->premier;
-    for (tmp = ui->premier; tmp != NULL; tmp = tmp->suivant) {
+    for (tmp = ui.premier; tmp != NULL; tmp = tmp->suivant) {
         if (tmp->c != '0') {
             break;
         }
         index += 1;
     }
     if (tmp == NULL) {
-        for (int i = 0; i < ui->len - 1; i++) {
-            ui = deleteFirstElem (ui);
+        for (int i = 0; i < ui.len - 1; i++) {
+            ui = deleteFirstElem(ui);
         }
-        return *ui;
+        return ui;
     }
 
     for (int i = 0; i < index; i++) {
         ui = deleteFirstElem(ui);
     }
-    return *ui;
+    return ui;
 
 }
 
@@ -604,12 +600,12 @@ static char *unbounded_int_lltoa(long long value, char *buffer, int base) {
     if (base < 2 || base > 32) {
         return buffer;
     }
-    long long n = abs(value);
+    long long n = llabs(value);
     int i = 0;
     while (n) {
-        int r = n % base;
-        if (r >= 10) buffer[i++] = 65 + (r - 10);
-        else buffer[i++] = 48 + r;
+        int r = (int) ((long long) n % base);
+        if (r >= 10) buffer[i++] = (char) (65 + (r - 10));
+        else buffer[i++] = (char) (48 + r);
         n = n / base;
     }
     if (i == 0) buffer[i++] = '0';
@@ -668,17 +664,17 @@ static chiffre * initChiffre (const char c) {
  * @param ui struct source
  * @param c valeur de la nouvelle struct chiffre ajouté
  */
-static unbounded_int * pushFront (unbounded_int *ui, const char c) {
+static unbounded_int pushFront(unbounded_int ui, const char c) {
     chiffre *ch = initChiffre(c);
-    ch->precedent = ui->dernier;
+    ch->precedent = ui.dernier;
     ch->suivant = NULL;
-    if (ui->dernier != NULL) {
-        ui->dernier->suivant = ch;
-    } else if (ui->dernier == NULL && ui->premier == NULL) {
-        ui->premier = ch;
+    if (ui.dernier != NULL) {
+        ui.dernier->suivant = ch;
+    } else if (ui.dernier == NULL && ui.premier == NULL) {
+        ui.premier = ch;
     }
-    ui->dernier = ch;
-    ui->len++;
+    ui.dernier = ch;
+    ui.len++;
     return ui;
 }
 
@@ -688,17 +684,17 @@ static unbounded_int * pushFront (unbounded_int *ui, const char c) {
  * @param ui struct source
  * @param c valeur de la nouvelle struct chiffre ajouté
  */
-static unbounded_int * pushBack (unbounded_int *ui, const char c) {
+static unbounded_int pushBack(unbounded_int ui, const char c) {
     chiffre *ch = initChiffre(c);
     ch->precedent = NULL;
-    ch->suivant = ui->premier;
-    if (ui->premier != NULL && ui->len != 0) {
-        ui->premier->precedent = ch;
-    } else if (ui->dernier == NULL && ui->premier == NULL) {
-        ui->dernier = ch;
+    ch->suivant = ui.premier;
+    if (ui.premier != NULL && ui.len != 0) {
+        ui.premier->precedent = ch;
+    } else if (ui.dernier == NULL && ui.premier == NULL) {
+        ui.dernier = ch;
     }
-    ui->premier = ch;
-    ui->len++;
+    ui.premier = ch;
+    ui.len++;
     return ui;
 }
 
@@ -707,14 +703,14 @@ static unbounded_int * pushBack (unbounded_int *ui, const char c) {
  * Supprime le premier élément
  * @param la structure à modifier
  */
-static unbounded_int *deleteFirstElem(unbounded_int *ui) {
-    if (ui->len <= 1) return NULL;
+static unbounded_int deleteFirstElem(unbounded_int ui) {
+    if (ui.len <= 1) return UNBOUNDED_INT_ERROR;
     chiffre *tmp;
-    tmp = ui->premier;
-    ui->premier = ui->premier->suivant;
-    ui->premier->precedent = NULL;
+    tmp = ui.premier;
+    ui.premier = ui.premier->suivant;
+    ui.premier->precedent = NULL;
     free(tmp);
-    ui->len--;
+    ui.len--;
     return ui;
 }
 
@@ -723,14 +719,14 @@ static unbounded_int *deleteFirstElem(unbounded_int *ui) {
  * Delete last elem
  *
  */
-__attribute__((unused)) static unbounded_int * deleteLastElem (unbounded_int *ui) {
-    if (ui->len <= 1) return NULL;
+__attribute__((unused)) static unbounded_int deleteLastElem(unbounded_int ui) {
+    if (ui.len <= 1) return UNBOUNDED_INT_ERROR;
     chiffre *tmp;
-    tmp = ui->dernier;
-    ui->dernier = ui->dernier->precedent;
-    ui->dernier->suivant = NULL;
+    tmp = ui.dernier;
+    ui.dernier = ui.dernier->precedent;
+    ui.dernier->suivant = NULL;
     free(tmp);
-    ui->len--;
+    ui.len--;
     return ui;
 }
 
@@ -765,33 +761,31 @@ void print_unbounded_int(unbounded_int ui) {
  *
  *
  */
-static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
-    
-    unbounded_int *res = malloc(sizeof(unbounded_int));
-    *res = UNBOUNDED_INT_ERROR;
-    res->signe = a->signe;
-    res->len = 0;
+static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b) {
+    unbounded_int res = UNBOUNDED_INT_ERROR;
+    res.signe = a.signe;
+    res.len = 0;
     int ret = 0;
-    chiffre *tmp_a = a->dernier;
-    chiffre *tmp_b = b->dernier;
-    int max_len = (a->len < b->len) ? b->len : a->len;
+    chiffre *tmp_a = a.dernier;
+    chiffre *tmp_b = b.dernier;
+    int max_len = (int) ((a.len < b.len) ? b.len : a.len);
     for (int i = 0; i < max_len; i++) {
 
-        char a;
-        if(tmp_a == NULL) a = '0';
-        else a = tmp_a->c;
-        char b;
-        if(tmp_b == NULL) b = '0';
-        else b = tmp_b->c;
-        
-        int c = (a - '0') + (b - '0') + ret;
+        char ca;
+        if (tmp_a == NULL) ca = '0';
+        else ca = tmp_a->c;
+        char cb;
+        if (tmp_b == NULL) cb = '0';
+        else cb = tmp_b->c;
+
+        int c = (ca - '0') + (cb - '0') + ret;
 
         char unit = (char) ((c % 10) + '0');
         ret = c / 10;
         res = pushBack(res, unit);
-        
-        if(tmp_a != NULL) {
-            tmp_a = tmp_a->precedent;    
+
+        if (tmp_a != NULL) {
+            tmp_a = tmp_a->precedent;
         } 
         
         if(tmp_b != NULL) {
@@ -801,7 +795,7 @@ static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
     }
 
     if (ret >= 1) {
-        res = pushBack(res, (char)ret+'0');
+        res = pushBack(res, (char) (ret + (int) '0'));
     }
     return cleanUnbounded_int(res);
     
@@ -811,39 +805,38 @@ static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b) {
 /**
  *
  */
-static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b) {
-    int plusgrand = plusGrandAbs(*a, *b);
-    unbounded_int *res = malloc(sizeof(unbounded_int));
-    *res = UNBOUNDED_INT_ERROR;
-    if (plusgrand == 0) { 
+static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
+    int plusgrand = plusGrandAbs(a, b);
+    unbounded_int res = UNBOUNDED_INT_ERROR;
+    if (plusgrand == 0) {
         res = pushBack(res, '0');
-        
-        return *res;
+
+        return res;
     }
-    res->len = 0;
-    int max_len = (a->len < b->len) ? b->len : a->len;
+    res.len = 0;
+    int max_len = (int) ((a.len < b.len) ? b.len : a.len);
     chiffre *tmp_a;
     chiffre *tmp_b;
     if (plusgrand == -1) {
 
-        res->signe = b->signe;
-        tmp_a = b->dernier;
-        tmp_b = a->dernier;
+        res.signe = b.signe;
+        tmp_a = b.dernier;
+        tmp_b = a.dernier;
     } else {
-        res->signe = a->signe;
-        tmp_a = a->dernier;
-        tmp_b = b->dernier;
+        res.signe = a.signe;
+        tmp_a = a.dernier;
+        tmp_b = b.dernier;
     }
     int ret = 0;
     for (int i = 0; i < max_len; i++) {
-        char a;
-        if(tmp_a == NULL) a = '0';
-        else a = tmp_a->c;
-        char b;
-        if (tmp_b == NULL) b = '0';
-        else b = tmp_b->c;
+        char ca;
+        if (tmp_a == NULL) ca = '0';
+        else ca = tmp_a->c;
+        char cb;
+        if (tmp_b == NULL) cb = '0';
+        else cb = tmp_b->c;
 
-        int c = (a - '0') - (b - '0') - ret;
+        int c = (ca - '0') - (cb - '0') - ret;
         if (c < 0) {
             c += 10;
             ret = 1;
@@ -880,24 +873,23 @@ static int plusGrandAbs (unbounded_int a, unbounded_int b) {
  *
  *
  */
-static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui) {
-    unbounded_int *p = malloc (sizeof(unbounded_int));
-    *p = UNBOUNDED_INT_ERROR;
+static unbounded_int multiplicationPourUnChiffre(char c, unbounded_int ui) {
+    unbounded_int p = UNBOUNDED_INT_ERROR;
     int a = c - '0';
     if (a == 1) return ui;
     int ret = 0;
-    chiffre *tmp = ui->dernier;
-    for (int i = 0; i < ui->len; i++) {
-        int tmp_c = tmp->c -'0';
+    chiffre *tmp = ui.dernier;
+    for (int i = 0; i < ui.len; i++) {
+        int tmp_c = tmp->c - '0';
         int mul = (a * tmp_c) + ret;
-        ret = mul/10;
-        char num = (char)((mul%10) + '0');
+        ret = mul / 10;
+        char num = (char) ((mul % 10) + '0');
         p = pushBack(p, num);
 
         tmp = tmp->precedent;
     }
     if (ret >= 1) {
-        p = pushBack(p,(char)(ret+'0'));
+        p = pushBack(p, (char) (ret + '0'));
     }
     return p;
 }
