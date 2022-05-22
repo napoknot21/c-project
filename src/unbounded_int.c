@@ -256,7 +256,7 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
  * @param b struct unbounded_int
  * @return le quotient entier de la division
  */
-unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b) {
+__attribute__((unused)) unbounded_int unbounded_int_division(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);

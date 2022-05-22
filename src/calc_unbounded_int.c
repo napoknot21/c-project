@@ -46,9 +46,9 @@ static int CALL_ID = 0;
 #define MULTIPLICATION(a, b)(unbounded_int_produit(a,b))
 #define ADDITION(a, b)(unbounded_int_somme(a,b))
 #define SUBSTRACTION(a, b)(unbounded_int_difference(a,b))
-#define DIVISION(a, b)(unbounded_int_division(a, b))
+//#define DIVISION(a, b)(unbounded_int_division(a, b))
 #define EQUALS(t, a, b)(tree_add((t), (a), (b)))
-#define MODULO(a, b)((a) % (b))
+//#define MODULO(a, b)((a) % (b))
 
 #define BUFFER_SIZE 16
 #define HASHMAP_INITIAL_SIZE 11
@@ -616,7 +616,6 @@ int main(int argc, char **argv) {
     AST_free(ast);
     tree_free(storage);
     hashMap_free(map);
-    printf("MALLOC_COUNTER = %d\n");
     disconnect(&in, &out);
     if (EXIT_REQUEST == -1) exit(EXIT_FAILURE);
     exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -1216,10 +1215,10 @@ static unbounded_int op(ASN *asn, Tree *storage, unbounded_int left, unbounded_i
         case DEFAULT_OP:
         case '+':
             return ADDITION(left, right);
-        case '/':
-            return DIVISION(left, right);
-            /*case '%':
-                return MODULO(left, right);*/
+            /*case '/':
+                return DIVISION(left, right);
+                case '%':
+                    return MODULO(left, right);*/
         default:
             return asn->result;
     }
@@ -1551,9 +1550,9 @@ static unsigned short priority(const char a) {
         case '+':
         case '-':
             return 2;
-        case '/':
+            //case '/':
         case '*':
-        case '%':
+            //case '%':
             return 3;
         default:
             return 0;
@@ -1609,5 +1608,7 @@ static int str_equals(const char *s1, const char *s2) {
 }
 
 static int isAnOperator(const char s) {
-    return s == '*' || s == '/' || s == '+' || s == '-' || s == '=' || s == '%';
+    return s == '*' || s == '+' || s == '-' || s == '=';
+    //|| s == '%' || s == '/'
+
 }

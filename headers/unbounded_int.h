@@ -34,7 +34,7 @@ unbounded_int unbounded_int_difference(unbounded_int a, unbounded_int b);
 
 unbounded_int unbounded_int_produit(unbounded_int a, unbounded_int b);
 
-unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b);
+__attribute__((unused)) unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b);
 
 unbounded_int unbounded_int_pow(unbounded_int x, unbounded_int n);
 
