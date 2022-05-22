@@ -31,13 +31,17 @@ unbounded_int unbounded_int_difference(unbounded_int a, unbounded_int b);
 
 unbounded_int unbounded_int_produit(unbounded_int a, unbounded_int b);
 
+unbounded_int unbounded_int_division(unbounded_int a, unbounded_int b);
+
 static int isNum(char c);
 
 static int isAStringNum (const char *c);
 
 static int isUnboundedIntEmpty ();
 
-static int isUnboundedZero (unbounded_int ui);
+static int isUnboundedZero (unbounded_int *ui);
+
+static int isUnboundedUnity (unbounded_int *ui);
 
 static char * cleanNumber (char *str);
 
@@ -51,8 +55,6 @@ static void swap (char *x, char *y);
 
 static char * reverse (char *buffer, int i, int j);
 
-static unbounded_int * initUnboundedEmpty ();
-
 static void initCharOfUnbounded (char *e, unbounded_int i);
 
 static chiffre * initChiffre (const char c);
@@ -61,8 +63,20 @@ static unbounded_int * pushBack (unbounded_int * ui, char c);
 
 static unbounded_int * pushFront (unbounded_int *ui, const char c);
 
+static unbounded_int * deleteFirstElem (unbounded_int *ui);
+
+static unbounded_int * deleteLastElem (unbounded_int *ui);
+
 static void print_unbounded_int (unbounded_int ui);
 
 static char * cleanNumber (char *str);
 
-static unbounded_int sumPositifUnbounded (unbounded_int a, unbounded_int b);
+static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b);
+
+static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b);
+
+static int plusGrandAbs (unbounded_int a, unbounded_int b);
+
+static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui);
+
+static long long puissance (int base, int puissance);
