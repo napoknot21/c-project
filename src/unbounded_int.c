@@ -6,58 +6,13 @@
 
 #define NUM (48)
 
-static char *cleanNumber(char *str);
-
-static unbounded_int sumPositifUnbounded(unbounded_int *a, unbounded_int *b);
-
-static unbounded_int sumNegatifUnbounded(unbounded_int *a, unbounded_int *b);
-
-static int plusGrandAbs(unbounded_int a, unbounded_int b);
-
-static unbounded_int *multiplicationPourUnChiffre(char c, unbounded_int *ui);
-
-__attribute__((unused)) static long long puissance(int base, int puissance);
-
-static int isNum(char c);
-
-static int isAStringNum(const char *c);
-
-static int isUnboundedIntEmpty(unbounded_int ui);
-
-static int isUnboundedZero(unbounded_int *ui);
-
-static int isUnboundedUnity(unbounded_int *ui);
-
-
-__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int ui);
-
-static char *unbounded_int_lltoa(long long value, char *buffer, int base);
-
-__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base);
-
-static void swap(char *x, char *y);
-
-static char *reverse(char *buffer, int i, int j);
-
-//static void initCharOfUnbounded (char *e, unbounded_int i);
-
-static chiffre *initChiffre(char c);
-
-static unbounded_int *pushBack(unbounded_int *ui, char c);
-
-static unbounded_int *pushFront(unbounded_int *ui, char c);
-
-__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui);
-
-__attribute__((unused)) static unbounded_int *deleteLastElem(unbounded_int *ui);
-
 /*************Headers**************/
 
 static int isNum(char c);
 
 static int isAStringNum (const char *c);
 
-static int isUnboundedIntEmpty ();
+static int isUnboundedIntEmpty(unbounded_int ui);
 
 static int isUnboundedZero (unbounded_int *ui);
 
@@ -65,29 +20,25 @@ static int isUnboundedUnity (unbounded_int *ui);
 
 static const char * cleanNumber (const char *str);
 
-static unbounded_int * cleanUnbounded_int (unbounded_int *ui);
+__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int *ui);
 
-static char * lltoa (long long value, char *buffer, int base);
+static char *unbounded_int_lltoa(long long value, char *buffer, int base);
 
-static char * itoa (int value, char *buffer, int base);
+__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base);
 
 static void swap (char *x, char *y);
 
 static char * reverse (char *buffer, int i, int j);
 
-static chiffre * initChiffre (const char c);
+static chiffre *initChiffre(char c);
 
 static unbounded_int * pushBack (unbounded_int * ui, char c);
 
-static unbounded_int * pushFront (unbounded_int *ui, const char c);
+static unbounded_int *pushFront(unbounded_int *ui, char c);
 
-static unbounded_int * deleteFirstElem (unbounded_int *ui);
+__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui);
 
-static unbounded_int * deleteLastElem (unbounded_int *ui);
-
-static void print_unbounded_int (unbounded_int ui);
-
-//static char * cleanNumber (char *str);
+__attribute__((unused)) static unbounded_int *deleteLastElem(unbounded_int *ui);
 
 static unbounded_int sumPositifUnbounded (unbounded_int *a, unbounded_int *b);
 
@@ -97,7 +48,7 @@ static int plusGrandAbs (unbounded_int a, unbounded_int b);
 
 static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui);
 
-static long long puissance (int base, int puissance);
+__attribute__((unused)) static long long puissance(int base, int puissance);
 
 
 /**
@@ -605,8 +556,8 @@ static const char * cleanNumber (const char *str) {
  * @param ui struct à néttoyer
  * @return un pointeur vers la structure ou une nouvelle
  */
- 
-static unbounded_int * cleanUnbounded_int (unbounded_int *ui) {
+
+__attribute__((unused)) static unbounded_int *cleanUnbounded_int(unbounded_int *ui) {
     /*
     if (ui->len <= 1) return ui;
 
@@ -629,9 +580,6 @@ static unbounded_int * cleanUnbounded_int (unbounded_int *ui) {
     }
 
 
-    
-
-/*
     
     int len = ui.len;
     if (len == 1) {
@@ -704,7 +652,7 @@ static char *unbounded_int_lltoa(long long value, char *buffer, int base) {
  * @param base base de conversion
  * @return char* 
  */
-static char *unbounded_int_itoa(int value, char *buffer, int base) {
+__attribute__((unused)) static char *unbounded_int_itoa(int value, char *buffer, int base) {
     if (base < 2 || base > 32) {
         return buffer;
     }
@@ -811,7 +759,7 @@ static unbounded_int * pushBack (unbounded_int *ui, const char c) {
  * Supprime le premier élément
  * @param la structure à modifier
  */
-static unbounded_int * deleteFirstElem (unbounded_int *ui) {
+__attribute__((unused)) static unbounded_int *deleteFirstElem(unbounded_int *ui) {
     if (ui->len <= 1) return NULL;
     chiffre *tmp;
     tmp = ui->premier;
@@ -1011,15 +959,15 @@ static unbounded_int * multiplicationPourUnChiffre (char c, unbounded_int *ui) {
  *
  *
  */
-static long long puissance (int base, int puissance) {
+__attribute__((unused)) static long long puissance(int base, int puissance) {
     int res = 1;
-    int puiss = puissance/2;
+    int puiss = puissance / 2;
     for (int i = 0; i < puiss; i++) {
         res *= base;
     }
     res *= res;
-    if (puissance%2 == 0) {
-        return res; 
+    if (puissance % 2 == 0) {
+        return res;
     }
-    return res*base;
+    return res * base;
 }
