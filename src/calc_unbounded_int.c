@@ -35,13 +35,13 @@ static char *FILE_NAME = "stdin";
 /**
  * Line position of the reader in the open file.
  */
-static size_t FILE_LINE = 1;
+static int FILE_LINE = 1;
 static int MALLOC_COUNTER = 0;
 static FILE *OUT;
 static int EXIT_REQUEST = 0;
 static int CALL_ID = 0;
 
-#define pERROR(error)(fprintf(stderr, "%s in file %s in line %li\n", error_getMessage(error), FILE_NAME, FILE_LINE))
+#define pERROR(error)(fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE))
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b)(unbounded_int_produit(a,b))
@@ -903,8 +903,7 @@ static int ASN_hasFunction(ASN *asn) {
 }
 
 static Function buildCalledFunction(HashMapData data, char *buffer) {
-    Function result;
-    result.func = NULL;
+    Function result = FUNCTION_NULL;
     int dLen = (int) strlen(data.function.name);
     INCR_CALL;
     char *r = intToString(CALL_ID);
@@ -1096,8 +1095,9 @@ static int buffer_add(Buffer *buffer, const char e) {
  */
 
 static int std_print(int argc, unbounded_int *argv, char **argn) {
-    fprintf(OUT, "%s = ", argn[0]);
-    print_unbounded_int(argv[0]);
+    char *result = unbounded_int2string(argv[0]);
+    fprintf(OUT, "%s = %s \n", argn[0], result);
+    free(result);
     return 0;
 }
 
@@ -1404,9 +1404,13 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
 static Function
 function_new(char *name, RetType type, int (*function)(int, unbounded_int *, char **),
              unsigned short requestedArguments) {
-    Function f = {.name = trim(name,
-                               strlen(name)), .requested = requestedArguments, .func = function, .argc = 0, .retType = type, .argv = calloc(
-            requestedArguments + 1, sizeof(int)), .argn = malloc(requestedArguments * sizeof(char *))};
+    Function f = {.name = trim(name, strlen(name)),
+            .requested = requestedArguments,
+            .func = function,
+            .argc = 0,
+            .retType = type,
+            .argv = calloc(requestedArguments + 1, sizeof(int)),
+            .argn = malloc(requestedArguments * sizeof(char *))};
     MALLOC_COUNTER += 2;
     return f;
 }

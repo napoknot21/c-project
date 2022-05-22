@@ -22,7 +22,7 @@ unbounded_int string2unbounded_int(char *e);
 
 unbounded_int ll2unbounded_int(long long i);
 
-const char *unbounded_int2string(unbounded_int i);
+char *unbounded_int2string(unbounded_int ui);
 
 int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b);
 

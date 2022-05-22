@@ -18,7 +18,7 @@ static int isUnboundedZero (unbounded_int *ui);
 
 static int isUnboundedUnity (unbounded_int *ui);
 
-static const char * cleanNumber (const char *str);
+static char *cleanNumber(char *str);
 
 static unbounded_int cleanUnbounded_int(unbounded_int *ui);
 
@@ -92,9 +92,9 @@ unbounded_int ll2unbounded_int (long long i) {
  * @param i struct unbounded_int
  * @return char* le paramètre sous en format string
  */
-const char * unbounded_int2string (unbounded_int ui) {
+char *unbounded_int2string(unbounded_int ui) {
     if (isUnboundedIntEmpty(ui)) return NULL;
-    char *e = malloc(sizeof(char)*(ui.len+1) + 1);
+    char *e = malloc(sizeof(char) * (ui.len + 2));
     if (e == NULL) return NULL;
     int i;
     if (ui.signe == '-') {
@@ -106,6 +106,7 @@ const char * unbounded_int2string (unbounded_int ui) {
         *(e+i+j) = tmp->c;
         tmp = tmp->suivant;
     }
+    e[ui.len] = '\0';
     return cleanNumber(e);
 }
 
@@ -124,7 +125,7 @@ int unbounded_int_cmp_unbounded_int (unbounded_int a, unbounded_int b) {
     if (a_c.signe == b_c.signe) {
         if (a_c.len == b_c.len) {
             chiffre *tmp1 = a_c.premier;
-            chiffre *tmp2 = b_c.premier; 
+            chiffre *tmp2 = b_c.premier;
             for (int i = 0; i < a_c.len; i++) {
                 if (tmp1->c > tmp2->c) return 1;
                 if (tmp1->c < tmp2->c) return -1;
@@ -525,12 +526,12 @@ static int isUnboundedUnity (unbounded_int *ui) {
  * @param str le nombre passé en paramètre sous forme de string
  * @return le nombre sans 0 ou d'autres characters de plus 
  */
-static const char * cleanNumber (const char *str) {
+static char *cleanNumber(char *str) {
     size_t len = strlen(str);
     int i;
     if (*str == '-' || *str == '+') {
         if (len == 2) {
-            return (*(str+1) == '0') ? "0" : str;
+            return (*(str + 1) == '0') ? "0" : str;
         }
         i = 1;
     } else {
@@ -564,7 +565,7 @@ static const char * cleanNumber (const char *str) {
  */
 
 static unbounded_int cleanUnbounded_int (unbounded_int *ui) {
-    
+
     if (ui->len <= 1) return *ui;
     if (ui->premier->c != '0') return *ui;
     int index = 0;
@@ -669,7 +670,7 @@ static unbounded_int * pushFront (unbounded_int *ui, const char c) {
     chiffre *ch = initChiffre(c);
     ch->precedent = ui->dernier;
     ch->suivant = NULL;
-    if (ui->dernier != NULL) {
+    if (ui->dernier != NULL && ui->len != 0) {
         ui->dernier->suivant = ch;
     } else if (ui->dernier == NULL && ui->premier == NULL) {
         ui->premier = ch;
@@ -689,10 +690,10 @@ static unbounded_int * pushBack (unbounded_int *ui, const char c) {
     chiffre *ch = initChiffre(c);
     ch->precedent = NULL;
     ch->suivant = ui->premier;
-    if (ui->premier != NULL) {
+    if (ui->premier != NULL && ui->len != 0) {
         ui->premier->precedent = ch;
     } else if (ui->dernier == NULL && ui->premier == NULL) {
-       ui->dernier = ch;
+        ui->dernier = ch;
     }
     ui->premier = ch;
     ui->len++;
