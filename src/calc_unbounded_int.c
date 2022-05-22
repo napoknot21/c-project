@@ -1400,8 +1400,8 @@ function_new(char *name, RetType type, int (*function)(int, unbounded_int *, cha
 
 static void function_free(Function f) {
     free(f.name);
-    free(f.argn);
-    free(f.argv);
+    //free(f.argn);
+    //free(f.argv);
     MALLOC_COUNTER -= 3;
 }
 

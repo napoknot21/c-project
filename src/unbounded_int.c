@@ -131,20 +131,14 @@ int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
                 tmp1 = tmp1->suivant;
                 tmp2 = tmp2->suivant;
             }
-            unbounded_int_free(a_c);
-            unbounded_int_free(b_c);
             return 0;
         } else {
             if (a_c.signe == '-') return (a_c.len > b_c.len) ? -1 : 1;
             int ret = (a_c.len > b_c.len) ? 1 : -1;
-            unbounded_int_free(a_c);
-            unbounded_int_free(b_c);
             return ret;
         }
     }
     int ret = (a_c.signe == '-') ? -1 : 1;
-    unbounded_int_free(a_c);
-    unbounded_int_free(b_c);
     return ret;
 }
 
@@ -175,16 +169,12 @@ unbounded_int unbounded_int_somme(unbounded_int a_ui, unbounded_int b_ui) {
     unbounded_int b = cleanUnbounded_int(b_ui);
     if (isUnboundedZero(a) || isUnboundedZero(b)) {
         if (isUnboundedZero(a) && !isUnboundedZero(b)) {
-            unbounded_int_free(a);
             return b;
         } else {
-            unbounded_int_free(b);
             return a;
         }
     }
     unbounded_int res = (a.signe == b.signe) ? sumPositifUnbounded(a, b) : sumNegatifUnbounded(a, b);
-    unbounded_int_free(a);
-    unbounded_int_free(b);
     return res;
 }
 
@@ -202,13 +192,16 @@ unbounded_int unbounded_int_difference(unbounded_int a_ui, unbounded_int b_ui) {
     if (isUnboundedZero(a) || isUnboundedZero(b)) {
         if (isUnboundedZero(a) && isUnboundedZero(b)) return a;
         else if (isUnboundedZero(a)) {
-            if (b.signe == '-') b.signe = '+';
-            else b.signe = '-';
+            b.signe = (b.signe == '-') ? '+' : '-';
             return b;
-        } else return a;
+        } else {
+            return a;
+        }
     }
-    if ((a.signe == '+' && b.signe == '-') || (a.signe == '-' && b.signe == '+')) return sumPositifUnbounded(a, b);
-    return sumNegatifUnbounded(a, b);
+    unbounded_int res;
+    if ((a.signe == '+' && b.signe == '-') || (a.signe == '-' && b.signe == '+')) res = sumPositifUnbounded(a, b);
+    else res = sumNegatifUnbounded(a, b);
+    return res;
 }
 
 
@@ -229,8 +222,6 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
         res.premier = c;
         res.dernier = c;
         res.signe = '+';
-        unbounded_int_free(a);
-        unbounded_int_free(b);
         return res;
     }
 
@@ -253,8 +244,6 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
         res = sumPositifUnbounded(res, tmp_p);
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
-    unbounded_int_free(a);
-    unbounded_int_free(b);
     return res;
 }
 
@@ -300,6 +289,7 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
         result = unbounded_int_produit(result, n);
         n = unbounded_int_difference(n, decr);
     }
+    unbounded_int_free(decr);
     return result;
 }
 
@@ -319,16 +309,16 @@ unbounded_int unbounded_int_free(unbounded_int u) {
 /**
  * fonction main (tests)
  */
-/*int main (int argc, char *argv[]) {
-    
+int main(int argc, char *argv[]) {
+
     printf("=AUXILIAR FUNCTIONS=\n");
     //isNum() test
     printf("==ISNUM() TEST==\n");
     char a = '2';
     char b = 'm';
 
-    printf("%c => is a a number ? %s\n",a, isNum(a) ? "True" : "False");
-    printf("%c => is a a number ? %s\n",b, isNum(b) ? "True" : "False");
+    printf("%c => is a a number ? %s\n", a, isNum(a) ? "True" : "False");
+    printf("%c => is a a number ? %s\n", b, isNum(b) ? "True" : "False");
 
     printf("===========\n");
     printf("==ISASTRINGNUM() TEST==\n");
@@ -482,7 +472,7 @@ unbounded_int unbounded_int_free(unbounded_int u) {
 
 
     return 0;
-}*/
+}
 
 
 
@@ -589,7 +579,7 @@ static char *cleanNumber(char *str) {
 
 /**
  * Fonction qui permet de "nettoyer" une structure unbounded_int
- * @param ui struct à néttoyer
+ * @param ui struct à nettoyer
  * @return un pointeur vers la structure ou une nouvelle
  */
 
