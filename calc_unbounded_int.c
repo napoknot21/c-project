@@ -1073,9 +1073,9 @@ static int std_print(int argc, unbounded_int *argv, char **argn) {
     char *result = unbounded_int2string(argv[0]);
     fprintf(OUT, "%s = %s \n", argn[0], result);
     argv[argc] = UNBOUNDED_INT_ERROR;
-    free(result);
-    unbounded_int_free(argv[0]);
-    free(argn[0]);
+    //free(result);
+    //unbounded_int_free(argv[0]);
+    //free(argn[0]);
     return 0;
 }
 
@@ -1087,8 +1087,8 @@ static int std_pow(int argc, unbounded_int *argv, char **argn) {
 
 static int std_abs(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_abs(argv[0]);
-    free(argn[0]);
-    unbounded_int_free(argv[0]);
+    //free(argn[0]);
+    //unbounded_int_free(argv[0]);
     return 1;
 }
 
@@ -1100,8 +1100,8 @@ static int std_exit(int argc, unbounded_int *argv, char **argn) {
 
 static int std_fact(int argc, unbounded_int *argv, char **argn) {
     argv[argc] = unbounded_int_fact(argv[0]);
-    unbounded_int_free(argv[0]);
-    free(argn[0]);
+    //(argv[0]);
+    //free(argn[0]);
     return 1;
 }
 
@@ -1195,8 +1195,8 @@ static ASN *ASN_free(ASN *n) {
     if (n != NULL) {
         ASN_free(n->right);
         ASN_free(n->left);
-        unbounded_int_free(n->result);
-        free(n);
+        //unbounded_int_free(n->result);
+        //free(n);
     }
     return n = NULL;
 }
@@ -1347,8 +1347,8 @@ static void node_free(Node *n) {
     node_free(n->left);
     node_free(n->middle);
     node_free(n->right);
-    unbounded_int_free(n->data);
-    free(n);
+    //unbounded_int_free(n->data);
+    //free(n);
 }
 
 /* #####################################################################################################################
@@ -1388,8 +1388,8 @@ function_new(char *name, RetType type, int (*function)(int, unbounded_int *, cha
 }
 
 static void function_free(Function f) {
-    free(f.argv);
-    free(f.argn);
+    //free(f.argv);
+    //free(f.argn);
     free(f.name);
 }
 
@@ -1578,6 +1578,7 @@ static char *trim(const char *s, size_t len) {
         return NULL;
     }
     strncpy(ret, s, size);
+    ret [size] = '\0';
     return ret;
 }
 

@@ -152,7 +152,7 @@ int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
 int unbounded_int_cmp_ll(unbounded_int a, long long b) {
     unbounded_int num = ll2unbounded_int(b);
     int bool = unbounded_int_cmp_unbounded_int(a, num);
-    unbounded_int_free(num);
+    //unbounded_int_free(num);
     return bool;
 }
 
@@ -241,8 +241,8 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
             tmp_p = pushFront(tmp_p, '0');
         }
         unbounded_int s = sumPositifUnbounded(res, tmp_p);
-        unbounded_int_free(tmp_p);
-        unbounded_int_free(res);
+        //unbounded_int_free(tmp_p);
+        //unbounded_int_free(res);
         res = s;
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
@@ -344,16 +344,16 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
     unbounded_int result = ll2unbounded_int(1);
     while (unbounded_int_cmp_ll(n, 0) > 0) {
         unbounded_int tmp = unbounded_int_produit(result, n);
-        unbounded_int_free(result);
+        //unbounded_int_free(result);
         result = tmp;
         tmp = unbounded_int_difference(n, decr);
-        unbounded_int_free(n);
+        //unbounded_int_free(n);
         n = tmp;
     }
-    unbounded_int_free(decr);
+    //unbounded_int_free(decr);
     return result;
 }
-
+ /**
 unbounded_int unbounded_int_free(unbounded_int u) {
     chiffre *c = u.premier;
     if (c == NULL) return UNBOUNDED_INT_ERROR;
@@ -367,7 +367,7 @@ unbounded_int unbounded_int_free(unbounded_int u) {
     free(c);
     return UNBOUNDED_INT_ERROR;
 }
-
+*/
 /**
  * vérifie si le code ASCII du char est un nombre (entre 48 et 57)
  * @param c char à tester
