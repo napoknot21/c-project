@@ -1149,7 +1149,7 @@ static ASN *ASN_new(Tree *t, Token token) {
 }
 
 static int AST_add(AST *ast, Tree *storage, Token token) {
-    if (ast == NULL || storage == NULL || isspace(token.data[0]) || token.type == VOID) {
+    if (ast == NULL || storage == NULL || isspace((unsigned )token.data[0]) || token.type == VOID) {
         pERROR(INTERNAL);
         return 0;
     }
@@ -1560,19 +1560,19 @@ static unsigned short priority(const char a) {
 static char *trim(const char *s, size_t len) {
     int start = 0, end = 0;
     for (int i = 0; i < (int) len; i++) {
-        if (!isspace(s[i])) {
+        if (!isspace((unsigned) s[i])) {
             start = i;
             break;
         }
     }
     for (int i = (int) len; i >= 0; i--) {
-        if (!isspace(s[i])) {
+        if (!isspace((unsigned) s[i])) {
             end = i;
             break;
         }
     }
     int size = end - start;
-    char *ret = malloc((size + 1) * sizeof(char));
+    char *ret = malloc((size) * sizeof(char) + 1);
     if (ret == NULL) {
         printErr("");
         return NULL;
@@ -1583,11 +1583,20 @@ static char *trim(const char *s, size_t len) {
 }
 
 static int isSignOrNumber(char c) {
-    return c == '+' || c == '-' || isdigit(c);
+    return c == '+' || c == '-' || isdigit((unsigned)c);
+}
+
+static int nDigits(unsigned int i) {
+    int n = 1;
+    while (i > 9) {
+        n++;
+        i /= 10;
+    }
+    return n;
 }
 
 static char *intToString(int n) {
-    int len = snprintf(NULL, 0, "%d", n);
+    int len = nDigits(abs(n));
     char *s = malloc(len * sizeof(char));
     if (s == NULL) return NULL;
     snprintf(s, len + 1, "%d", n);

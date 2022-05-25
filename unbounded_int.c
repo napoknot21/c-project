@@ -101,8 +101,8 @@ char *unbounded_int2string(unbounded_int ui) {
         i = 1;
     } else i = 0;
     chiffre *tmp = ui.premier;
-    for (int j = 0; j < ui.len; j++) {
-        *(e + i + j) = tmp->c;
+    for (; i < ui.len; i++) {
+        *(e + i) = tmp->c;
         tmp = tmp->suivant;
     }
     e[ui.len] = '\0';
@@ -434,19 +434,30 @@ static int isUnboundedUnity(unbounded_int ui) {
 
 
 /**
- * Fonction qui permet de "nettoyer" un nombre
+ * Fonction qui permet de "nettoyer" un nombre.
+ * Free l'argument, s'il y a une copie.
  * @param str le nombre passé en paramètre sous forme de string
  * @return le nombre sans 0 ou d'autres characters de plus 
  */
-static char *cleanNumber(char *str) {
+static char *cleanNumber(char *str) { //todo: Retravailler le return de cette fonction pour qu'il soit homogene.
     size_t len = strlen(str);
+    char * zero = malloc(sizeof (char[2]));
+    zero[0] = '0';
+    zero [1] = '\0';
     int i;
     if (*str == '-' || *str == '+') {
         if (len == 2) {
-            return (*(str + 1) == '0') ? "0" : str;
+           if (*(str + 1) == '0'){
+               return zero;
+           }
+           else {
+               free(zero);
+              return str;
+           }
         }
         i = 1;
     } else {
+        free(zero);
         if (len == 1) return str;
         i = 0;
     }
@@ -457,15 +468,20 @@ static char *cleanNumber(char *str) {
         }
         index++;
     }
-    if (index == i) return str;
-    if (index == len) return "0";
+    if (index == i) {
+        free(zero);
+        return str;
+    }
+    if (index == len) return zero;
+    free(zero);
     int newLen = len - index + 1;
-    char *newStr = malloc(sizeof(char) * newLen + 1);
+    char *newStr = malloc(sizeof(char) * (newLen + 1));
     if (i == 1) newStr[0] = str[0];
     for (size_t j = index; j < len; j++) {
         newStr[i] = str[j];
         i++;
     }
+    newStr[newLen] = '\0';
     return newStr;
 }
 
@@ -722,7 +738,7 @@ static unbounded_int sumPositifUnbounded(unbounded_int a, unbounded_int b) {
  *
  */
 static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
-    int plusgrand = plusGrandAbs(a, b);
+    int plusgrand = unbounded_int_cmp_unbounded_int(a,b);
     unbounded_int res = UNBOUNDED_INT_ERROR;
     if (plusgrand == 0) {
         res.signe = '+';
@@ -736,7 +752,7 @@ static unbounded_int sumNegatifUnbounded(unbounded_int a, unbounded_int b) {
     chiffre *tmp_b;
     if (plusgrand == -1) {
 
-        res.signe = b.signe;
+        res.signe = (b.signe == '+')? '-' : '+';
         tmp_a = b.dernier;
         tmp_b = a.dernier;
     } else {
