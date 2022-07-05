@@ -21,6 +21,6 @@ enum Error {
  * @return The error's message.
  */
 char *error_getMessage(enum Error error);
-void perror_file(enum Error error, char FILE_NAME, int FILE_LINE);
+void perror_file(enum Error error, char* FILE_NAME, int FILE_LINE);
 void perror_src(char * message);
 #endif //C_PROJECT_EXECERROR_H
