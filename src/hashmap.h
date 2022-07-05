@@ -1,47 +1,39 @@
 //
 // Created by Kevin on 05/07/2022.
 //
-#include <stdlib.h>
+
 #ifndef C_PROJECT_HASHMAP_H
 #define C_PROJECT_HASHMAP_H
-#define DUMMY_DATA(h) ((HashMapData) {.hash = (h), .function = FUNCTION_NULL, .type=DUMMY})
-#define NONE_DATA ((HashMapData) {.hash = 0,.function = FUNCTION_NULL, .type=NONE})
-
+#include <stdlib.h>
 typedef struct HashMap HashMap;
 typedef struct HashMapData HashMapData;
+enum Type {
+    NONE, DUMMY, FULL
+};
 
 struct HashMapData {
-    long long hash;
-    Function function;
-    FuncType type;
+    size_t mHash;
+    char * mName;
+    void* mData;
+    enum Type mType;
 };
 struct HashMap {
-    HashMapData *data;
-    size_t capacity;
-    size_t keyNumber;
-    size_t dummyNumber;
-    float minRatio, maxRatio;
+    HashMapData *mData;
+    size_t mCapacity;
+    size_t mKeyNumber;
+    size_t mDummyNumber;
+    float mMinRatio, mMaxRatio;
+    int (*cmp) (const char*, const void*);
+    void (*mFree)(void*);
 };
 
-static void resize(HashMap *map, size_t new);
+HashMapData hashMap_get(HashMap *map, char *name);
 
-static HashMapData hashMap_get(HashMap *map, const char *name);
+HashMap *HashMap_new();
 
-static HashMap *HashMap_new();
+int hashMap_put(HashMap *map, char* name, void* value);
 
-static void hashMapData_free(HashMapData data);
+void hashMap_free(HashMap *map);
 
-static long long hash(const char *name);
-
-static long long hash1(double capacity, long long hash);
-
-static long long hash2(long long hash);
-
-static long long find(HashMap *map, const char *name, int flag);
-
-static int hashMap_put(HashMap *map, Function function, FuncType type);
-
-static void hashMap_free(HashMap *map);
-
-static int HashMap_remove(HashMap *map, char *name);
+int HashMap_remove(HashMap *map, char *name);
 #endif //C_PROJECT_HASHMAP_H

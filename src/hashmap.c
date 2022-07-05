@@ -1,148 +1,152 @@
 //
 // Created by Kevin on 05/07/2022.
 //
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <limits.h>
+#include "execerror.h"
 #include "hashmap.h"
+
+#define DUMMY_DATA(h) ((HashMapData) {.mName = "", .mHash = (h), .mData = NULL, .mType = DUMMY})
+#define NONE_DATA ((HashMapData) {.mName = "", .mHash = 0, .mData = NULL, .mType = NONE})
 #define HASHMAP_INITIAL_SIZE 11
 #define HASHMAP_MIN_RATIO ((float)0.25)
 #define HASHMAP_MAX_RATIO ((float)0.75)
 #define HASH_A ((sqrt(5)-1)/2)
 
+static void resize(HashMap *map, size_t newSize);
 
-static long long hash(const char *name) {
-    double value = 0;
-    double len = (double) strlen(name);
-    for (int i = 0; i < len; i++) {
-        value += (int) name[i] * (pow(31, len - i));
+static size_t hash(const char *name) {
+    size_t value = 0;
+    size_t len = strlen(name);
+    for (size_t i = 0; i < len; i++) {
+        value += (size_t) name[i] * (pow(31, len - i));
     }
-    return (long long) value;
+    return (size_t) value;
 }
 
-static long long hash1(double capacity, long long hash) {
-    return (long long) (((double) (hash) / HASH_A) * capacity);
+static size_t hash1(double capacity, size_t hash) {
+    return (size_t) (((double) (hash) / HASH_A) * capacity);
 }
 
-static long long hash2(long long hash) {
-    return (long long) (2 * hash + 1) % LLONG_MAX;
+static size_t hash2(size_t hash) {
+    return (size_t) (2 * hash + 1) % LLONG_MAX;
 }
 
-static HashMap *HashMap_new() {
+
+HashMap *HashMap_new() {
     HashMap *map = malloc(sizeof(HashMap));
     if (map == NULL) {
-        printErr("");
+        perror_src("");
         return NULL;
     }
-    map->minRatio = HASHMAP_MIN_RATIO;
-    map->maxRatio = HASHMAP_MAX_RATIO;
-    map->capacity = HASHMAP_INITIAL_SIZE;
-    map->data = malloc(sizeof(HashMapData) * map->capacity);
-    for (int i = 0; i < map->capacity; i++) {
-        map->data[i] = NONE_DATA;
+    map->mMinRatio = HASHMAP_MIN_RATIO;
+    map->mMaxRatio = HASHMAP_MAX_RATIO;
+    map->mCapacity = HASHMAP_INITIAL_SIZE;
+    map->mData = malloc(sizeof(HashMapData) * map->mCapacity);
+    for (int i = 0; i < map->mCapacity; i++) {
+        map->mData[i] = NONE_DATA;
     }
-    if (map->data == NULL) {
-        printErr("");
+    if (map->mData == NULL) {
+        perror_src("");
         free(map);
         return NULL;
     }
-    map->keyNumber = 0;
-    map->dummyNumber = 0;
+    map->mKeyNumber = 0;
+    map->mDummyNumber = 0;
     return map;
 }
 
-static long long find(HashMap *map, const char *name, int flag) {
-    long long hashVal = hash(name);
-    long long ind = hash1((double) map->capacity, hashVal) % (long long) map->capacity;
-    long long step = hash2(hashVal);
-    long long dummy = -1;
-    for (int i = 0; i < map->capacity; i++) {
-        if (map->data[ind].type == NONE) {
+static size_t find(HashMap *map, char *name, int flag) {
+    size_t hashVal = hash(name);
+    size_t ind = hash1((double) map->mCapacity, hashVal) % (size_t) map->mCapacity;
+    size_t step = hash2(hashVal);
+    size_t dummy = -1;
+    for (int i = 0; i < map->mCapacity; i++) {
+        if (map->mData[ind].mType == NONE) {
             if (dummy == -1) dummy = ind;
             break;
         }
-        if (map->data[ind].type == DUMMY) {
+        if (map->mData[ind].mType == DUMMY) {
             if (dummy == -1) dummy = ind;
-        } else if (map->data[ind].hash == hashVal && str_equals(map->data[ind].function.name, name)) {
+        } else if (map->mData[ind].mHash == hashVal && map->cmp(name, map->mData[ind].mData)) {
             return ind;
         }
-        ind = (ind + step) % (long long) map->capacity;
+        ind = (ind + step) % (size_t) map->mCapacity;
     }
     return (flag) ? dummy : -1;
 }
 
-static int hashMap_put(HashMap *map, Function function, FuncType type) {
-    long long hashVal = hash(function.name);
-    long long empty = find(map, function.name, 1);
+int hashMap_put(HashMap *map, char *name, void *value) {
+    long long hashVal = hash(name);
+    long long empty = find(map, name, 1);
     if (empty == -1) return 0;
 
-    HashMapData new = {.function = function, .type = type, .hash = hashVal};
-    if (map->data[empty].type == DUMMY) {
-        map->dummyNumber--;
-        map->keyNumber++;
+    HashMapData new = {.mName = name, .mData = value, .mType = FULL, .mHash = hashVal};
+    if (map->mData[empty].mType == DUMMY) {
+        map->mDummyNumber--;
+        map->mKeyNumber++;
     }
-    if (map->data[empty].type == NONE) {
-        map->keyNumber++;
+    if (map->mData[empty].mType == NONE) {
+        map->mKeyNumber++;
     }
-    map->data[empty] = new;
-    if (map->dummyNumber + map->keyNumber >= (long long) ((double) map->capacity * map->maxRatio)) {
-        int ratio = (map->dummyNumber < map->keyNumber) ? 2 : 1;
-        resize(map, ratio * map->capacity);
+    map->mData[empty] = new;
+    if (map->mDummyNumber + map->mKeyNumber >= (size_t) ((double) map->mCapacity * map->mMaxRatio)) {
+        int ratio = (map->mDummyNumber < map->mKeyNumber) ? 2 : 1;
+        resize(map, ratio * map->mCapacity);
     }
     return 1;
 }
 
-static HashMapData hashMap_get(HashMap *map, const char *name) {
+HashMapData hashMap_get(HashMap *map, char *name) {
     long long pos = find(map, name, 0);
     if (pos == -1) return NONE_DATA;
-    return map->data[pos];
+    return map->mData[pos];
 }
 
 static void resize(HashMap *map, size_t newSize) {
-    HashMapData *old = map->data;
-    size_t oldLen = map->capacity;
+    HashMapData *old = map->mData;
+    size_t oldLen = map->mCapacity;
     HashMapData *new = malloc(newSize * sizeof(HashMapData));
     for (int i = 0; i < newSize; i++) new[i] = NONE_DATA;
     if (new == NULL) {
-        printErr("");
+        perror_src("");
         return;
     }
-    map->data = new;
-    map->capacity = newSize;
-    map->keyNumber = 0;
-    map->dummyNumber = 0;
+    map->mData = new;
+    map->mCapacity = newSize;
+    map->mKeyNumber = 0;
+    map->mDummyNumber = 0;
     for (int i = 0; i < oldLen; i++) {
-        if (old[i].type == NONE || old[i].type == DUMMY) continue;
-        else hashMap_put(map, old[i].function, old[i].type);
+        if (old[i].mType == NONE || old[i].mType == DUMMY) continue;
+        else hashMap_put(map, old[i].mName, old[i].mData);
     }
     free(old);
 }
 
-static void hashMapData_free(HashMapData data) {
-    if (data.type == NONE || data.type == DUMMY) return;
-    function_free(data.function);
-}
-
-static int HashMap_remove(HashMap *map, char *name) {
+int HashMap_remove(HashMap *map, char *name) {
     long long pos = find(map, name, 0);
     if (pos == -1) return -1;
-    HashMapData del = map->data[pos];
-    map->data[pos] = DUMMY_DATA(del.hash);
-    hashMapData_free(del);
-    map->dummyNumber++;
-    map->keyNumber--;
-    if (map->dummyNumber + map->keyNumber <= (long long) ((double) map->capacity * map->minRatio)) {
-        resize(map, (map->capacity / 2));
+    HashMapData del = map->mData[pos];
+    map->mData[pos] = DUMMY_DATA(del.mHash);
+    if (del.mType == FULL) map->mFree(&del);
+    map->mDummyNumber++;
+    map->mKeyNumber--;
+    if (map->mDummyNumber + map->mKeyNumber <= (size_t) ((double) map->mCapacity * map->mMinRatio)) {
+        resize(map, (map->mCapacity / 2));
     }
     return 1;
 }
 
-static void hashMap_free(HashMap *map) {
+void hashMap_free(HashMap *map) {
     if (map == NULL) return;
-    for (int i = 0; i < map->capacity; i++) {
-        hashMapData_free(map->data[i]);
+    for (size_t i = 0; i < map->mCapacity; i++) {
+        HashMapData data = map->mData[i];
+        if (data.mType == FULL) {
+            map->mFree(&data);
+        }
     }
     free(map);
+    map = NULL;
 }
-
-
-
-
-
