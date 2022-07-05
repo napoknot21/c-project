@@ -18,6 +18,8 @@ typedef struct {
 /**
  * Prototypes de fonctions (headers)
  */
+
+unbounded_int unbounded_int_free(unbounded_int u);
 unbounded_int string2unbounded_int(char *e);
 
 unbounded_int ll2unbounded_int(long long i);
@@ -42,7 +44,7 @@ unbounded_int unbounded_int_abs(unbounded_int x);
 
 unbounded_int unbounded_int_fact(unbounded_int n);
 
-unbounded_int unbounded_int_free(unbounded_int u);
+
 
 void print_unbounded_int(unbounded_int ui);
 

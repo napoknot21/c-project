@@ -48,6 +48,8 @@ static unbounded_int multiplicationPourUnChiffre(char c, unbounded_int ui);
 
 __attribute__((unused)) static long long puissance(int base, int puissance);
 
+static unbounded_int unbounded_int_cpy (unbounded_int u);
+
 
 /**
  * Convertis un string en type unbounded_int
@@ -152,7 +154,7 @@ int unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {
 int unbounded_int_cmp_ll(unbounded_int a, long long b) {
     unbounded_int num = ll2unbounded_int(b);
     int bool = unbounded_int_cmp_unbounded_int(a, num);
-    //unbounded_int_free(num);
+    unbounded_int_free(num);
     return bool;
 }
 
@@ -190,12 +192,13 @@ unbounded_int unbounded_int_difference(unbounded_int a_ui, unbounded_int b_ui) {
     unbounded_int a = cleanUnbounded_int(a_ui);
     unbounded_int b = cleanUnbounded_int(b_ui);
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
-        if (isUnboundedZero(&a) && isUnboundedZero(&b)) return a;
+        if (isUnboundedZero(&a) && isUnboundedZero(&b)) return unbounded_int_cpy(a);
         else if (isUnboundedZero(&a)) {
-            b.signe = (b.signe == '-') ? '+' : '-';
-            return b;
+            unbounded_int res = unbounded_int_cpy(b);
+            res.signe = (b.signe == '-') ? '+' : '-';
+            return res;
         } else {
-            return a;
+            return unbounded_int_cpy(a);
         }
     }
     unbounded_int res;
@@ -226,29 +229,40 @@ unbounded_int unbounded_int_produit(unbounded_int a_ui, unbounded_int b_ui) {
     }
 
     if (isUnboundedUnity(a) || isUnboundedUnity(b)) {
-        if (isUnboundedUnity(a) && !isUnboundedUnity(b)) return b;
-        else return a;
+        if (isUnboundedUnity(a) && !isUnboundedUnity(b)) return unbounded_int_cpy(b);
+        else return unbounded_int_cpy(a);
     }
 
-    chiffre *tmp = a.dernier;
+    chiffre tmp = *a.dernier;
 
-    res = multiplicationPourUnChiffre(tmp->c, b);
+    res = multiplicationPourUnChiffre(tmp.c, b);
     for (int i = 1; i < a.len; i++) {
-        tmp = tmp->precedent;
-        unbounded_int tmp_p = multiplicationPourUnChiffre(tmp->c, b);
+        tmp = *tmp.precedent;
+        unbounded_int tmp_p = multiplicationPourUnChiffre(tmp.c, b);
 
         for (int j = 0; j < i; j++) {
             tmp_p = pushFront(tmp_p, '0');
         }
         unbounded_int s = sumPositifUnbounded(res, tmp_p);
-        //unbounded_int_free(tmp_p);
-        //unbounded_int_free(res);
+        unbounded_int_free(tmp_p);
+        unbounded_int_free(res);
         res = s;
     }
     res.signe = (a.signe == b.signe) ? '+' : '-';
     return res;
 }
 
+
+static unbounded_int unbounded_int_cpy (unbounded_int u) {
+    unbounded_int res = UNBOUNDED_INT_ERROR;
+    res.signe = u.signe;
+    chiffre *c = u.premier;
+    while (c != NULL) {
+        res = pushBack(res,c->c);
+        c = c->suivant;
+    }
+    return res;
+}
 
 /**
  * fais la division de deux structures unbounded-int
@@ -344,16 +358,16 @@ unbounded_int unbounded_int_fact(unbounded_int n) {
     unbounded_int result = ll2unbounded_int(1);
     while (unbounded_int_cmp_ll(n, 0) > 0) {
         unbounded_int tmp = unbounded_int_produit(result, n);
-        //unbounded_int_free(result);
+        unbounded_int_free(result);
         result = tmp;
         tmp = unbounded_int_difference(n, decr);
-        //unbounded_int_free(n);
+        unbounded_int_free(n);
         n = tmp;
     }
-    //unbounded_int_free(decr);
+    unbounded_int_free(decr);
     return result;
 }
- /**
+
 unbounded_int unbounded_int_free(unbounded_int u) {
     chiffre *c = u.premier;
     if (c == NULL) return UNBOUNDED_INT_ERROR;
@@ -367,7 +381,6 @@ unbounded_int unbounded_int_free(unbounded_int u) {
     free(c);
     return UNBOUNDED_INT_ERROR;
 }
-*/
 /**
  * vérifie si le code ASCII du char est un nombre (entre 48 et 57)
  * @param c char à tester
@@ -457,8 +470,11 @@ static char *cleanNumber(char *str) { //todo: Retravailler le return de cette fo
         }
         i = 1;
     } else {
-        free(zero);
-        if (len == 1) return str;
+
+        if (len == 1) {
+            free(zero);
+            return str;
+        }
         i = 0;
     }
     int index = i;
@@ -514,6 +530,7 @@ static unbounded_int cleanUnbounded_int(unbounded_int ui) {
     for (int i = 0; i < index; i++) {
         ui = deleteFirstElem(ui);
     }
+
     return ui;
 
 }
@@ -824,6 +841,7 @@ static unbounded_int multiplicationPourUnChiffre(char c, unbounded_int ui) {
     if (ret >= 1) {
         p = pushBack(p, (char) (ret + '0'));
     }
+    p.signe = ui.signe;
     return p;
 }
 

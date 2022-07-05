@@ -1003,7 +1003,7 @@ static Token token_new(char *s, size_t len, enum TokenType type) {
 
 static void token_free(Token t) {
     if (t.type == FUNCTION) return;
-    free(t.data);
+    //free(t.data);
 }
 
 
@@ -1196,7 +1196,7 @@ static ASN *ASN_free(ASN *n) {
         ASN_free(n->right);
         ASN_free(n->left);
         //unbounded_int_free(n->result);
-        //free(n);
+        free(n);
     }
     return n = NULL;
 }
