@@ -4,13 +4,14 @@
 
 #ifndef C_PROJECT_EXECERROR_H
 #define C_PROJECT_EXECERROR_H
+#include <stdio.h>
 
-#define pERROR(error)(fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE))
+#define pERROR(error)()
 #define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 /**
  * Parser and lexer errors.
  */
-enum ERROR {
+enum Error {
     INVALID_OPERATOR, INVALID_SYNTAX, MISSING_BLANK, UNKNOWN_CHARACTER, INTERNAL, TOO_MANY_ARGUMENTS, MISSING_ARGUMENTS
 };
 
@@ -19,5 +20,7 @@ enum ERROR {
  * @param error The error's code.
  * @return The error's message.
  */
-static char *error_getMessage(enum ERROR error);
+char *error_getMessage(enum Error error);
+void perror_file(enum Error error, char FILE_NAME, int FILE_LINE);
+void perror_src(char * message);
 #endif //C_PROJECT_EXECERROR_H

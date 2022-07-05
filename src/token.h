@@ -2,9 +2,9 @@
 // Created by Kevin on 05/07/2022.
 //
 
-#include <stdlib.h>
 #ifndef C_PROJECT_TOKEN_H
 #define C_PROJECT_TOKEN_H
+#include <stdlib.h>
 /**
 * Token types.
 */

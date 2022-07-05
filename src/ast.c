@@ -2,7 +2,18 @@
 // Created by Kevin on 05/07/2022.
 //
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
 #include "ast.h"
+#include "execerror.h"
+#include "unbounded_int.h"
+#include "token.h"
+#include "function.h"
+#include "hashmap.h"
+
+
 static AST *AST_new() {
     AST *tree = malloc(sizeof(AST));
     if (tree == NULL) return NULL;
@@ -10,7 +21,7 @@ static AST *AST_new() {
     return tree;
 }
 
-static ASN *ASN_new(Tree *t, Token token) {
+static ASN *ASN_new(unbounded_int value, Token token) {
     ASN *node = malloc(sizeof(ASN));
     if (node == NULL) return NULL;
     switch (token.type) {
@@ -23,10 +34,9 @@ static ASN *ASN_new(Tree *t, Token token) {
             node->result = string2unbounded_int(token.data);
             break;
         case VAR:
-            node->result = tree_getValue(t, token.data);
+            node->result = value;
             node->token = token;
             break;
-            node->token = token;
         case FUNCTION:
             node->result = ll2unbounded_int(0);
 
@@ -41,12 +51,12 @@ static ASN *ASN_new(Tree *t, Token token) {
     return node;
 }
 
-static int AST_add(AST *ast, Tree *storage, Token token) {
-    if (ast == NULL || storage == NULL || isspace((unsigned )token.data[0]) || token.type == VOID) {
-        pERROR(INTERNAL);
+static int AST_add(AST *ast, unbounded_int value, Token token) {
+    if (ast == NULL || storage == NULL || isspace((unsigned) token.data[0]) || token.type == VOID) {
+        perror_file(INTERNAL);
         return 0;
     }
-    return ASN_add(storage, &ast->root, token);
+    return ASN_add(value, &ast->root, token);
 }
 
 static int ASN_add(Tree *storage, ASN **asn, Token token) {

@@ -1,13 +1,6 @@
 //
 // Created by Kevin on 05/07/2022.
 //
-#include <stdlib.h>
-#include "unbounded_int.h"
-#include "token.h"
-#include "execerror.h"
-#include "lib.h"
-#include "string.h"
-#include "hashmap.h"
 #ifndef C_PROJECT_AST_H
 #define C_PROJECT_AST_H
 #define DEFAULT_OP '\0'

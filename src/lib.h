@@ -1,10 +1,10 @@
 //
 // Created by Kevin on 05/07/2022.
 //
-#include <stdlib.h>
 
 #ifndef C_PROJECT_LIB_H
 #define C_PROJECT_LIB_H
+#include <stdlib.h>
 /**
  * Indicate if the char given in argument is an operator
  * @param s The char which will be tested.

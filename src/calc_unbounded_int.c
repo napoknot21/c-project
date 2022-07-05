@@ -12,14 +12,14 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "unbounded_int.h"
-#include "lib.h"
-#include "hashmap.h"
-#include "execerror.h"
-#include "function.h"
-#include "token.h"
-#include "ast.h"
-#include "buffer.h"
+#include "library/unbounded_int.h"
+#include "library/lib.h"
+#include "library/hashmap.h"
+#include "library/execerror.h"
+#include "library/function.h"
+#include "library/token.h"
+#include "library/ast.h"
+#include "library/buffer.h"
 
 /**
  * Name of the open file.

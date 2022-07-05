@@ -1,11 +1,11 @@
 //
 // Created by Kevin on 05/07/2022.
 //
+#ifndef C_PROJECT_FUNCTION_H
+#define C_PROJECT_FUNCTION_H
 #include "lib.h"
 #include "unbounded_int.h"
 #include <string.h>
-#ifndef C_PROJECT_FUNCTION_H
-#define C_PROJECT_FUNCTION_H
 typedef enum FuncType {
     STD, DUMMY, NONE, CALL
 } FuncType;
