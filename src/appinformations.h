@@ -1,0 +1,10 @@
+//
+// Created by Kevin on 06/07/2022.
+//
+
+#ifndef C_PROJECT_APPINFORMATIONS_H
+#define C_PROJECT_APPINFORMATIONS_H
+int EXIT_REQUEST = 0;
+int FILE_LINE = 1;
+char *FILE_NAME = "stdin";
+#endif //C_PROJECT_APPINFORMATIONS_H

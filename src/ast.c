@@ -52,7 +52,7 @@ static ASN *ASN_new(unbounded_int value, Token token) {
 }
 
 static int AST_add(AST *ast, unbounded_int value, Token token) {
-    if (ast == NULL || storage == NULL || isspace((unsigned) token.data[0]) || token.type == VOID) {
+    if (ast == NULL || isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
         perror_file(INTERNAL);
         return 0;
     }

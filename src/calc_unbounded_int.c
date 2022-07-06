@@ -20,17 +20,18 @@
 #include "token.h"
 #include "ast.h"
 #include "buffer.h"
+#include "appinformations.h"
 
 /**
  * Name of the open file.
  */
-static char *FILE_NAME = "stdin";
+
 /**
  * Line position of the reader in the open file.
  */
-static int FILE_LINE = 1;
+
 static FILE *OUT;
-static int EXIT_REQUEST = 0;
+
 static int CALL_ID = 0;
 
 #define BUFFER_SIZE 16

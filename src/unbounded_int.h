@@ -44,7 +44,7 @@ unbounded_int unbounded_int_abs(unbounded_int x);
 
 unbounded_int unbounded_int_fact(unbounded_int n);
 
-
+int isError(unbounded_int i);
 
 void print_unbounded_int(unbounded_int ui);
 

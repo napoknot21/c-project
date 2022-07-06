@@ -863,3 +863,7 @@ __attribute__((unused)) static long long puissance(int base, int puissance) {
     }
     return res * base;
 }
+
+int isError(unbounded_int i) {
+    return i.signe == UNBOUNDED_INT_ERROR.signe;
+}
