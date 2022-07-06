@@ -1,0 +1,208 @@
+
+#include <stdio.h>
+#include "unbounded_int.h"
+
+static int check_unbounded_int_form(char* src, unbounded_int result) {
+	assert(strlen(src) == result.mLength);
+	Number current = result.mFirst;
+	for (size_t i = 0; i < result.len; i++) {
+		assert(current.mVal == strPos[i])
+	}
+}
+unbounded_int test_string2unbounded_int(char* e) {
+	printf("########## TEST STRING2UNBOUNDED_INT ##########\n");
+	char* strPos = "1123534876543";
+	unbounded_int uPos = string2unbounded_int(strPos);
+	check_unbounded_int_form(strPos, uPos);
+	unbounded_int_free(uPos);
+	char* strAdd = "+936419645";
+	unbounded_int uAdd = string2unbounded_int(strAdd);
+	check_unbounded_int_form(&strAdd[1], uAdd);
+	unbounded_int_free(uAdd);
+	printf("\n\n");
+}
+
+unbounded_int test_ll2unbounded_int(long long i) {
+	printf("########## TEST LL2UNBOUNDED_INT ##########\n");
+	char* strPos = "1123534876543";
+	long long llPos = 1123534876543;
+	unbounded_int uPos = ll2unbounded_int(llPos);
+	check_unbounded_int_form(strPos, uPos);
+	unbounded_int_free(uPos);
+	char* strAdd = "936419645";
+	long long llAdd = +936419645;
+	unbounded_int uAdd = ll2unbounded_int(llAdd);
+	check_unbounded_int_form(strAdd, uAdd);
+	unbounded_int_free(uAdd);
+	printf("\n\n");
+}
+
+char* test_unbounded_int2string(unbounded_int ui) {
+	//todo: Construction d'un unbounded_int (positif, negetif, bug ? et comparaison)
+}
+
+int test_unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {}
+
+int test_unbounded_int_cmp_ll(unbounded_int a, long long b) {}
+
+
+unbounded_int test_unbounded_int_somme(unbounded_int a, unbounded_int b) {
+	printf("==UNBOUNDED_INT_SOMME() TEST==\n");
+	long long i1 = 645248;
+	long long i2 = 543124;
+	long long i3 = -46872;
+	long long i4 = -13246;
+	long long i5 = 5724;
+	long long i6 = -6578;
+	long long i7 = 0
+	unbounded_int u1 = int2unbounded_int(645248);
+	unbounded_int u2 = int2unbounded_int(543124);
+	unbounded_int u3 = int2unbounded_int(-46872);
+	unbounded_int u4 = int2unbounded_int(-13246);
+	unbounded_int u5 = int2unbounded_int(5724);
+	unbounded_int u6 = int2unbounded_int(-6578);
+	unbounded_int u7 = int2unbounded_int(0);
+
+	unbounded_int res1 = unbounded_int_somme(u1, u2);
+	unbounded_int res2 = unbounded_int_somme(u1, u7);
+	unbounded_int res3 = unbounded_int_somme(u3, u4);
+	unbounded_int res4 = unbounded_int_somme(u5, u7);
+	unbounded_int res5 = unbounded_int_somme(u5, u1);
+	unbounded_int res6 = unbounded_int_somme(u3, u5);
+	unbounded_int res7 = unbounded_int_somme(u5, u6);
+
+	int b1 = unbounded_int_cmp_ll(res1, i1 + i2);
+	int b2 = unbounded_int_cmp_ll(res2, i1 + i7);
+	int b3 = unbounded_int_cmp_ll(res3, i3 + i4);
+	int b4 = unbounded_int_cmp_ll(res4, i5 + i7);
+	int b5 = unbounded_int_cmp_ll(res5, i5 + i1);
+	int b6 = unbounded_int_cmp_ll(res6, i3 + i5);
+	int b7 = unbounded_int_cmp_ll(res7, i5 + i6);
+	unbounded_int_free(u1);
+	unbounded_int_free(u2);
+	unbounded_int_free(u3);
+	unbounded_int_free(u4);
+	unbounded_int_free(u5);
+	unbounded_int_free(u6);
+	unbounded_int_free(u7);
+	unbounded_int_free(res1);
+	unbounded_int_free(res2);
+	unbounded_int_free(res3);
+	unbounded_int_free(res4);
+	unbounded_int_free(res5);
+	unbounded_int_free(res6);
+	unbounded_int_free(res7);
+	assert(b1);
+	assert(b2);
+	assert(b3);
+	assert(b4);
+	assert(b5);
+	assert(b6);
+	assert(b7);
+
+	printf("===========\n");
+}
+
+unbounded_int test_unbounded_int_difference(unbounded_int a, unbounded_int b) {
+	printf("==UNBOUNDED_INT_DIFFERENCE() TEST==\n");
+
+	long long i1 = 645248;
+	long long i2 = 543124;
+	long long i3 = -46872;
+	long long i4 = -13246;
+	long long i5 = 5724;
+	long long i6 = -6578;
+	long long i7 = 0
+	unbounded_int u1 = int2unbounded_int(645248);
+	unbounded_int u2 = int2unbounded_int(543124);
+	unbounded_int u3 = int2unbounded_int(-46872);
+	unbounded_int u4 = int2unbounded_int(-13246);
+	unbounded_int u5 = int2unbounded_int(5724);
+	unbounded_int u6 = int2unbounded_int(-6578);
+	unbounded_int u7 = int2unbounded_int(0);
+	unbounded_int res1 = unbounded_int_difference(ui3, ui1); // -a - (+b)
+	unbounded_int res2 = unbounded_int_difference(ui1, ui8); // +a - (-b)
+	unbounded_int res3 = unbounded_int_difference(u7, ui6);
+	unbounded_int res4 = unbounded_int_difference(u7, ui5);
+	unbounded_int res5 = unbounded_int_difference(ui6, ui10);
+	unbounded_int res6 = unbounded_int_difference(ui1, ui2);
+	unbounded_int res7 = unbounded_int_difference(ui3, ui4);
+	int b1 = unbounded_int_cmp_ll(res1, i1 - i2);
+	int b2 = unbounded_int_cmp_ll(res2, i1 - i7);
+	int b3 = unbounded_int_cmp_ll(res3, i3 - i4);
+	int b4 = unbounded_int_cmp_ll(res4, i5 - i7);
+	int b5 = unbounded_int_cmp_ll(res5, i5 - i1);
+	int b6 = unbounded_int_cmp_ll(res1, i1 - i2);
+	int b7 = unbounded_int_cmp_ll(res7, i3 - i4);
+	unbounded_int_free(u1);
+	unbounded_int_free(u2);
+	unbounded_int_free(u3);
+	unbounded_int_free(u4);
+	unbounded_int_free(u5);
+	unbounded_int_free(u6);
+	unbounded_int_free(u7);
+	unbounded_int_free(res1);
+	unbounded_int_free(res2);
+	unbounded_int_free(res3);
+	unbounded_int_free(res4);
+	unbounded_int_free(res5);
+	unbounded_int_free(res6);
+	unbounded_int_free(res7);
+	assert(b1);
+	assert(b2);
+	assert(b3);
+	assert(b4);
+	assert(b5);
+	assert(b6);
+	assert(b7);
+
+	printf("===========\n");
+}
+
+unbounded_int test_unbounded_int_produit(unbounded_int a, unbounded_int b) {
+	printf("==UNBOUNDED_INT_PRODUIT() TEST==\n");
+	unbounded_int u1 = int2unbounded_int(645248);
+	unbounded_int u2 = int2unbounded_int(-13246);
+	unbounded_int u3 = int2unbounded_int(5724);
+	unbounded_int u4 = int2unbounded_int(0);
+
+	unbounded_int res1 = unbounded_int_produit(u4, u1);
+	unbounded_int res2 = unbounded_int_produit(ui1, u4);
+	unbounded_int res3 = unbounded_int_produit(u3, u3);
+	unbounded_int res4 = unbounded_int_produit(u2, u2);
+	unbounded_int res5 = unbounded_int_produit(u3, u2);
+
+	int b1 = unbounded_int_cmp_ll(res1, i4 * i1);
+	int b2 = unbounded_int_cmp_ll(res2, i1 * i4);
+	int b3 = unbounded_int_cmp_ll(res3, i3 * i3);
+	int b4 = unbounded_int_cmp_ll(res4, i2 * i2);
+	int b5 = unbounded_int_cmp_ll(res5, i3 + i2);
+	unbounded_int_free(u1);
+	unbounded_int_free(u2);
+	unbounded_int_free(u3);
+	unbounded_int_free(u4);
+	unbounded_int_free(u5);
+	unbounded_int_free(res1);
+	unbounded_int_free(res2);
+	unbounded_int_free(res3);
+	unbounded_int_free(res4);
+	unbounded_int_free(res5);
+	assert(b1);
+	assert(b2);
+	assert(b3);
+	assert(b4);
+	assert(b5);
+	printf("===========\n");
+}
+
+unbounded_int test_unbounded_int_division(unbounded_int a, unbounded_int b) {}
+
+unbounded_int test_unbounded_int_pow(unbounded_int x, unbounded_int n) {}
+
+unbounded_int test_unbounded_int_abs(unbounded_int x) {}
+
+unbounded_int test_unbounded_int_fact(unbounded_int n) {}
+
+int test_isError(unbounded_int i) {}
+
+void test_print_unbounded_int(unbounded_int ui) {}

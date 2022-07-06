@@ -159,7 +159,7 @@ static void disconnect(FILE **in, FILE **out);
 /**
  * Check is the strings given in arguments are equals.
  *
- * @param s1 The first string
+ * @param s1 The mFirst string
  * @param s2 The second string
  * @return true if the string are equals, false otherwise.
  */

@@ -7,5 +7,6 @@ add_library(Objects
 				${CMAKE_CURRENT_SOURCE_DIR}/src/stack.c
 				${CMAKE_CURRENT_SOURCE_DIR}/src/unbounded_int.c
 )
+add_test(c-project src/test_unbounded_int.c)
 
 target_include_directories(Objects PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
