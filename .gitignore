@@ -6,3 +6,6 @@ bin/
 .idea
 .iml
 .exe
+.vs/
+out/*
+cmake-build-debug-cygwin/*

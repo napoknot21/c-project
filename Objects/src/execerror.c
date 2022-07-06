@@ -3,6 +3,7 @@
 //
 
 #include "execerror.h"
+#include "appinformations.h"
 
 char *error_getMessage(enum Error error) {
     switch (error) {
@@ -25,9 +26,7 @@ char *error_getMessage(enum Error error) {
     }
 }
 
-void perror_file(enum Error error, char* FILE_NAME, int FILE_LINE) {
+void perror_file(enum Error error) {
     fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE);
 }
-
-void perror_file(enum Error error, char FILE_NAME, int FILE_LINE);
 void perror_src(char * message);

@@ -229,11 +229,11 @@ void load_stdlib(HashMap *map) {
     Function exit = function_new("exit", VOID_TYPE, std_exit, 0);
     Function abs = function_new("abs", NUM_TYPE, std_abs, 1);
     Function fact = function_new("fact", NUM_TYPE, std_fact, 1);
-    hashMap_put(map, print, STD);
-    hashMap_put(map, pow, STD);
-    hashMap_put(map, exit, STD);
-    hashMap_put(map, abs, STD);
-    hashMap_put(map, fact, STD);
+    hashMap_put(map, print.name,&print);
+    hashMap_put(map, pow.name,&pow);
+    hashMap_put(map, exit.name,&exit);
+    hashMap_put(map,abs.name, &abs);
+    hashMap_put(map, fact.name,&fact);
 }
 
 /* #####################################################################################################################
@@ -324,7 +324,7 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
         *last = *current = NUMBER;
     } else if (isAnOperator((char) c)) {
         if (*last == OPERATOR) {
-            pERROR(INVALID_SYNTAX);
+            perror_file(INVALID_SYNTAX,FILE_NAME,FILE_LINE);
             return 0;
         }
         *current = OPERATOR;
@@ -349,7 +349,7 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
 static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function) {
     if (function == NULL) {
-        pERROR(INTERNAL);
+        perror_file(INTERNAL, FILE_NAME,FILE_LINE);
         return -1;
     }
     if (function->argc > function->requested) {
@@ -389,8 +389,8 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
             return 0;
         }
         if (!*isFunc) {
-            hashMap_put(map, *function, CALL);
-            *function = NONE_DATA.function;
+            hashMap_put(map, function, CALL);
+            *function = FUNCTION_NULL;
         }
         return 1;
     }
@@ -507,11 +507,11 @@ static int treatment
         return (AST_hasFunction(ast)) ? 1 : -2;  //void value
     }
     HashMapData data = hashMap_get(map, buffer);
-    if (data.type != NONE) {
+    if (data.mType != NONE) {
         *func = 1;
         Function new = buildCalledFunction(data, trim(buffer, len));
         *function = new;
-        hashMap_put(map, new, CALL);
+        hashMap_put(map, function, CALL);
         Token token = token_new(new.name, strlen(new.name), FUNCTION);
         if (!AST_add(ast, storage, token)) {
             token_free(token);
@@ -531,7 +531,7 @@ static int treatment
         len--;
     }
     if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
-        pERROR(MISSING_BLANK);
+        perror_file(MISSING_BLANK,FILE_NAME,FILE_LINE);
         return 0;   //error value
     }
     Token token = token_new(buffer, len, type);
@@ -544,7 +544,8 @@ static int treatment
 
 static Function buildCalledFunction(HashMapData data, char *buffer) {
     Function result = FUNCTION_NULL;
-    int dLen = (int) strlen(data.function.name);
+    Function f = *(Function *) data.mData;
+    int dLen = (int) strlen(f.name);
     INCR_CALL;
     char *r = intToString(CALL_ID);
     int rLen = (int) strlen(r);
@@ -554,7 +555,7 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
     if (newName == NULL) {
         return result;
     }
-    char *tmp = memmove(newName, data.function.name, dLen * sizeof(char));
+    char *tmp = memmove(newName, f.name, dLen * sizeof(char));
     if (tmp == NULL) {
         free(newName);
         free(line);
@@ -577,7 +578,7 @@ static Function buildCalledFunction(HashMapData data, char *buffer) {
         return result;
     }
     newName[dLen + len + rLen] = '\0';
-    result = function_new(newName, data.function.retType, data.function.func, data.function.requested);
+    result = function_new(newName, f.retType, f.func, f.requested);
     return result;
 }
 
@@ -810,14 +811,14 @@ static void node_free(Node *n) {
  */
 static int function_apply(HashMap *map, char *name, ASN *node) {
     HashMapData data = hashMap_get(map, name);
-    if (data.type == NONE) return 0;
-    Function f = data.function;
+    if (data.mType == NONE) return 0;
+    Function f = *(Function *) data.mData;
     if (f.requested > f.argc) {
-        if (!EXIT_REQUEST) pERROR(MISSING_ARGUMENTS);
+        if (!EXIT_REQUEST) perror_file(MISSING_ARGUMENTS,FILE_NAME,FILE_LINE);
         EXIT_REQUEST = -1;
         return 0;
     } else if (f.requested < f.argc) {
-        if (!EXIT_REQUEST) pERROR(TOO_MANY_ARGUMENTS);
+        if (!EXIT_REQUEST) perror_file(TOO_MANY_ARGUMENTS, FILE_NAME, FILE_LINE);
         EXIT_REQUEST = -1;
         return 0;
     }

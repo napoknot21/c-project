@@ -1,0 +1,11 @@
+add_library(Objects
+				${CMAKE_CURRENT_SOURCE_DIR}/src/ast.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/buffer.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/execerror.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/function.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/hashmap.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/stack.c
+				${CMAKE_CURRENT_SOURCE_DIR}/src/unbounded_int.c
+)
+
+target_include_directories(Objects PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

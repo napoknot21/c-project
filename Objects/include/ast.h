@@ -3,6 +3,7 @@
 //
 #ifndef C_PROJECT_AST_H
 #define C_PROJECT_AST_H
+
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b)(unbounded_int_produit(a,b))
 #define ADDITION(a, b)(unbounded_int_somme(a,b))
