@@ -3,7 +3,6 @@
 //
 #ifndef C_PROJECT_FUNCTION_H
 #define C_PROJECT_FUNCTION_H
-#include "lib.h"
 #include "unbounded_int.h"
 #include <string.h>
 typedef enum FuncType {

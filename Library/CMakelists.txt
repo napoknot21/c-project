@@ -1,3 +1,6 @@
-add_library(Library ${CMAKE_CURRENT_SOURCE_DIR}/src/lib.c)
+add_library(Library SHARED
+	${CMAKE_CURRENT_SOURCE_DIR}/src/lib.c
+	${CMAKE_CURRENT_SOURCE_DIR}/src/execerror.c
+)
 
-target_include_directories(Library PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Library INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

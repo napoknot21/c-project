@@ -3,6 +3,7 @@
 //
 #include "lib.h"
 #include <string.h>
+#include<ctype.h>
 static int isHigher(const char a, const char b) {
     if (!isAnOperator(a)) return 0;
     if (!isAnOperator(b)) return 1;

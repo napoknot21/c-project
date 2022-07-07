@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include "unbounded_int.h"
+#include <time.h>
 
 static int check_unbounded_int_form(char* src, unbounded_int result) {
 	assert(strlen(src) == result.mLength);
@@ -9,7 +10,8 @@ static int check_unbounded_int_form(char* src, unbounded_int result) {
 		assert(current.mVal == strPos[i])
 	}
 }
-unbounded_int test_string2unbounded_int(char* e) {
+
+static void test_string2unbounded_int() {
 	printf("########## TEST STRING2UNBOUNDED_INT ##########\n");
 	char* strPos = "1123534876543";
 	unbounded_int uPos = string2unbounded_int(strPos);
@@ -19,10 +21,9 @@ unbounded_int test_string2unbounded_int(char* e) {
 	unbounded_int uAdd = string2unbounded_int(strAdd);
 	check_unbounded_int_form(&strAdd[1], uAdd);
 	unbounded_int_free(uAdd);
-	printf("\n\n");
 }
 
-unbounded_int test_ll2unbounded_int(long long i) {
+static void test_ll2unbounded_int() {
 	printf("########## TEST LL2UNBOUNDED_INT ##########\n");
 	char* strPos = "1123534876543";
 	long long llPos = 1123534876543;
@@ -34,20 +35,18 @@ unbounded_int test_ll2unbounded_int(long long i) {
 	unbounded_int uAdd = ll2unbounded_int(llAdd);
 	check_unbounded_int_form(strAdd, uAdd);
 	unbounded_int_free(uAdd);
-	printf("\n\n");
 }
 
-char* test_unbounded_int2string(unbounded_int ui) {
+static void test_unbounded_int2string() {
 	//todo: Construction d'un unbounded_int (positif, negetif, bug ? et comparaison)
 }
 
-int test_unbounded_int_cmp_unbounded_int(unbounded_int a, unbounded_int b) {}
+static void test_unbounded_int_cmp_unbounded_int() {}
 
-int test_unbounded_int_cmp_ll(unbounded_int a, long long b) {}
+static void test_unbounded_int_cmp_ll() {}
 
-
-unbounded_int test_unbounded_int_somme(unbounded_int a, unbounded_int b) {
-	printf("==UNBOUNDED_INT_SOMME() TEST==\n");
+static void test_unbounded_int_somme() {
+	printf("############ TEST UNBOUNDED_INT_SOMME ###########\n");
 	long long i1 = 645248;
 	long long i2 = 543124;
 	long long i3 = -46872;
@@ -99,12 +98,10 @@ unbounded_int test_unbounded_int_somme(unbounded_int a, unbounded_int b) {
 	assert(b5);
 	assert(b6);
 	assert(b7);
-
-	printf("===========\n");
 }
 
-unbounded_int test_unbounded_int_difference(unbounded_int a, unbounded_int b) {
-	printf("==UNBOUNDED_INT_DIFFERENCE() TEST==\n");
+static void test_unbounded_int_difference() {
+	printf("########## TEST UNBOUNDED_INT_DIFFERENCE ###########\n");
 
 	long long i1 = 645248;
 	long long i2 = 543124;
@@ -155,12 +152,10 @@ unbounded_int test_unbounded_int_difference(unbounded_int a, unbounded_int b) {
 	assert(b5);
 	assert(b6);
 	assert(b7);
-
-	printf("===========\n");
 }
 
-unbounded_int test_unbounded_int_produit(unbounded_int a, unbounded_int b) {
-	printf("==UNBOUNDED_INT_PRODUIT() TEST==\n");
+static void test_unbounded_int_produit() {
+	printf("########### TEST UNBOUNDED_INT_PRODUIT() ###########\n");
 	unbounded_int u1 = int2unbounded_int(645248);
 	unbounded_int u2 = int2unbounded_int(-13246);
 	unbounded_int u3 = int2unbounded_int(5724);
@@ -192,17 +187,85 @@ unbounded_int test_unbounded_int_produit(unbounded_int a, unbounded_int b) {
 	assert(b3);
 	assert(b4);
 	assert(b5);
-	printf("===========\n");
 }
 
-unbounded_int test_unbounded_int_division(unbounded_int a, unbounded_int b) {}
+static void test_unbounded_int_division() {}
 
-unbounded_int test_unbounded_int_pow(unbounded_int x, unbounded_int n) {}
+static void test_unbounded_int_pow() {}
 
-unbounded_int test_unbounded_int_abs(unbounded_int x) {}
+static void test_unbounded_int_abs() {
+	long long i1 = -834873642;
+	long long i2 = 834873642;
+	long long i3 = -0;
+	long long i4 = 0;
+	unbounded_int u1 = ll2unbounded_int(i1);
+	unbounded_int u2 = ll2unbounded_int(i2);
+	unbounded_int u3 = ll2unbounded_int(i3);
 
-unbounded_int test_unbounded_int_fact(unbounded_int n) {}
+	unbonded_int res1 = unbounded_int_abs(u1);
+	unbonded_int res2 = unbounded_int_abs(u2);
+	unbonded_int res3 = unbounded_int_abs(u3);
+	int b1 = unbounded_int_cmp_ll(res1, i2);
+	int b2 = unbounded_int_cmp_ll(res2, i2);
+	int b3 = unbounded_int_cmp_ll(res3, i4);
+	unbounded_int_free(u1);
+	unbounded_int_free(u2);
+	unbounded_int_free(u3);
+	unbounded_int_free(res1);
+	unbounded_int_free(res2);
+	unbounded_int_free(res3);
+	assert(b1);
+	assert(b2);
+	assert(b3);
+}
 
-int test_isError(unbounded_int i) {}
+static long long fact(long long n) {
+	if (n <= 0) return 1;
+	long long val = 1;
+	for (long long i = 1; i < n; i++) val *= i;
+	return val;
+}
 
-void test_print_unbounded_int(unbounded_int ui) {}
+static void test_unbounded_int_fact() {
+	long long i1 = fact(5);
+	long long i2 = 1;
+	long long i3 = fact(20);
+	unbounded_int u1 = unbounded_int_fact(5);
+	unbounded_int u2 = unbounded_int_fact(0);
+	unbounded_int u3 = unbounded_int_fact(20);
+	int b1 = unbounded_int_cmp_ll(u1, i1);
+	int b2 = unbounded_int_cmp_ll(u2, i2);
+	int b3 = unbounded_int_cmp_ll(u3, i3);
+	unbounded_int_free(u1);
+	unbounded_int_free(u2);
+	unbounded_int_free(u3);
+	assert(b1);
+	assert(b2);
+	assert(b3);
+}
+
+static void test(void(*f)()) {
+	time_t begin = time(NULL);
+	f();
+	time_t end = time(NULL);
+	double delta = difftime(end,begin);
+	printf("[PASSED] in %ld seconds \n", delta);
+
+
+}
+
+int main() {
+	test(test_ll2unbounded_int);
+	test(test_string2unbounded_int);
+	test(test_unbounded_int2string);
+	test(test_unbounded_int_cmp_ll);
+	test(test_unbounded_int_abs);
+	test(test_unbounded_int_cmp_unbounded_int);
+	test(test_unbounded_int_difference);
+	test(test_unbounded_int_division);
+	test(test_unbounded_int_fact);
+	test(test_unbounded_int_pow);
+	test(test_unbounded_int_produit);
+	testtest_unbounded_int_somme);
+	return 0;
+}
