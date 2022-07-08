@@ -7,9 +7,6 @@
 #include <stdlib.h>
 typedef struct HashMap HashMap;
 typedef struct HashMapData HashMapData;
-enum Type {
-    NONE, DUMMY, FULL
-};
 
 struct HashMapData {
     size_t mHash;

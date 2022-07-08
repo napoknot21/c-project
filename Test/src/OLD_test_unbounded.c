@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-#include "src/unbounded_int.h"
+#include "src/UnboundedInt.h"
 
 /**
  * fonction main (tests)
@@ -23,60 +23,60 @@ int main(int argc, char *argv[]) {
 
     //STRING2UNBOUNDED_INT () TEST
     printf("==STRING2UNBOUNDED_INT() TEST==\n");
-    unbounded_int ui1 = string2unbounded_int(st_n);
-    unbounded_int ui2 = string2unbounded_int(st_p);
+    UnboundedInt ui1 = string2UnboundedInt(st_n);
+    UnboundedInt ui2 = string2UnboundedInt(st_p);
 
-    print_unbounded_int(ui1);
-    print_unbounded_int(ui2);
+    print_UnboundedInt(ui1);
+    print_UnboundedInt(ui2);
 
     printf("===========\n");
 
     //LL2UNBOUNDED_INT() TEST
     printf("==LL2UNBOUNDED_INT() TEST==\n");
-    unbounded_int ui3 = ll2unbounded_int(i);
-    unbounded_int ui4 = ll2unbounded_int(j);
+    UnboundedInt ui3 = ll2UnboundedInt(i);
+    UnboundedInt ui4 = ll2UnboundedInt(j);
 
-    print_unbounded_int(ui3);
-    print_unbounded_int(ui4);
+    print_UnboundedInt(ui3);
+    print_UnboundedInt(ui4);
 
     printf("===========\n");
 
     //UNBOUNDED_INT2STRING() TEST
     printf("==UNBOUNDED_INT2STRING() TEST==\n");
-    printf("%s\n",unbounded_int2string(ui1));
-    printf("%s\n",unbounded_int2string(ui2));
-    printf("%s\n",unbounded_int2string(ui3));
-    printf("%s\n",unbounded_int2string(ui4));
+    printf("%s\n",UnboundedInt2string(ui1));
+    printf("%s\n",UnboundedInt2string(ui2));
+    printf("%s\n",UnboundedInt2string(ui3));
+    printf("%s\n",UnboundedInt2string(ui4));
 
     printf("===========\n");
 
     //UNBOUNDED_INT_SOMME() TEST
     printf("==UNBOUNDED_INT_SOMME() TEST==\n");
 
-    unbounded_int ui5 = string2unbounded_int("645248");
-    unbounded_int ui6 = string2unbounded_int("543124");
-    unbounded_int ui7 = string2unbounded_int("-46872");
-    unbounded_int ui8 = string2unbounded_int("-13246");
-    unbounded_int ui9 = string2unbounded_int("5724");
-    unbounded_int ui10 = string2unbounded_int("-6578");
-    unbounded_int zero = string2unbounded_int("0");
+    UnboundedInt ui5 = string2UnboundedInt("645248");
+    UnboundedInt ui6 = string2UnboundedInt("543124");
+    UnboundedInt ui7 = string2UnboundedInt("-46872");
+    UnboundedInt ui8 = string2UnboundedInt("-13246");
+    UnboundedInt ui9 = string2UnboundedInt("5724");
+    UnboundedInt ui10 = string2UnboundedInt("-6578");
+    UnboundedInt zero = string2UnboundedInt("0");
 
-    unbounded_int res1 = unbounded_int_somme(ui5, ui6);
-    unbounded_int res2 = unbounded_int_somme(ui5, zero);
-    unbounded_int res3 = unbounded_int_somme(ui7, ui8);
-    unbounded_int res4 = unbounded_int_somme(ui7, zero);
-    unbounded_int res5 = unbounded_int_somme(ui9, ui5);
-    unbounded_int res6 = unbounded_int_somme(ui7, ui10);
-    unbounded_int res6_5 = unbounded_int_somme(ui9, ui10);
+    UnboundedInt res1 = UnboundedInt_somme(ui5, ui6);
+    UnboundedInt res2 = UnboundedInt_somme(ui5, zero);
+    UnboundedInt res3 = UnboundedInt_somme(ui7, ui8);
+    UnboundedInt res4 = UnboundedInt_somme(ui7, zero);
+    UnboundedInt res5 = UnboundedInt_somme(ui9, ui5);
+    UnboundedInt res6 = UnboundedInt_somme(ui7, ui10);
+    UnboundedInt res6_5 = UnboundedInt_somme(ui9, ui10);
 
 
-    printf("%s + %s = %s\n",unbounded_int2string(ui5), unbounded_int2string(ui6), unbounded_int2string(res1));
-    printf("%s + %s = %s\n",unbounded_int2string(ui5), unbounded_int2string(zero), unbounded_int2string(res2));
-    printf("%s + (%s) = %s\n",unbounded_int2string(ui7), unbounded_int2string(ui8), unbounded_int2string(res3));
-    printf("%s + %s = %s\n",unbounded_int2string(ui7), unbounded_int2string(zero), unbounded_int2string(res4));
-    printf("%s + %s = %s\n",unbounded_int2string(ui9), unbounded_int2string(ui5), unbounded_int2string(res5));
-    printf("%s + (%s) = %s\n",unbounded_int2string(ui7), unbounded_int2string(ui10), unbounded_int2string(res6));
-    printf("%s + (%s) = %s\n",unbounded_int2string(ui9), unbounded_int2string(ui10), unbounded_int2string(res6_5));
+    printf("%s + %s = %s\n",UnboundedInt2string(ui5), UnboundedInt2string(ui6), UnboundedInt2string(res1));
+    printf("%s + %s = %s\n",UnboundedInt2string(ui5), UnboundedInt2string(zero), UnboundedInt2string(res2));
+    printf("%s + (%s) = %s\n",UnboundedInt2string(ui7), UnboundedInt2string(ui8), UnboundedInt2string(res3));
+    printf("%s + %s = %s\n",UnboundedInt2string(ui7), UnboundedInt2string(zero), UnboundedInt2string(res4));
+    printf("%s + %s = %s\n",UnboundedInt2string(ui9), UnboundedInt2string(ui5), UnboundedInt2string(res5));
+    printf("%s + (%s) = %s\n",UnboundedInt2string(ui7), UnboundedInt2string(ui10), UnboundedInt2string(res6));
+    printf("%s + (%s) = %s\n",UnboundedInt2string(ui9), UnboundedInt2string(ui10), UnboundedInt2string(res6_5));
 
     printf("===========\n");
 
@@ -84,22 +84,22 @@ int main(int argc, char *argv[]) {
     //UNBOUNDED_INT_SOMME() TEST
     printf("==UNBOUNDED_INT_DIFFERENCE() TEST==\n");
 
-    unbounded_int res7 = unbounded_int_difference(ui7, ui5); // -a - (+b)
-    unbounded_int res8 = unbounded_int_difference(ui5, ui8); // +a - (-b)
-    unbounded_int res9 = unbounded_int_difference(zero, ui10);
-    unbounded_int res10 = unbounded_int_difference(zero, ui9);
-    unbounded_int res11 = unbounded_int_difference(ui10, ui10);
-    unbounded_int res12 = unbounded_int_difference(ui5, ui6);
-    unbounded_int res13 = unbounded_int_difference(ui7, ui8);
+    UnboundedInt res7 = UnboundedInt_difference(ui7, ui5); // -a - (+b)
+    UnboundedInt res8 = UnboundedInt_difference(ui5, ui8); // +a - (-b)
+    UnboundedInt res9 = UnboundedInt_difference(zero, ui10);
+    UnboundedInt res10 = UnboundedInt_difference(zero, ui9);
+    UnboundedInt res11 = UnboundedInt_difference(ui10, ui10);
+    UnboundedInt res12 = UnboundedInt_difference(ui5, ui6);
+    UnboundedInt res13 = UnboundedInt_difference(ui7, ui8);
 
 
-    printf("%s - %s = %s\n",unbounded_int2string(ui7), unbounded_int2string(ui5), unbounded_int2string(res7));
-    printf("%s - (%s) = %s\n",unbounded_int2string(ui5), unbounded_int2string(ui8), unbounded_int2string(res8));
-    printf("%s - (%s) = %s\n",unbounded_int2string(zero), unbounded_int2string(ui10), unbounded_int2string(res9));
-    printf("%s - %s = %s\n",unbounded_int2string(zero), unbounded_int2string(ui9), unbounded_int2string(res10));
-    printf("%s - (%s) = %s\n",unbounded_int2string(ui10), unbounded_int2string(ui10), unbounded_int2string(res11));
-    printf("%s - %s = %s\n",unbounded_int2string(ui5), unbounded_int2string(ui6), unbounded_int2string(res12));
-    printf("%s - (%s) = %s\n",unbounded_int2string(ui7), unbounded_int2string(ui8), unbounded_int2string(res13));
+    printf("%s - %s = %s\n",UnboundedInt2string(ui7), UnboundedInt2string(ui5), UnboundedInt2string(res7));
+    printf("%s - (%s) = %s\n",UnboundedInt2string(ui5), UnboundedInt2string(ui8), UnboundedInt2string(res8));
+    printf("%s - (%s) = %s\n",UnboundedInt2string(zero), UnboundedInt2string(ui10), UnboundedInt2string(res9));
+    printf("%s - %s = %s\n",UnboundedInt2string(zero), UnboundedInt2string(ui9), UnboundedInt2string(res10));
+    printf("%s - (%s) = %s\n",UnboundedInt2string(ui10), UnboundedInt2string(ui10), UnboundedInt2string(res11));
+    printf("%s - %s = %s\n",UnboundedInt2string(ui5), UnboundedInt2string(ui6), UnboundedInt2string(res12));
+    printf("%s - (%s) = %s\n",UnboundedInt2string(ui7), UnboundedInt2string(ui8), UnboundedInt2string(res13));
 
 
 
@@ -108,17 +108,17 @@ int main(int argc, char *argv[]) {
     //UNBOUNDED_INT_PRODUIT() TEST
     printf("==UNBOUNDED_INT_PRODUIT() TEST==\n");
 
-    unbounded_int res14 = unbounded_int_produit(zero, ui5);
-    unbounded_int res14_5 = unbounded_int_produit(ui5, zero);
-    unbounded_int res15 = unbounded_int_produit(ui9, ui9);
-    unbounded_int res16 = unbounded_int_produit(ui8, ui8);
-    unbounded_int res17 = unbounded_int_produit(ui9, ui8);
+    UnboundedInt res14 = UnboundedInt_produit(zero, ui5);
+    UnboundedInt res14_5 = UnboundedInt_produit(ui5, zero);
+    UnboundedInt res15 = UnboundedInt_produit(ui9, ui9);
+    UnboundedInt res16 = UnboundedInt_produit(ui8, ui8);
+    UnboundedInt res17 = UnboundedInt_produit(ui9, ui8);
 
-    printf("%s * (%s) = %s\n",unbounded_int2string(zero), unbounded_int2string(ui5), unbounded_int2string(res14));
-    printf("%s * (%s) = %s\n",unbounded_int2string(ui5), unbounded_int2string(zero), unbounded_int2string(res14_5));
-    printf("%s * (%s) = %s\n",unbounded_int2string(ui9), unbounded_int2string(ui9), unbounded_int2string(res15));
-    printf("%s * (%s) = %s\n",unbounded_int2string(ui8), unbounded_int2string(ui8), unbounded_int2string(res16));
-    printf("%s * (%s) = %s\n",unbounded_int2string(ui9), unbounded_int2string(ui8), unbounded_int2string(res17));
+    printf("%s * (%s) = %s\n",UnboundedInt2string(zero), UnboundedInt2string(ui5), UnboundedInt2string(res14));
+    printf("%s * (%s) = %s\n",UnboundedInt2string(ui5), UnboundedInt2string(zero), UnboundedInt2string(res14_5));
+    printf("%s * (%s) = %s\n",UnboundedInt2string(ui9), UnboundedInt2string(ui9), UnboundedInt2string(res15));
+    printf("%s * (%s) = %s\n",UnboundedInt2string(ui8), UnboundedInt2string(ui8), UnboundedInt2string(res16));
+    printf("%s * (%s) = %s\n",UnboundedInt2string(ui9), UnboundedInt2string(ui8), UnboundedInt2string(res17));
 
 
 

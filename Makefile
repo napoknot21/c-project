@@ -4,20 +4,20 @@ LDLIBS=		-lm
 EXEC= calc
 
 
-calc: build build/calc_unbounded_int.o build/unbounded_int.o
-	$(CC) $(CFLAGS) $(LDLIBS) build/calc_unbounded_int.o build/unbounded_int.o -o $(EXEC)
+calc: build build/calc_UnboundedInt.o build/UnboundedInt.o
+	$(CC) $(CFLAGS) $(LDLIBS) build/calc_UnboundedInt.o build/UnboundedInt.o -o $(EXEC)
 
-test: build build/test_unbounded.o build/unbounded_int.o
-	$(CC) $(CFLAGS) $(LDLIBS)  build/unbounded_int.o build/test_unbounded.o -o $@
+test: build build/test_unbounded.o build/UnboundedInt.o
+	$(CC) $(CFLAGS) $(LDLIBS)  build/UnboundedInt.o build/test_unbounded.o -o $@
 
-build/test_unbounded.o: build/unbounded_int.o library
+build/test_unbounded.o: build/UnboundedInt.o library
 	$(CC) $(CFLAGS) $(LDLIBS)  -c test_unbounded.c -o $@
 
-build/unbounded_int.o: library library
-	$(CC) $(CFLAGS) $(LDLIBS) -c unbounded_int.c -o $@
+build/UnboundedInt.o: library library
+	$(CC) $(CFLAGS) $(LDLIBS) -c UnboundedInt.c -o $@
 
-build/calc_unbounded_int.o: src/calc_unbounded_int.c library
-	$(CC) $(CFLAGS) $(LDLIBS) -c calc_unbounded_int.c -o $@
+build/calc_UnboundedInt.o: src/calc_UnboundedInt.c library
+	$(CC) $(CFLAGS) $(LDLIBS) -c calc_UnboundedInt.c -o $@
 
 
 

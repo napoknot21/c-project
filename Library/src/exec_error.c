@@ -2,8 +2,8 @@
 // Created by Kevin on 05/07/2022.
 //
 
-#include "execerror.h"
-#include "appinformations.h"
+#include "exec_error.h"
+#include "app_informations.h"
 
 char *error_getMessage(enum Error error) {
     switch (error) {

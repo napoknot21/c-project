@@ -15,12 +15,12 @@
 #include "unbounded_int.h"
 #include "lib.h"
 #include "hashmap.h"
-#include "execerror.h"
+#include "exec_error.h"
 #include "function.h"
 #include "token.h"
 #include "ast.h"
 #include "buffer.h"
-#include "appinformations.h"
+#include "app_informations.h"
 
 /**
  * Name of the open file.
@@ -41,15 +41,15 @@ static int CALL_ID = 0;
  * STD functions
  */
 
-static int std_print(int argc, unbounded_int *argv, char **argn);
+static int std_print(int argc, UnboundedInt *argv, char **argn);
 
-static int std_pow(int argc, unbounded_int *argv, char **argn);
+static int std_pow(int argc, UnboundedInt *argv, char **argn);
 
-static int std_exit(int argc, unbounded_int *argv, char **argn);
+static int std_exit(int argc, UnboundedInt *argv, char **argn);
 
-static int std_abs(int argc, unbounded_int *argv, char **argn);
+static int std_abs(int argc, UnboundedInt *argv, char **argn);
 
-static int std_fact(int argc, unbounded_int *argv, char **argn);
+static int std_fact(int argc, UnboundedInt *argv, char **argn);
 
 
 
@@ -85,7 +85,7 @@ static void tree_free(Tree *t);
  *          -1 if the name is empty. <br>
  *          -2 if the tree is NULL.
  */
-static int tree_add(Tree *t, unbounded_int n, char *string);
+static int tree_add(Tree *t, UnboundedInt n, char *string);
 
 /**
  * Gets the value of the given variable.
@@ -95,7 +95,7 @@ static int tree_add(Tree *t, unbounded_int n, char *string);
  * @return the data value if the value is found. <br>
  *          0 otherwise
  */
-static unbounded_int tree_getValue(Tree *t, char *string);
+static UnboundedInt tree_getValue(Tree *t, char *string);
 
 /**
  * Variables storage node.
@@ -126,7 +126,7 @@ static void node_free(Node *n);
  * @return  0 if the variable was normally added. <br>
  *          -1 if the variable's name is empty
  */
-static int node_add(Node **pNode, unbounded_int n, const char *string);
+static int node_add(Node **pNode, UnboundedInt n, const char *string);
 
 /**
  * Gets the value of the given variable.
@@ -136,7 +136,7 @@ static int node_add(Node **pNode, unbounded_int n, const char *string);
  * @return the data value if the value is found. <br>
  *          0 otherwise.
  */
-static unbounded_int node_getValue(Node **node, char *string);
+static UnboundedInt node_getValue(Node **node, char *string);
 
 /**
  * Open files according to the arguments given to the program. By default, in = stdin and out = stdout
@@ -176,7 +176,7 @@ static int str_equals(const char *s1, const char *s2);
  */
 static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map);
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounded_int *astResult);
+static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, UnboundedInt *astResult);
 
 /**
  * Treats the token stored in the buffer.
@@ -213,7 +213,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
  */
 struct Node {
     char id;
-    unbounded_int data;
+    UnboundedInt data;
     Node *left;
     Node *middle;
     Node *right;
@@ -292,7 +292,7 @@ int main(int argc, char **argv) {
 
 static int
 parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
-      int *argStart, Function *function, AST *argAst, unbounded_int *astResult) {
+      int *argStart, Function *function, AST *argAst, UnboundedInt *astResult) {
     if (c == 4) {
         EXIT_REQUEST = 1;
         return 0;
@@ -375,7 +375,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
         return 1;
     }
     if (c == ',') {
-        unbounded_int astResult = ll2unbounded_int(0);
+        UnboundedInt astResult = ll2UnboundedInt(0);
         char *in = trim(buffer->buffer, buffer->length);
         function->argn[function->argc] = in;
         int val = parseString(in, ast, storage, map, &astResult);
@@ -398,7 +398,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
     return 1;
 }
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, unbounded_int *astResult) {
+static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, UnboundedInt *astResult) {
     int len = (int) strlen(in);
     if (len == 0) {
         return 0;
@@ -499,7 +499,7 @@ static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
 }
 
 static int treatment
-        (Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,
+        (Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type, int *func, HashMap *map, Function *function,
          int *argsStart) {
     char *buffer = pBuffer->buffer;
     size_t len = pBuffer->length;
@@ -513,7 +513,8 @@ static int treatment
         *function = new;
         hashMap_put(map, function, CALL);
         Token token = token_new(new.name, strlen(new.name), FUNCTION);
-        if (!AST_add(ast, storage, token)) {
+        UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, new.name).mData);
+        if (!AST_add(ast, value, token)) {
             token_free(token);
             return 0; //error value
         }
@@ -523,7 +524,8 @@ static int treatment
     }
     if (type == NUMBER && buffer[0] == '=') {
         Token token = token_new(buffer, 1, OPERATOR);
-        if (!AST_add(ast, storage, token)) {
+        UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data).mData);
+        if (!AST_add(ast, value, token)) {
             token_free(token);
             return 0; //error value
         }
@@ -535,7 +537,8 @@ static int treatment
         return 0;   //error value
     }
     Token token = token_new(buffer, len, type);
-    if (!AST_add(ast, storage, token)) {
+    UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data).mData);
+    if (!AST_add(ast, value, token)) {
         token_free(token);
         return 0; //error value
     }
@@ -681,37 +684,37 @@ static int buffer_add(Buffer *buffer, const char e) {
  * STD functions
  */
 
-static int std_print(int argc, unbounded_int *argv, char **argn) {
-    char *result = unbounded_int2string(argv[0]);
+static int std_print(int argc, UnboundedInt *argv, char **argn) {
+    char *result = UnboundedInt2string(argv[0]);
     fprintf(OUT, "%s = %s \n", argn[0], result);
     argv[argc] = UNBOUNDED_INT_ERROR;
     //free(result);
-    //unbounded_int_free(argv[0]);
+    //UnboundedInt_free(argv[0]);
     //free(argn[0]);
     return 0;
 }
 
-static int std_pow(int argc, unbounded_int *argv, char **argn) {
-    argv[argc] = unbounded_int_pow(argv[0], argv[1]);
+static int std_pow(int argc, UnboundedInt *argv, char **argn) {
+    argv[argc] = UnboundedInt_pow(argv[0], argv[1]);
     return 1;
 
 }
 
-static int std_abs(int argc, unbounded_int *argv, char **argn) {
-    argv[argc] = unbounded_int_abs(argv[0]);
+static int std_abs(int argc, UnboundedInt *argv, char **argn) {
+    argv[argc] = UnboundedInt_abs(argv[0]);
     //free(argn[0]);
-    //unbounded_int_free(argv[0]);
+    //UnboundedInt_free(argv[0]);
     return 1;
 }
 
-static int std_exit(int argc, unbounded_int *argv, char **argn) {
+static int std_exit(int argc, UnboundedInt *argv, char **argn) {
     argv[argc] = UNBOUNDED_INT_ERROR;
     EXIT_REQUEST = 1;
     return 1;
 }
 
-static int std_fact(int argc, unbounded_int *argv, char **argn) {
-    argv[argc] = unbounded_int_fact(argv[0]);
+static int std_fact(int argc, UnboundedInt *argv, char **argn) {
+    argv[argc] = UnboundedInt_fact(argv[0]);
     //(argv[0]);
     //free(argn[0]);
     return 1;
@@ -738,12 +741,12 @@ static Node *node_new(char id) {
         return NULL;
     }
     n->id = id;
-    n->data = ll2unbounded_int(0);
+    n->data = ll2UnboundedInt(0);
     n->left = n->middle = n->right = NULL;
     return n;
 }
 
-static int tree_add(Tree *t, unbounded_int n, char *string) {
+static int tree_add(Tree *t, UnboundedInt n, char *string) {
     if (t == NULL) return -2;
     int len = (int) strlen(string);
     if (len < 1) return -1;
@@ -751,7 +754,7 @@ static int tree_add(Tree *t, unbounded_int n, char *string) {
     return 0;
 }
 
-static int node_add(Node **pNode, const unbounded_int n, const char *string) {
+static int node_add(Node **pNode, const UnboundedInt n, const char *string) {
     int len = (int) strlen(string);
     if (len < 1) return -1;
     if (*pNode == NULL) {
@@ -770,16 +773,16 @@ static int node_add(Node **pNode, const unbounded_int n, const char *string) {
     return 0;
 }
 
-static unbounded_int tree_getValue(Tree *t, char *string) {
+static UnboundedInt tree_getValue(Tree *t, char *string) {
     int len = (int) strlen(string);
-    if (len < 1) return ll2unbounded_int(0);
+    if (len < 1) return ll2UnboundedInt(0);
     return node_getValue(&t->root, string);
 }
 
-static unbounded_int node_getValue(Node **node, char *string) {
+static UnboundedInt node_getValue(Node **node, char *string) {
     int len = (int) strlen(string);
-    if (len < 1) return ll2unbounded_int(0);
-    if (node == NULL || *node == NULL) return ll2unbounded_int(0);
+    if (len < 1) return ll2UnboundedInt(0);
+    if (node == NULL || *node == NULL) return ll2UnboundedInt(0);
     if (string[0] < (*node)->id) {
         return node_getValue(&(*node)->left, string);
     }
@@ -802,7 +805,7 @@ static void node_free(Node *n) {
     node_free(n->left);
     node_free(n->middle);
     node_free(n->right);
-    //unbounded_int_free(n->data);
+    //UnboundedInt_free(n->data);
     //free(n);
 }
 

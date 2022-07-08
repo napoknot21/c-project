@@ -21,14 +21,14 @@ struct Function {
     unsigned short requested;
     unsigned short argc;
     RetType retType;
-    unbounded_int *argv;
+    UnboundedInt *argv;
     char **argn;
 
-    int (*func)(int, unbounded_int *, char **);
+    int (*func)(int, UnboundedInt *, char **);
 };
 
 static Function
-function_new(char *name, RetType type, int (*function)(int, unbounded_int *, char **),
+function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
              unsigned short requestedArguments);
 
 static void function_free(Function f);

@@ -5,8 +5,12 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include "execerror.h"
+#include "exec_error.h"
 #include "hashmap.h"
+
+enum Type {
+    NONE, DUMMY, FULL
+};
 
 #define DUMMY_DATA(h) ((HashMapData) {.mName = "", .mHash = (h), .mData = NULL, .mType = DUMMY})
 #define NONE_DATA ((HashMapData) {.mName = "", .mHash = 0, .mData = NULL, .mType = NONE})
@@ -21,9 +25,9 @@ static size_t hash(const char *name) {
     size_t value = 0;
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++) {
-        value += (size_t) name[i] * (pow(31, len - i));
+        value += (size_t) (name[i] * (pow(31, len - i)));
     }
-    return (size_t) value;
+    return value;
 }
 
 static size_t hash1(double capacity, size_t hash) {
