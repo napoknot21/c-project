@@ -174,9 +174,9 @@ static int str_equals(const char *s1, const char *s2);
  * @param storage The storage tree.
  * @return true if everything went fine, false otherwise.
  */
-static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map);
+static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *map);
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, UnboundedInt *astResult);
+static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, UnboundedInt *astResult);
 
 /**
  * Treats the token stored in the buffer.
@@ -193,7 +193,7 @@ static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, Unbounde
  *         1 otherwise.
  */
 static int
-treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, HashMap *map, Function *function,
+treatment(Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type, int *func, HashMap *map, Function *function,
           int *argsStart);
 
 
@@ -203,9 +203,9 @@ treatment(Buffer *pBuffer, AST *ast, Tree *storage, TokenType type, int *func, H
 
 static int function_apply(HashMap *map, char *name, ASN *node);
 
-static Function buildCalledFunction(HashMapData data, char *buffer);
+static Function buildCalledFunction(Function data, char *buffer);
 
-static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int *isFunc, int *argsStart, HashMap *map,
+static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function);
 
 /* #####################################################################################################################
@@ -240,7 +240,7 @@ void load_stdlib(HashMap *map) {
  * Main function.
  */
 int main(int argc, char **argv) {
-    FILE *in = NULL, *out = NULL;
+    /*FILE *in = NULL, *out = NULL;
     connect(&in, &out, argc, argv);
     OUT = out;
     if (in == NULL) {
@@ -282,7 +282,8 @@ int main(int argc, char **argv) {
     hashMap_free(map);
     disconnect(&in, &out);
     if (EXIT_REQUEST == -1) exit(EXIT_FAILURE);
-    exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);
+    exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);*/
+    return 0;
 }
 
 
@@ -291,7 +292,7 @@ int main(int argc, char **argv) {
  */
 
 static int
-parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
+parse(int c, AST *ast, HashMap *storage, HashMap *map, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
       int *argStart, Function *function, AST *argAst, UnboundedInt *astResult) {
     if (c == 4) {
         EXIT_REQUEST = 1;
@@ -324,7 +325,7 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
         *last = *current = NUMBER;
     } else if (isAnOperator((char) c)) {
         if (*last == OPERATOR) {
-            perror_file(INVALID_SYNTAX,FILE_NAME,FILE_LINE);
+            perror_file(INVALID_SYNTAX);
             return 0;
         }
         *current = OPERATOR;
@@ -346,10 +347,10 @@ parse(int c, AST *ast, Tree *storage, HashMap *map, TokenType *last, TokenType *
     return 1;
 }
 
-static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int *isFunc, int *argsStart, HashMap *map,
+static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function) {
     if (function == NULL) {
-        perror_file(INTERNAL, FILE_NAME,FILE_LINE);
+        perror_file(INTERNAL);
         return -1;
     }
     if (function->argc > function->requested) {
@@ -389,7 +390,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
             return 0;
         }
         if (!*isFunc) {
-            hashMap_put(map, function, CALL);
+            hashMap_put(map, function->name, function);
             *function = FUNCTION_NULL;
         }
         return 1;
@@ -398,7 +399,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, Tree *storage, int
     return 1;
 }
 
-static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, UnboundedInt *astResult) {
+static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, UnboundedInt *astResult) {
     int len = (int) strlen(in);
     if (len == 0) {
         return 0;
@@ -451,7 +452,7 @@ static int parseString(char *in, AST *ast, Tree *storage, HashMap *map, Unbounde
     return 1;
 }
 
-static int parseFile(FILE *in, AST *ast, Tree *storage, HashMap *map) {
+static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *map) {
     int isFunc = 0;
     int argsStart = 0;
     TokenType last, current;
@@ -506,14 +507,14 @@ static int treatment
     if (type == VOID || buffer[0] == '\0') {
         return (AST_hasFunction(ast)) ? 1 : -2;  //void value
     }
-    HashMapData data = hashMap_get(map, buffer);
-    if (data.mType != NONE) {
+    Function *data = (Function *) hashMap_get(map, buffer);
+    if (data != NULL) {
         *func = 1;
-        Function new = buildCalledFunction(data, trim(buffer, len));
+        Function new = buildCalledFunction(*data, trim(buffer, len));
         *function = new;
-        hashMap_put(map, function, CALL);
+        hashMap_put(map, function->name, function);
         Token token = token_new(new.name, strlen(new.name), FUNCTION);
-        UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, new.name).mData);
+        UnboundedInt value = *((UnboundedInt*) hashMap_get(storage, new.name));
         if (!AST_add(ast, value, token)) {
             token_free(token);
             return 0; //error value
@@ -524,7 +525,7 @@ static int treatment
     }
     if (type == NUMBER && buffer[0] == '=') {
         Token token = token_new(buffer, 1, OPERATOR);
-        UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data).mData);
+        UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data));
         if (!AST_add(ast, value, token)) {
             token_free(token);
             return 0; //error value
@@ -533,11 +534,11 @@ static int treatment
         len--;
     }
     if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
-        perror_file(MISSING_BLANK,FILE_NAME,FILE_LINE);
+        perror_file(MISSING_BLANK);
         return 0;   //error value
     }
     Token token = token_new(buffer, len, type);
-    UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data).mData);
+    UnboundedInt value = *((UnboundedInt*)hashMap_get(storage, token.data));
     if (!AST_add(ast, value, token)) {
         token_free(token);
         return 0; //error value
@@ -545,9 +546,8 @@ static int treatment
     return 1; //add value
 }
 
-static Function buildCalledFunction(HashMapData data, char *buffer) {
+static Function buildCalledFunction(Function f, char *buffer) {
     Function result = FUNCTION_NULL;
-    Function f = *(Function *) data.mData;
     int dLen = (int) strlen(f.name);
     INCR_CALL;
     char *r = intToString(CALL_ID);
@@ -813,21 +813,20 @@ static void node_free(Node *n) {
  * Function's functions
  */
 static int function_apply(HashMap *map, char *name, ASN *node) {
-    HashMapData data = hashMap_get(map, name);
-    if (data.mType == NONE) return 0;
-    Function f = *(Function *) data.mData;
-    if (f.requested > f.argc) {
-        if (!EXIT_REQUEST) perror_file(MISSING_ARGUMENTS,FILE_NAME,FILE_LINE);
+    Function *f = (Function *)  hashMap_get(map, name);
+    if (f == NULL) return 0;
+    if (f->requested > f->argc) {
+        if (!EXIT_REQUEST) perror_file(MISSING_ARGUMENTS);
         EXIT_REQUEST = -1;
         return 0;
-    } else if (f.requested < f.argc) {
-        if (!EXIT_REQUEST) perror_file(TOO_MANY_ARGUMENTS, FILE_NAME, FILE_LINE);
+    } else if (f->requested < f->argc) {
+        if (!EXIT_REQUEST) perror_file(TOO_MANY_ARGUMENTS);
         EXIT_REQUEST = -1;
         return 0;
     }
-    f.func(f.argc, f.argv, f.argn);
-    if (node != NULL && f.retType != VOID_TYPE) node->result = f.argv[f.argc];
-    HashMap_remove(map, f.name);
+    f->func(f->argc, f->argv, f->argn);
+    if (node != NULL && f->retType != VOID_TYPE) node->result = f->argv[f->argc];
+    HashMap_remove(map, f->name);
     return 1;
 }
 

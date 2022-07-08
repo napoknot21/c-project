@@ -4,7 +4,9 @@
 
 #ifndef C_PROJECT_LIB_H
 #define C_PROJECT_LIB_H
+
 #include <stdlib.h>
+
 /**
  * Indicate if the char given in argument is an operator
  * @param s The char which will be tested.
@@ -43,4 +45,5 @@ static char *trim(const char *s, size_t len);
 static int isSignOrNumber(char c);
 
 static char *intToString(int n);
+
 #endif //C_PROJECT_LIB_H

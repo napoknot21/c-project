@@ -3,8 +3,12 @@
 //
 #ifndef C_PROJECT_FUNCTION_H
 #define C_PROJECT_FUNCTION_H
+
 #include "unbounded_int.h"
+#include "ast.h"
+#include "hashmap.h"
 #include <string.h>
+
 typedef enum FuncType {
     STD, DUMMY, NONE, CALL
 } FuncType;
@@ -27,11 +31,12 @@ struct Function {
     int (*func)(int, UnboundedInt *, char **);
 };
 
-static Function
-function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
-             unsigned short requestedArguments);
+Function function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
+                      unsigned short requestedArguments);
 
-static void function_free(Function f);
+void function_free(Function f);
+
+static int function_apply(HashMap *map, char *name, ASN *node);
 
 
 #define FUNCTION_NULL (Function) {.name = NULL, .requested = 0, .argc = 0, .retType= VOID_TYPE, .argv = NULL, .argn = NULL}

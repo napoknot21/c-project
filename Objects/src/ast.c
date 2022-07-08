@@ -6,8 +6,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "ast.h"
+
+#include "lib.h"
 
 #include "exec_error.h"
 #include "unbounded_int.h"
@@ -28,7 +31,7 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
  * @param s The node's data
  * @return The node's pointer
  */
-static ASN* ASN_new(UnboundedInt value, Token token);
+static ASN *ASN_new(UnboundedInt value, Token token);
 
 /**
  * Add a new Node in the AST according to the string given in argument. Manage the operator priority.
@@ -36,14 +39,14 @@ static ASN* ASN_new(UnboundedInt value, Token token);
  * @param storage. The storage tree.
  * @param s The node value.
  */
-static int ASN_add(UnboundedInt value, ASN** asn, Token token);
+static int ASN_add(UnboundedInt value, ASN **asn, Token token);
 
 /**
  * Free the ASN.
  * @param asn The node which will be free.
  * @return NULL.
  */
-static ASN* ASN_free(ASN* asn);
+static ASN *ASN_free(ASN *asn);
 
 
 /**
@@ -57,14 +60,8 @@ static ASN* ASN_free(ASN* asn);
  *         The DEFAULT_OP(empty node) is considered as an addition.
  *         if the node is not an operator, return the result of the node.
  */
-static UnboundedInt op(ASN* asn, HashMap* storage, UnboundedInt left, UnboundedInt right);
+static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedInt right);
 
-static AST *AST_new() {
-    AST *tree = malloc(sizeof(AST));
-    if (tree == NULL) return NULL;
-    tree->root = NULL;
-    return tree;
-}
 
 static ASN *ASN_new(UnboundedInt value, Token token) {
     ASN *node = malloc(sizeof(ASN));
@@ -96,15 +93,6 @@ static ASN *ASN_new(UnboundedInt value, Token token) {
     return node;
 }
 
-static int AST_add(AST *ast, UnboundedInt value, Token token) {
-    if (ast == NULL || isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
-        perror_file(INTERNAL);
-        return 0;
-    }
-
-    return ASN_add(value, &ast->root, token);
-}
-
 static int ASN_add(UnboundedInt value, ASN **asn, Token token) {
     if (*asn == NULL) {
         *asn = ASN_new(value, token_new("", 0, OPERATOR));
@@ -126,20 +114,6 @@ static int ASN_add(UnboundedInt value, ASN **asn, Token token) {
     return 1;
 }
 
-static AST *AST_clear(AST *ast) {
-    if (ast->root != NULL) {
-        ASN_free(ast->root);
-    }
-    ast->root = NULL;
-    return ast;
-}
-
-static AST *AST_free(AST *ast) {
-    ASN_free(ast->root);
-    free(ast);
-    return NULL;
-}
-
 static ASN *ASN_free(ASN *n) {
     if (n != NULL) {
         ASN_free(n->right);
@@ -147,14 +121,14 @@ static ASN *ASN_free(ASN *n) {
         //UnboundedInt_free(n->result);
         free(n);
     }
-    
+
     return n = NULL;
 }
 
 static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedInt right) {
     switch (asn->token.data[0]) {
         case '=':
-            EQUALS(storage, right, asn->left->token.data);
+            EQUALS(storage, asn->left->token.data, &right);
             return right;
         case '*':
             return MULTIPLICATION(right, left);
@@ -172,24 +146,6 @@ static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedI
     }
 }
 
-static int AST_apply(HashMap *storage, AST *ast, HashMap *map) {
-    if (storage == NULL || ast == NULL) {
-        errno = 22; //Invalid arguments
-        printErr("Internal Error");
-        return 0;
-    }
-    if (ast->root == NULL) {
-        perror_file(INVALID_SYNTAX);
-        return 0;
-    }
-    if (ast->root->token.data[0] == DEFAULT_OP && ast->root->left == NULL) {
-        perror_file(INVALID_OPERATOR);
-        return 0;
-    }
-    int err = 1;
-    ASN_apply(storage, ast->root, &err, map);
-    return err;
-}
 
 static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
     if (asn == NULL) return ll2UnboundedInt(0);
@@ -216,12 +172,61 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
     return asn->result = op(asn, storage, left, right);
 }
 
-static int AST_hasFunction(AST *ast) {
+AST *AST_new() {
+    AST *tree = malloc(sizeof(AST));
+    if (tree == NULL) return NULL;
+    tree->root = NULL;
+    return tree;
+}
+
+int AST_add(AST *ast, UnboundedInt value, Token token) {
+    if (ast == NULL || isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
+        perror_file(INTERNAL);
+        return 0;
+    }
+
+    return ASN_add(value, &ast->root, token);
+}
+
+int AST_apply(HashMap *storage, AST *ast, HashMap *map) {
+    if (storage == NULL || ast == NULL) {
+        errno = 22; //Invalid arguments
+        printErr("Internal Error");
+        return 0;
+    }
+    if (ast->root == NULL) {
+        perror_file(INVALID_SYNTAX);
+        return 0;
+    }
+    if (ast->root->token.data[0] == DEFAULT_OP && ast->root->left == NULL) {
+        perror_file(INVALID_OPERATOR);
+        return 0;
+    }
+    int err = 1;
+    ASN_apply(storage, ast->root, &err, map);
+    return err;
+}
+
+AST *AST_clear(AST *ast) {
+    if (ast->root != NULL) {
+        ASN_free(ast->root);
+    }
+    ast->root = NULL;
+    return ast;
+}
+
+AST *AST_free(AST *ast) {
+    ASN_free(ast->root);
+    free(ast);
+    return NULL;
+}
+
+int AST_hasFunction(AST *ast) {
     if (ast == NULL || ast->root == NULL) return 0;
     return ASN_hasFunction(ast->root);
 }
 
-static int ASN_hasFunction(ASN *asn) {
+int ASN_hasFunction(ASN *asn) {
     if (asn->token.type == FUNCTION) return 1;
     int left = (asn->left == NULL) ? 0 : ASN_hasFunction(asn->left);
     int right = (asn->right == NULL) ? 0 : ASN_hasFunction(asn->right);

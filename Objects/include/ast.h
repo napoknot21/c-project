@@ -4,14 +4,18 @@
 #ifndef C_PROJECT_AST_H
 #define C_PROJECT_AST_H
 
+
 #include "token.h"
 #include "unbounded_int.h"
+#include "hashmap.h"
+
 #define DEFAULT_OP '\0'
 #define MULTIPLICATION(a, b)(UnboundedInt_produit(a,b))
 #define ADDITION(a, b)(UnboundedInt_somme(a,b))
 #define SUBSTRACTION(a, b)(UnboundedInt_difference(a,b))
 //#define DIVISION(a, b)(UnboundedInt_division(a, b))
-#define EQUALS(t, a, b)(tree_add((t), (a), (b)))
+
+#define EQUALS(t, a, b)(hashMap_put((t), (a), (b)))
 //#define MODULO(a, b)((a) % (b))
 
 
@@ -21,8 +25,8 @@
 typedef struct ASN {
     Token token;
     UnboundedInt result;
-    ASN *left;
-    ASN *right;
+    struct ASN *left;
+    struct ASN *right;
 } ASN;
 
 typedef struct AST {
@@ -65,5 +69,7 @@ int AST_apply(HashMap *storage, AST *ast, HashMap *map);
 AST *AST_clear(AST *ast);
 
 int AST_hasFunction(AST *ast);
+
 int ASN_hasFunction(ASN *asn);
+
 #endif //C_PROJECT_AST_H

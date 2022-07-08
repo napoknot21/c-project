@@ -4,7 +4,9 @@
 
 #ifndef C_PROJECT_TOKEN_H
 #define C_PROJECT_TOKEN_H
+
 #include <stdlib.h>
+
 /**
 * Token types.
 */
@@ -33,4 +35,5 @@ static void token_free(Token t);
  * @return The created Token.
  */
 static Token token_new(char *s, size_t len, enum TokenType type);
+
 #endif //C_PROJECT_TOKEN_H

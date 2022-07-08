@@ -1,9 +1,9 @@
 add_library(Library
-	include/app_informations.h
-	include/exec_error.h
-	include/lib.h
-	src/lib.c
-	src/exec_error.c
-)
+        include/app_informations.h
+        include/exec_error.h
+        include/lib.h
+        src/lib.c
+        src/exec_error.c
+        )
 
 target_include_directories(Library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

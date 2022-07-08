@@ -4,6 +4,7 @@
 #include "lib.h"
 #include <string.h>
 #include<ctype.h>
+
 static int isHigher(const char a, const char b) {
     if (!isAnOperator(a)) return 0;
     if (!isAnOperator(b)) return 1;
@@ -47,12 +48,12 @@ static char *trim(const char *s, size_t len) {
         return NULL;
     }
     strncpy(ret, s, size);
-    ret [size] = '\0';
+    ret[size] = '\0';
     return ret;
 }
 
 static int isSignOrNumber(char c) {
-    return c == '+' || c == '-' || isdigit((unsigned)c);
+    return c == '+' || c == '-' || isdigit((unsigned) c);
 }
 
 static int nDigits(unsigned int i) {
@@ -87,4 +88,4 @@ static int str_equals(const char *s1, const char *s2) {
 static int isAnOperator(const char s) {
     return s == '*' || s == '+' || s == '-' || s == '=';
     //|| s == '%' || s == '/'
-
+}

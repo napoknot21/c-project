@@ -4,6 +4,7 @@
 
 #ifndef C_PROJECT_EXECERROR_H
 #define C_PROJECT_EXECERROR_H
+
 #include <stdio.h>
 #include "app_informations.h"
 
@@ -22,6 +23,9 @@ enum Error {
  * @return The error's message.
  */
 char *error_getMessage(enum Error error);
+
 void perror_file(enum Error error);
-void perror_src(char * message);
+
+void perror_src(char *message);
+
 #endif //C_PROJECT_EXECERROR_H

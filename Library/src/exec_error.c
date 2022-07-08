@@ -29,4 +29,5 @@ char *error_getMessage(enum Error error) {
 void perror_file(enum Error error) {
     fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE);
 }
-void perror_src(char * message);
+
+void perror_src(char *message);

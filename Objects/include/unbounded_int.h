@@ -106,4 +106,5 @@ int isError(UnboundedInt i);
  * @param ui structure UnboundedInt
  */
 void print_UnboundedInt(UnboundedInt ui);
+
 #endif // !C_PROJECT_UNBOUNDED_INT_H

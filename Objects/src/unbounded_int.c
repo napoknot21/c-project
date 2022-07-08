@@ -48,7 +48,7 @@ static UnboundedInt multiplicationPourUnChiffre(char c, UnboundedInt ui);
 
 static long long puissance(int base, int puissance);
 
-static UnboundedInt UnboundedInt_cpy (UnboundedInt u);
+static UnboundedInt UnboundedInt_cpy(UnboundedInt u);
 
 
 UnboundedInt string2UnboundedInt(char *e) {
@@ -72,12 +72,10 @@ UnboundedInt string2UnboundedInt(char *e) {
 }
 
 
-
 UnboundedInt ll2UnboundedInt(long long i) {
     char buffer[100];
     return string2UnboundedInt(UnboundedInt_lltoa(i, buffer, 10));
 }
-
 
 
 char *UnboundedInt2string(UnboundedInt ui) {
@@ -97,7 +95,6 @@ char *UnboundedInt2string(UnboundedInt ui) {
     e[ui.mLength] = '\0';
     return cleanNumber(e);
 }
-
 
 
 int UnboundedInt_cmp_UnboundedInt(UnboundedInt a, UnboundedInt b) {
@@ -126,14 +123,12 @@ int UnboundedInt_cmp_UnboundedInt(UnboundedInt a, UnboundedInt b) {
 }
 
 
-
 int UnboundedInt_cmp_ll(UnboundedInt a, long long b) {
     UnboundedInt num = ll2UnboundedInt(b);
     int bool = UnboundedInt_cmp_UnboundedInt(a, num);
     UnboundedInt_free(num);
     return bool;
 }
-
 
 
 UnboundedInt UnboundedInt_somme(UnboundedInt a_ui, UnboundedInt b_ui) {
@@ -150,7 +145,6 @@ UnboundedInt UnboundedInt_somme(UnboundedInt a_ui, UnboundedInt b_ui) {
     UnboundedInt res = (a.mSign == b.mSign) ? sumPositifUnbounded(a, b) : sumNegatifUnbounded(a, b);
     return res;
 }
-
 
 
 UnboundedInt UnboundedInt_difference(UnboundedInt a_ui, UnboundedInt b_ui) {
@@ -172,7 +166,6 @@ UnboundedInt UnboundedInt_difference(UnboundedInt a_ui, UnboundedInt b_ui) {
     else res = sumNegatifUnbounded(a, b);
     return res;
 }
-
 
 
 UnboundedInt UnboundedInt_produit(UnboundedInt a_ui, UnboundedInt b_ui) {
@@ -214,12 +207,12 @@ UnboundedInt UnboundedInt_produit(UnboundedInt a_ui, UnboundedInt b_ui) {
 }
 
 
-static UnboundedInt UnboundedInt_cpy (UnboundedInt u) {
+static UnboundedInt UnboundedInt_cpy(UnboundedInt u) {
     UnboundedInt res = UNBOUNDED_INT_ERROR;
     res.mSign = u.mSign;
     Number *c = u.mFirst;
     while (c != NULL) {
-        res = pushBack(res,c->mVal);
+        res = pushBack(res, c->mVal);
         c = c->mNext;
     }
     return res;
@@ -248,12 +241,12 @@ UnboundedInt UnboundedInt_division(UnboundedInt a_ui, UnboundedInt b_ui) {
             res.mLength = 1;
             res.mFirst = c;
             res.mLast = c;
-            res.mSign = (a.mSign == b.mSign) ? '+' : '-'; 
+            res.mSign = (a.mSign == b.mSign) ? '+' : '-';
             return res;
         } else if (isUnboundedUnity(b)) {
             a.mSign = (a.mSign == b.mSign) ? '+' : '-';
             return a;
-        } 
+        }
         Number *c = initChiffre('0');
         res.mLength = 1;
         res.mFirst = c;
@@ -337,6 +330,7 @@ UnboundedInt UnboundedInt_free(UnboundedInt u) {
     free(c);
     return UNBOUNDED_INT_ERROR;
 }
+
 /**
  * vérifie si le code ASCII du char est un nombre (entre 48 et 57)
  * @param c char à tester
@@ -410,19 +404,18 @@ static int isUnboundedUnity(UnboundedInt ui) {
  */
 static char *cleanNumber(char *str) { //todo: Retravailler le return de cette fonction pour qu'il soit homogene.
     size_t mLength = strlen(str);
-    char * zero = malloc(sizeof (char[2]));
+    char *zero = malloc(sizeof(char[2]));
     zero[0] = '0';
-    zero [1] = '\0';
+    zero[1] = '\0';
     int i;
     if (*str == '-' || *str == '+') {
         if (mLength == 2) {
-           if (*(str + 1) == '0'){
-               return zero;
-           }
-           else {
-               free(zero);
-              return str;
-           }
+            if (*(str + 1) == '0') {
+                return zero;
+            } else {
+                free(zero);
+                return str;
+            }
         }
         i = 1;
     } else {
@@ -636,7 +629,6 @@ static UnboundedInt deleteLastElem(UnboundedInt ui) {
 }
 
 
-
 void print_UnboundedInt(UnboundedInt ui) {
     UnboundedInt tmp = UNBOUNDED_INT_ERROR;
     if (ui.mSign == tmp.mSign && ui.mLength == tmp.mLength && ui.mFirst == tmp.mFirst && ui.mLast == tmp.mLast) {
@@ -708,7 +700,7 @@ static UnboundedInt sumPositifUnbounded(UnboundedInt a, UnboundedInt b) {
  *
  */
 static UnboundedInt sumNegatifUnbounded(UnboundedInt a, UnboundedInt b) {
-    int plusgrand = UnboundedInt_cmp_UnboundedInt(a,b);
+    int plusgrand = UnboundedInt_cmp_UnboundedInt(a, b);
     UnboundedInt res = UNBOUNDED_INT_ERROR;
     if (plusgrand == 0) {
         res.mSign = '+';
@@ -722,7 +714,7 @@ static UnboundedInt sumNegatifUnbounded(UnboundedInt a, UnboundedInt b) {
     Number *tmp_b;
     if (plusgrand == -1) {
 
-        res.mSign = (b.mSign == '+')? '-' : '+';
+        res.mSign = (b.mSign == '+') ? '-' : '+';
         tmp_a = b.mLast;
         tmp_b = a.mLast;
     } else {

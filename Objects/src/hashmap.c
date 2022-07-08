@@ -12,6 +12,14 @@ enum Type {
     NONE, DUMMY, FULL
 };
 
+enum Type;
+struct HashMapData {
+    size_t mHash;
+    char *mName;
+    void *mData;
+    enum Type mType;
+};
+
 #define DUMMY_DATA(h) ((HashMapData) {.mName = "", .mHash = (h), .mData = NULL, .mType = DUMMY})
 #define NONE_DATA ((HashMapData) {.mName = "", .mHash = 0, .mData = NULL, .mType = NONE})
 #define HASHMAP_INITIAL_SIZE 11
@@ -103,10 +111,10 @@ int hashMap_put(HashMap *map, char *name, void *value) {
     return 1;
 }
 
-HashMapData hashMap_get(HashMap *map, char *name) {
+void *hashMap_get(HashMap *map, char *name) {
     long long pos = find(map, name, 0);
-    if (pos == -1) return NONE_DATA;
-    return map->mData[pos];
+    if (pos == -1) return NULL;
+    return map->mData[pos].mData;
 }
 
 static void resize(HashMap *map, size_t newSize) {
