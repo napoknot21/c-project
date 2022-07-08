@@ -9,3 +9,6 @@ project (c-project VERSION 0.0.1 LANGUAGES C)
 add_subdirectory (Library)
 add_subdirectory (Objects)	
 add_subdirectory (Calc)
+
+enable_testing ()
+add_subdirectory (Test)

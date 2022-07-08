@@ -1,13 +1,18 @@
-add_library(Objects SHARED
-				${CMAKE_CURRENT_SOURCE_DIR}/src/ast.c
-				${CMAKE_CURRENT_SOURCE_DIR}/src/buffer.c
-				${CMAKE_CURRENT_SOURCE_DIR}/src/function.c
-				${CMAKE_CURRENT_SOURCE_DIR}/src/hashmap.c
-				${CMAKE_CURRENT_SOURCE_DIR}/src/stack.c
-				${CMAKE_CURRENT_SOURCE_DIR}/src/unbounded_int.c
+add_library(Objects
+				include/ast.h
+				include/buffer.h
+				include/function.h
+				include/hashmap.h
+				include/stack.h
+				include/unbounded_int.h
+				src/ast.c
+				src/buffer.c
+				src/function.c
+				src/hashmap.c
+				src/stack.c
+				src/unbounded_int.c
 )
-add_test(Objects PRIVATE src/test_unbounded_int.c)
 
-target_include_directories(Objects INTERFACE include/)
+target_include_directories(Objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
 target_link_libraries(Objects PRIVATE Library)
