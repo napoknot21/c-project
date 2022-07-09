@@ -297,11 +297,16 @@ UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n) {
     return result;
 }
 
+/**
+ * Return the absolute value of x. There is no copy
+ * @param x The unbounded int that will be the absolute value.
+ */
 UnboundedInt UnboundedInt_abs(UnboundedInt x) {
     x.mSign = '+';
     return x;
 }
 
+//todo: find a way to make the freed possible, ERROR on u3 l315
 UnboundedInt UnboundedInt_fact(UnboundedInt n) {
     UnboundedInt decr = ll2UnboundedInt(1);
     UnboundedInt result = ll2UnboundedInt(1);
@@ -310,7 +315,7 @@ UnboundedInt UnboundedInt_fact(UnboundedInt n) {
         UnboundedInt_free(result);
         result = tmp;
         tmp = UnboundedInt_difference(n, decr);
-        UnboundedInt_free(n);
+        UnboundedInt_free(n); //access to desallocated memory
         n = tmp;
     }
     UnboundedInt_free(decr);

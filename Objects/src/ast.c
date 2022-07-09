@@ -166,7 +166,7 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
         return ll2UnboundedInt(0);
     }
     if (asn->token.type == FUNCTION) {
-        *err = function_apply(map, asn->token.data, asn);
+        //*err = function_apply(map, asn->token.data, asn);
         return asn->result;
     }
     return asn->result = op(asn, storage, left, right);
@@ -232,5 +232,3 @@ int ASN_hasFunction(ASN *asn) {
     int right = (asn->right == NULL) ? 0 : ASN_hasFunction(asn->right);
     return left || right;
 }
-
-

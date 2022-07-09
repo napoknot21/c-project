@@ -33,17 +33,17 @@ static size_t hash(const char *name) {
     size_t value = 0;
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++) {
-        value += (size_t) (name[i] * (pow(31, len - i)));
+        value += (size_t) (name[i] * pow(31, len - i));
     }
     return value;
 }
 
 static size_t hash1(double capacity, size_t hash) {
-    return (size_t) (((double) (hash) / HASH_A) * capacity);
+    return (size_t) ((double) hash / HASH_A * capacity);
 }
 
 static size_t hash2(size_t hash) {
-    return (size_t) (2 * hash + 1) % LLONG_MAX;
+    return (2 * hash + 1) % LLONG_MAX;
 }
 
 
@@ -57,13 +57,14 @@ HashMap *HashMap_new() {
     map->mMaxRatio = HASHMAP_MAX_RATIO;
     map->mCapacity = HASHMAP_INITIAL_SIZE;
     map->mData = malloc(sizeof(HashMapData) * map->mCapacity);
-    for (int i = 0; i < map->mCapacity; i++) {
+    for (size_t i = 0; i < map->mCapacity; i++) {
         map->mData[i] = NONE_DATA;
     }
     if (map->mData == NULL) {
         perror_src("");
         free(map);
         return NULL;
+        
     }
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
@@ -105,7 +106,7 @@ int hashMap_put(HashMap *map, char *name, void *value) {
     }
     map->mData[empty] = new;
     if (map->mDummyNumber + map->mKeyNumber >= (size_t) ((double) map->mCapacity * map->mMaxRatio)) {
-        int ratio = (map->mDummyNumber < map->mKeyNumber) ? 2 : 1;
+        int ratio = (map->mDummyNumber < map->mKeyNumber)? 2 : 1;
         resize(map, ratio * map->mCapacity);
     }
     return 1;

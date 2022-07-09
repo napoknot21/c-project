@@ -5,6 +5,8 @@
 #include <string.h>
 #include<ctype.h>
 
+#include "exec_error.h"
+
 static int isHigher(const char a, const char b) {
     if (!isAnOperator(a)) return 0;
     if (!isAnOperator(b)) return 1;
@@ -35,16 +37,16 @@ static char *trim(const char *s, size_t len) {
             break;
         }
     }
-    for (int i = (int) len; i >= 0; i--) {
-        if (!isspace((unsigned) s[i])) {
+    for (int i = (int)len; i >= 0; i--) {
+        if (!isspace((int)s[i])) {
             end = i;
             break;
         }
     }
     int size = end - start;
-    char *ret = malloc((size) * sizeof(char) + 1);
+    char *ret = malloc(size * sizeof(char) + 1);
     if (ret == NULL) {
-        printErr("");
+       perror_src("");
         return NULL;
     }
     strncpy(ret, s, size);
@@ -52,20 +54,21 @@ static char *trim(const char *s, size_t len) {
     return ret;
 }
 
-static int isSignOrNumber(char c) {
+int isSignOrNumber(char c) {
     return c == '+' || c == '-' || isdigit((unsigned) c);
 }
 
-static int nDigits(unsigned int i) {
+int nDigits(unsigned int i) {
     int n = 1;
     while (i > 9) {
         n++;
         i /= 10;
     }
     return n;
+    
 }
 
-static char *intToString(int n) {
+char *intToString(int n) {
     int len = nDigits(abs(n));
     char *s = malloc(len * sizeof(char));
     if (s == NULL) return NULL;

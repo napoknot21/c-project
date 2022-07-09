@@ -89,8 +89,6 @@ static void test_UnboundedInt_somme() {
     UnboundedInt_free(u7);
     UnboundedInt_free(res1);
     UnboundedInt_free(res2);
-    //todo: fix desallocated memory
-    //todo : find a way to generalize the memory management
     UnboundedInt_free(res3);
     UnboundedInt_free(res4);
     UnboundedInt_free(res5);

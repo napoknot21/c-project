@@ -36,7 +36,7 @@ Function function_new(char *name, RetType type, int (*function)(int, UnboundedIn
 
 void function_free(Function f);
 
-static int function_apply(HashMap *map, char *name, ASN *node);
+int function_apply(HashMap *map, char *name, ASN *node);
 
 
 #define FUNCTION_NULL (Function) {.name = NULL, .requested = 0, .argc = 0, .retType= VOID_TYPE, .argv = NULL, .argn = NULL}
