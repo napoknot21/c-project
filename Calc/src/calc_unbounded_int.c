@@ -685,25 +685,25 @@ static int buffer_add(Buffer *buffer, const char e) {
  */
 
 static int std_print(int argc, UnboundedInt *argv, char **argn) {
-    char *result = UnboundedInt2string(argv[0]);
+    char *result = unboundedInt_toString(argv[0]);
     fprintf(OUT, "%s = %s \n", argn[0], result);
     argv[argc] = UNBOUNDED_INT_ERROR;
     //free(result);
-    //UnboundedInt_free(argv[0]);
+    //unboundedInt_free(argv[0]);
     //free(argn[0]);
     return 0;
 }
 
 static int std_pow(int argc, UnboundedInt *argv, char **argn) {
-    argv[argc] = UnboundedInt_pow(argv[0], argv[1]);
+    argv[argc] = unboundedInt_pow(argv[0], argv[1]);
     return 1;
 
 }
 
 static int std_abs(int argc, UnboundedInt *argv, char **argn) {
-    argv[argc] = UnboundedInt_abs(argv[0]);
+    argv[argc] = unboundedInt_abs(argv[0]);
     //free(argn[0]);
-    //UnboundedInt_free(argv[0]);
+    //unboundedInt_free(argv[0]);
     return 1;
 }
 
@@ -714,7 +714,7 @@ static int std_exit(int argc, UnboundedInt *argv, char **argn) {
 }
 
 static int std_fact(int argc, UnboundedInt *argv, char **argn) {
-    argv[argc] = UnboundedInt_fact(argv[0]);
+    argv[argc] = unboundedInt_fact(argv[0]);
     //(argv[0]);
     //free(argn[0]);
     return 1;
@@ -805,7 +805,7 @@ static void node_free(Node *n) {
     node_free(n->left);
     node_free(n->middle);
     node_free(n->right);
-    //UnboundedInt_free(n->data);
+    //unboundedInt_free(n->data);
     //free(n);
 }
 

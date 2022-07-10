@@ -10,8 +10,7 @@ add_library(Objects
         src/function.c
         src/hashmap.c
         src/stack.c
-        src/unbounded_int.c
-        )
+        src/unbounded_int.c)
 
 target_include_directories(Objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 

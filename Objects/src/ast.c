@@ -68,22 +68,22 @@ static ASN *ASN_new(UnboundedInt value, Token token) {
     if (node == NULL) return NULL;
     switch (token.type) {
         case OPERATOR:
-            node->result = ll2UnboundedInt(0);
+            node->result = unboundedInt_newll(0);
             node->token = token;
             break;
         case NUMBER:
             node->token = token;
-            node->result = string2UnboundedInt(token.data);
+            node->result = unboundedInt_newString(token.data);
             break;
         case VAR:
             node->result = value;
             node->token = token;
             break;
         case FUNCTION:
-            node->result = ll2UnboundedInt(0);
+            node->result = unboundedInt_newll(0);
 
         default:
-            node->result = ll2UnboundedInt(0);
+            node->result = unboundedInt_newll(0);
             node->token = token;
             break;
     }
@@ -118,7 +118,7 @@ static ASN *ASN_free(ASN *n) {
     if (n != NULL) {
         ASN_free(n->right);
         ASN_free(n->left);
-        //UnboundedInt_free(n->result);
+        //unboundedInt_free(n->result);
         free(n);
     }
 
@@ -148,7 +148,7 @@ static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedI
 
 
 static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
-    if (asn == NULL) return ll2UnboundedInt(0);
+    if (asn == NULL) return unboundedInt_newll(0);
     if (asn->token.type == NUMBER || asn->token.type == VAR) {
         return asn->result;
     }
@@ -158,12 +158,12 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
         ((asn->left == NULL) || (asn->right == NULL))) {
         if (*err) perror_file(INVALID_SYNTAX);
         *err = 0;
-        return ll2UnboundedInt(0);
+        return unboundedInt_newll(0);
     }
     if (asn->token.data[0] == '=' && asn->left->token.type == NUMBER) { //Invalid assignation
         if (*err) perror_file(INVALID_SYNTAX);
         *err = 0;
-        return ll2UnboundedInt(0);
+        return unboundedInt_newll(0);
     }
     if (asn->token.type == FUNCTION) {
         //*err = function_apply(map, asn->token.data, asn);
@@ -180,7 +180,7 @@ AST *AST_new() {
 }
 
 int AST_add(AST *ast, UnboundedInt value, Token token) {
-    if (ast == NULL || isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
+    if (ast == NULL || unboundedInt_isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
         perror_file(INTERNAL);
         return 0;
     }

@@ -3,6 +3,11 @@
 //
 
 #include "exec_error.h"
+
+#include <errno.h>
+#include <stdio.h> 
+#include <string.h>
+
 #include "app_informations.h"
 
 char *error_getMessage(enum Error error) {
@@ -30,4 +35,6 @@ void perror_file(enum Error error) {
     fprintf(stderr, "%s in file %s in line %d\n", error_getMessage(error), FILE_NAME, FILE_LINE);
 }
 
-void perror_src(char *message);
+void perror_src(char *message) {
+    fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, message);
+}

@@ -7,13 +7,13 @@
 
 #include "exec_error.h"
 
-static int isHigher(const char a, const char b) {
+int isHigher(const char a, const char b) {
     if (!isAnOperator(a)) return 0;
     if (!isAnOperator(b)) return 1;
     return priority(a) > priority(b);
 }
 
-static unsigned short priority(const char a) {
+unsigned short priority(const char a) {
     switch (a) {
         case '=':
             return 1;
@@ -29,7 +29,7 @@ static unsigned short priority(const char a) {
     }
 }
 
-static char *trim(const char *s, size_t len) {
+char *trim(const char *s, size_t len) {
     int start = 0, end = 0;
     for (int i = 0; i < (int) len; i++) {
         if (!isspace((unsigned) s[i])) {
@@ -76,7 +76,7 @@ char *intToString(int n) {
     return s;
 }
 
-static int str_equals(const char *s1, const char *s2) {
+int str_equals(const char *s1, const char *s2) {
     int l1 = (int) strlen(s1);
     int l2 = (int) strlen(s2);
     if (l1 != l2) return 0;
@@ -88,7 +88,70 @@ static int str_equals(const char *s1, const char *s2) {
     return 1;
 }
 
-static int isAnOperator(const char s) {
+int isAnOperator(const char s) {
     return s == '*' || s == '+' || s == '-' || s == '=';
     //|| s == '%' || s == '/'
+}
+
+int isAStringNum(const char* c) {
+    size_t mLength = strlen(c);
+    if (mLength == 0) return 0;
+    int i;
+    if (*c == '-' || *c == '+') {
+        if (mLength == 1) return 0;
+        i = 1;
+    }
+    else {
+        i = 0;
+    }
+    for (size_t j = i; j < strlen(c); j++) {
+        if (!isdigit(c[j])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+char* cleanNumber(char* str) { //todo: Retravailler le return de cette fonction pour qu'il soit homogene.
+    size_t length = strlen(str);
+    char* zero = malloc(sizeof(char[2]));
+    zero[0] = '0';
+    zero[1] = '\0';
+    int i;
+    if (*str == '-' || *str == '+') {
+        if (length == 2) {
+            if (*(str + 1) == '0') {
+                return zero;
+            }
+        	free(zero);
+        	return str;
+        }
+        i = 1;
+    }
+    else {
+        if (length == 1) {
+            free(zero);
+            return str;
+        }
+        i = 0;
+    }
+    int index = i;
+    for (size_t j = i; j < length; j++) {
+        if (*(str + j) != '0') {
+            break;
+        }
+        index++;
+    }
+    if (index == i) {
+        free(zero);
+        return str;
+    }
+    if (index == length) return zero;
+    free(zero);
+    int newLen = length - index + 1;
+    char* newStr = malloc(sizeof(char) * (newLen + 1));
+    if (i == 1) newStr[0] = str[0];
+    memmove(newStr, str + index, length);
+    newStr[newLen] = '\0';
+    return newStr;
 }

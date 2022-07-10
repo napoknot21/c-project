@@ -5,11 +5,6 @@
 #ifndef C_PROJECT_EXECERROR_H
 #define C_PROJECT_EXECERROR_H
 
-#include <stdio.h>
-#include "app_informations.h"
-
-#define pERROR(error)()
-#define printErr(c)(fprintf(stderr, "%s in file %s in line %d\n %s\n", strerror(errno), __FILE__, __LINE__, (c)))
 /**
  * Parser and lexer errors.
  */

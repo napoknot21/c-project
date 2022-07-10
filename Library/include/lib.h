@@ -46,4 +46,19 @@ int isSignOrNumber(char c);
 
 char *intToString(int n);
 
+/**
+ * Vérifie que le string est bien composé de nombres
+ * @param c String à tester
+ * @return 1 = true, et 0 sinon
+ */
+int isAStringNum(const char* c);
+
+/**
+ * Fonction qui permet de "nettoyer" un nombre.
+ * Free l'argument, s'il y a une copie.
+ * @param str le nombre passé en paramètre sous forme de string
+ * @return le nombre sans 0 ou d'autres characters de plus
+ */
+char* cleanNumber(char* str);
+
 #endif //C_PROJECT_LIB_H
