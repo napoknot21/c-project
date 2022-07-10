@@ -4,6 +4,7 @@ add_library(Library
         include/lib.h
         src/lib.c
         src/exec_error.c
-        )
+        src/test.c 
+        include/test.h)
 
 target_include_directories(Library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
