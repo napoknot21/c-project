@@ -112,7 +112,7 @@ int isAStringNum(const char* c) {
     return 1;
 }
 
-char* cleanNumber(char* str) { //todo: Retravailler le return de cette fonction pour qu'il soit homogene.
+char* cleanNumber(char* str) {
     size_t length = strlen(str);
     char* zero = malloc(sizeof(char[2]));
     zero[0] = '0';

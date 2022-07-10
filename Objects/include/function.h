@@ -31,12 +31,12 @@ struct Function {
     int (*func)(int, UnboundedInt *, char **);
 };
 
-Function function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
+Function Function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
                       unsigned short requestedArguments);
 
-void function_free(Function f);
+void Function_free(Function f);
 
-int function_apply(HashMap *map, char *name, ASN *node);
+int Function_apply(HashMap *map, char *name, ASN *node);
 
 
 #define FUNCTION_NULL (Function) {.name = NULL, .requested = 0, .argc = 0, .retType= VOID_TYPE, .argv = NULL, .argn = NULL}

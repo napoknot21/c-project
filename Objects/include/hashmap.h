@@ -22,13 +22,13 @@ struct HashMap {
     void (*mFree)(void *);
 };
 
-void *hashMap_get(HashMap *map, char *name);
+void *HashMap_get(HashMap *map, char *name);
 
 HashMap *HashMap_new();
 
-int hashMap_put(HashMap *map, char *name, void *value);
+int HashMap_put(HashMap *map, char *name, void *value);
 
-void hashMap_free(HashMap *map);
+void HashMap_free(HashMap *map);
 
 int HashMap_remove(HashMap *map, char *name);
 

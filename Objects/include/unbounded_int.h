@@ -22,28 +22,28 @@ typedef struct {
  * Prototypes de fonctions (headers)
  */
 
-UnboundedInt unboundedInt_free(UnboundedInt u);
+UnboundedInt UnboundedInt_free(UnboundedInt u);
 
 /**
  * Convertis un string en type UnboundedInt
  * @param e : le string à convertir
  * @return UnboundedInt la paramètre comme nouvelle structure
  */
-UnboundedInt unboundedInt_newString(char *e);
+UnboundedInt UnboundedInt_newString(char *e);
 
 /**
  * Convertit un long en type UnboundedInt
  * @param i variable à convertir
  * @return UnboundedInt : paramètre comme nouvelle struct
  */
-UnboundedInt unboundedInt_newll(long long i);
+UnboundedInt UnboundedInt_newll(long long i);
 
 /**
  * Convertis un type UnboundedInt en string
  * @param i struct UnboundedInt
  * @return char* le paramètre sous en format string
  */
-char *unboundedInt_toString(UnboundedInt ui);
+char *UnboundedInt_toString(UnboundedInt ui);
 
 /**
  * Vérifie si la struct a est plus grande que celle de b (ou à l'inverse)
@@ -52,7 +52,7 @@ char *unboundedInt_toString(UnboundedInt ui);
  * @param b struct UnboundedInt
  * @return int : −1 si a < b; 0 si a == b et 1 sinon
  */
-int unboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b);
+int UnboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b);
 
 /**
  * Vérifie si la struct a est plus grande que long b (ou à l'inverse)
@@ -60,7 +60,7 @@ int unboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b);
  * @param b long
  * @return int : −1 si a < b; 0 si a == b et 1 sinon
  */
-int unboundedInt_cmpll(UnboundedInt a, long long b);
+int UnboundedInt_cmpll(UnboundedInt a, long long b);
 
 /**
  * Fais la somme de deux struct UnboundedInt
@@ -68,7 +68,7 @@ int unboundedInt_cmpll(UnboundedInt a, long long b);
  * @param b struct UnboundedInt
  * @return la somme sous forme de struct UnboundedInt
  */
-UnboundedInt unboundedInt_add(UnboundedInt a, UnboundedInt b);
+UnboundedInt UnboundedInt_add(UnboundedInt a, UnboundedInt b);
 
 /**
  * Fais la difference des deux struct struct UnboundedInt
@@ -76,7 +76,7 @@ UnboundedInt unboundedInt_add(UnboundedInt a, UnboundedInt b);
  * @param b struct UnboundedInt
  * @return la différence sous forme de struct UnboundedInt
  */
-UnboundedInt unboundedInt_subtract(UnboundedInt a, UnboundedInt b);
+UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b);
 
 /**
  * Fait la multiplication de deux structs UnboundedInt
@@ -84,7 +84,7 @@ UnboundedInt unboundedInt_subtract(UnboundedInt a, UnboundedInt b);
  * @param b struct UnboundedInt
  * @return le produit sous forme de struct UnboundedInt
  */
-UnboundedInt unboundedInt_multiply(UnboundedInt a, UnboundedInt b);
+UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b);
 
 /**
  * fais la division de deux structures unbounded-int
@@ -92,20 +92,20 @@ UnboundedInt unboundedInt_multiply(UnboundedInt a, UnboundedInt b);
  * @param b struct UnboundedInt
  * @return le quotient entier de la division
  */
-UnboundedInt unboundedInt_divide(UnboundedInt a, UnboundedInt b);
+UnboundedInt UnboundedInt_divide(UnboundedInt a, UnboundedInt b);
 
-UnboundedInt unboundedInt_pow(UnboundedInt x, UnboundedInt n);
+UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n);
 
-UnboundedInt unboundedInt_abs(UnboundedInt x);
+UnboundedInt UnboundedInt_abs(UnboundedInt x);
 
-UnboundedInt unboundedInt_fact(UnboundedInt n);
+UnboundedInt UnboundedInt_fact(UnboundedInt n);
 
-int unboundedInt_isError(UnboundedInt i);
+int UnboundedInt_isError(UnboundedInt i);
 
 /**
  * Fonction auxiliaire pour afficher une structure UnboundedInt
  * @param ui structure UnboundedInt
  */
-void unboundedInt_print(UnboundedInt ui);
+void UnboundedInt_print(UnboundedInt ui);
 
 #endif // !C_PROJECT_UNBOUNDED_INT_H

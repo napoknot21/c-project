@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
 
@@ -15,7 +14,6 @@
 #include "exec_error.h"
 #include "unbounded_int.h"
 #include "token.h"
-#include "function.h"
 #include "hashmap.h"
 
 /**
@@ -68,22 +66,22 @@ static ASN *ASN_new(UnboundedInt value, Token token) {
     if (node == NULL) return NULL;
     switch (token.type) {
         case OPERATOR:
-            node->result = unboundedInt_newll(0);
+            node->result = UnboundedInt_newll(0);
             node->token = token;
             break;
         case NUMBER:
             node->token = token;
-            node->result = unboundedInt_newString(token.data);
+            node->result = UnboundedInt_newString(token.data);
             break;
         case VAR:
             node->result = value;
             node->token = token;
             break;
         case FUNCTION:
-            node->result = unboundedInt_newll(0);
+            node->result = UnboundedInt_newll(0);
 
         default:
-            node->result = unboundedInt_newll(0);
+            node->result = UnboundedInt_newll(0);
             node->token = token;
             break;
     }
@@ -95,7 +93,7 @@ static ASN *ASN_new(UnboundedInt value, Token token) {
 
 static int ASN_add(UnboundedInt value, ASN **asn, Token token) {
     if (*asn == NULL) {
-        *asn = ASN_new(value, token_new("", 0, OPERATOR));
+        *asn = ASN_new(value, Token_new("", 0, OPERATOR));
         (*asn)->left = ASN_new(value, token);
     } else if ((*asn)->token.data[0] == DEFAULT_OP) {
         if ((*asn)->token.type != token.type) {
@@ -148,7 +146,7 @@ static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedI
 
 
 static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
-    if (asn == NULL) return unboundedInt_newll(0);
+    if (asn == NULL) return UnboundedInt_newll(0);
     if (asn->token.type == NUMBER || asn->token.type == VAR) {
         return asn->result;
     }
@@ -158,12 +156,12 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
         ((asn->left == NULL) || (asn->right == NULL))) {
         if (*err) perror_file(INVALID_SYNTAX);
         *err = 0;
-        return unboundedInt_newll(0);
+        return UnboundedInt_newll(0);
     }
     if (asn->token.data[0] == '=' && asn->left->token.type == NUMBER) { //Invalid assignation
         if (*err) perror_file(INVALID_SYNTAX);
         *err = 0;
-        return unboundedInt_newll(0);
+        return UnboundedInt_newll(0);
     }
     if (asn->token.type == FUNCTION) {
         //*err = function_apply(map, asn->token.data, asn);
@@ -180,7 +178,7 @@ AST *AST_new() {
 }
 
 int AST_add(AST *ast, UnboundedInt value, Token token) {
-    if (ast == NULL || unboundedInt_isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
+    if (ast == NULL || UnboundedInt_isError(value) || isspace((unsigned) token.data[0]) || token.type == VOID) {
         perror_file(INTERNAL);
         return 0;
     }
@@ -191,7 +189,7 @@ int AST_add(AST *ast, UnboundedInt value, Token token) {
 int AST_apply(HashMap *storage, AST *ast, HashMap *map) {
     if (storage == NULL || ast == NULL) {
         errno = 22; //Invalid arguments
-        printErr("Internal Error");
+        perror_src("Internal Error");
         return 0;
     }
     if (ast->root == NULL) {

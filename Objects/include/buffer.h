@@ -17,14 +17,14 @@ typedef struct Buffer {
  * Create a dynamic buffer.
  * @return The buffer pointer.
  */
-Buffer *buffer_new();
+Buffer *Buffer_new();
 
 /**
  * Clear the buffer and puts its capacity to the BUFFER_SIZE.
  * @param buffer The buffer pointer.
  * @return the buffer if everything went fine, NULL otherwise
  */
-Buffer *buffer_clear(Buffer *buffer);
+Buffer *Buffer_clear(Buffer *buffer);
 
 /**
  * Free the buffer.
@@ -32,7 +32,7 @@ Buffer *buffer_clear(Buffer *buffer);
  * @param buffer The buffer which will be free.
  * @return NULL.
  */
-Buffer *buffer_free(Buffer *buffer);
+Buffer *Buffer_free(Buffer *buffer);
 
 /**
  * Add the given element in the given buffer
@@ -40,7 +40,7 @@ Buffer *buffer_free(Buffer *buffer);
  * @param e The element which will be added to the buffer
  * @return 1 if the element is added to the buffer, 0 otherwise
  */
-int buffer_add(Buffer *buffer, char e);
+int Buffer_add(Buffer *buffer, char e);
 
 
 #endif //C_PROJECT_BUFFER_H

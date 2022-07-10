@@ -10,12 +10,12 @@
 #include "hashmap.h"
 
 #define DEFAULT_OP '\0'
-#define MULTIPLICATION(a, b)(unboundedInt_multiply(a,b))
-#define ADDITION(a, b)(unboundedInt_add(a,b))
-#define SUBSTRACTION(a, b)(unboundedInt_subtract(a,b))
+#define MULTIPLICATION(a, b)(UnboundedInt_multiply(a,b))
+#define ADDITION(a, b)(UnboundedInt_add(a,b))
+#define SUBSTRACTION(a, b)(UnboundedInt_subtract(a,b))
 //#define DIVISION(a, b)(unboundedInt_divide(a, b))
 
-#define EQUALS(t, a, b)(hashMap_put((t), (a), (b)))
+#define EQUALS(t, a, b)(HashMap_put((t), (a), (b)))
 //#define MODULO(a, b)((a) % (b))
 
 

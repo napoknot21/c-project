@@ -26,7 +26,7 @@ typedef struct Token {
  * Free a token.
  * @param t The token which will be free
  */
-void token_free(Token t);
+void Token_free(Token t);
 
 /**
  * Create a new token according to the string given in argument and the type.
@@ -34,6 +34,6 @@ void token_free(Token t);
  * @param type The token's type.
  * @return The created Token.
  */
-Token token_new(char *s, size_t len, enum TokenType type);
+Token Token_new(char *s, size_t len, enum TokenType type);
 
 #endif //C_PROJECT_TOKEN_H

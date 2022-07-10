@@ -50,7 +50,7 @@ static long long puissance(int base, int puissance);
 static UnboundedInt UnboundedInt_cpy(UnboundedInt u);
 
 
-UnboundedInt unboundedInt_newString(char *e) {
+UnboundedInt UnboundedInt_newString(char *e) {
     if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
     const char *str = cleanNumber(e);
     UnboundedInt res = UNBOUNDED_INT_ERROR;
@@ -75,13 +75,13 @@ UnboundedInt unboundedInt_newString(char *e) {
 }
 
 
-UnboundedInt unboundedInt_newll(long long i) {
+UnboundedInt UnboundedInt_newll(long long i) {
     char buffer[100];
     return unboundedInt_newString(UnboundedInt_lltoa(i, buffer, 10));
 }
 
 
-char *unboundedInt_toString(UnboundedInt ui) {
+char *UnboundedInt_toString(UnboundedInt ui) {
     if (isUnboundedIntEmpty(ui)) return NULL;
     char *e = malloc(sizeof(char) * (ui.mLength + 2));
     if (e == NULL) return NULL;
@@ -100,7 +100,7 @@ char *unboundedInt_toString(UnboundedInt ui) {
 }
 
 
-int unboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b) {
+int UnboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b) {
     if ((isUnboundedZero(&a) && isUnboundedZero(&b)) || (isUnboundedUnity(a) && isUnboundedUnity(b))) return 0;
     UnboundedInt a_c = cleanUnbounded_int(a);
     UnboundedInt b_c = cleanUnbounded_int(b);
@@ -126,7 +126,7 @@ int unboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b) {
 }
 
 
-int unboundedInt_cmpll(UnboundedInt a, long long b) {
+int UnboundedInt_cmpll(UnboundedInt a, long long b) {
     UnboundedInt num = unboundedInt_newll(b);
     int bool = unboundedInt_cmpUnboundedInt(a, num);
     unboundedInt_free(num);
@@ -134,10 +134,10 @@ int unboundedInt_cmpll(UnboundedInt a, long long b) {
 }
 
 
-UnboundedInt unboundedInt_add(UnboundedInt a_ui, UnboundedInt b_ui) {
-    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    UnboundedInt a = cleanUnbounded_int(a_ui);
-    UnboundedInt b = cleanUnbounded_int(b_ui);
+UnboundedInt UnboundedInt_add(UnboundedInt a, UnboundedInt b) {
+    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+    UnboundedInt a = cleanUnbounded_int(a);
+    UnboundedInt b = cleanUnbounded_int(b);
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         if (isUnboundedZero(&a) && !isUnboundedZero(&b)) {
             return b;
@@ -150,10 +150,10 @@ UnboundedInt unboundedInt_add(UnboundedInt a_ui, UnboundedInt b_ui) {
 }
 
 
-UnboundedInt unboundedInt_subtract(UnboundedInt a_ui, UnboundedInt b_ui) {
-    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    UnboundedInt a = cleanUnbounded_int(a_ui);
-    UnboundedInt b = cleanUnbounded_int(b_ui);
+UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b) {
+    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+    UnboundedInt a = cleanUnbounded_int(a);
+    UnboundedInt b = cleanUnbounded_int(b);
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         if (isUnboundedZero(&a) && isUnboundedZero(&b)) return UnboundedInt_cpy(a);
         else if (isUnboundedZero(&a)) {
@@ -171,10 +171,10 @@ UnboundedInt unboundedInt_subtract(UnboundedInt a_ui, UnboundedInt b_ui) {
 }
 
 
-UnboundedInt unboundedInt_multiply(UnboundedInt a_ui, UnboundedInt b_ui) {
-    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    UnboundedInt a = cleanUnbounded_int(a_ui);
-    UnboundedInt b = cleanUnbounded_int(b_ui);
+UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b) {
+    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+    UnboundedInt a = cleanUnbounded_int(a);
+    UnboundedInt b = cleanUnbounded_int(b);
     UnboundedInt res = UNBOUNDED_INT_ERROR;
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         Number *c = initChiffre('0');
@@ -222,10 +222,10 @@ static UnboundedInt UnboundedInt_cpy(UnboundedInt u) {
 }
 
 
-UnboundedInt unboundedInt_divide(UnboundedInt a_ui, UnboundedInt b_ui) {
-    if (isUnboundedIntEmpty(a_ui) || isUnboundedIntEmpty(b_ui)) return UNBOUNDED_INT_ERROR;
-    UnboundedInt a = cleanUnbounded_int(a_ui);
-    UnboundedInt b = cleanUnbounded_int(b_ui);
+UnboundedInt UnboundedInt_divide(UnboundedInt a, UnboundedInt b) {
+    if (isUnboundedIntEmpty(a) || isUnboundedIntEmpty(b)) return UNBOUNDED_INT_ERROR;
+    UnboundedInt a = cleanUnbounded_int(a);
+    UnboundedInt b = cleanUnbounded_int(b);
     UnboundedInt res = UNBOUNDED_INT_ERROR;
     if (isUnboundedZero(&a) || isUnboundedZero(&b)) {
         if (isUnboundedZero(&b)) return UNBOUNDED_INT_ERROR;
@@ -281,7 +281,7 @@ UnboundedInt unboundedInt_divide(UnboundedInt a_ui, UnboundedInt b_ui) {
     return unboundedInt_newll(cmpt);
 }
 
-UnboundedInt unboundedInt_pow(UnboundedInt x, UnboundedInt n) {
+UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n) {
     UnboundedInt result = unboundedInt_newll(1);
     //UnboundedInt decr = unboundedInt_newll(1);
     //UnboundedInt mod = unboundedInt_newll(2);
@@ -304,13 +304,13 @@ UnboundedInt unboundedInt_pow(UnboundedInt x, UnboundedInt n) {
  * Return the absolute value of x. There is no copy
  * @param x The unbounded int that will be the absolute value.
  */
-UnboundedInt unboundedInt_abs(UnboundedInt x) {
+UnboundedInt UnboundedInt_abs(UnboundedInt x) {
     x.mSign = '+';
     return x;
 }
 
 //todo: find a way to make the freed possible, ERROR on u3 l315
-UnboundedInt unboundedInt_fact(UnboundedInt n) {
+UnboundedInt UnboundedInt_fact(UnboundedInt n) {
     UnboundedInt decr = unboundedInt_newll(1);
     UnboundedInt result = unboundedInt_newll(1);
     while (unboundedInt_cmpll(n, 0) > 0) {
@@ -325,7 +325,7 @@ UnboundedInt unboundedInt_fact(UnboundedInt n) {
     return result;
 }
 
-UnboundedInt unboundedInt_free(UnboundedInt u) {
+UnboundedInt UnboundedInt_free(UnboundedInt u) {
     Number *c = u.mFirst;
     if (c == NULL) return UNBOUNDED_INT_ERROR;
     u.mFirst = NULL;
@@ -614,7 +614,7 @@ static UnboundedInt deleteLastElem(UnboundedInt ui) {
 }
 
 
-void unboundedInt_print(UnboundedInt ui) {
+void UnboundedInt_print(UnboundedInt ui) {
     UnboundedInt tmp = UNBOUNDED_INT_ERROR;
     if (ui.mSign == tmp.mSign && ui.mLength == tmp.mLength && ui.mFirst == tmp.mFirst && ui.mLast == tmp.mLast) {
         printf("L'UnboundedInt est vide\n");
@@ -794,6 +794,6 @@ static long long puissance(int base, int puissance) {
     return res * base;
 }
 
-int unboundedInt_isError(UnboundedInt i) {
+int UnboundedInt_isError(UnboundedInt i) {
     return i.mSign == UNBOUNDED_INT_ERROR.mSign;
 }

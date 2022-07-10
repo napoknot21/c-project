@@ -10,7 +10,12 @@
 
 #include "app_informations.h"
 
-char *error_getMessage(enum Error error) {
+/**
+ * Print on the stderr the corresponding message according to the code given in argument.
+ * @param error The error's code.
+ * @return The error's message.
+ */
+static char *error_getMessage(enum Error error) {
     switch (error) {
         case INVALID_SYNTAX:
             return "An invalid syntax was found";
