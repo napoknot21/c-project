@@ -6,12 +6,13 @@
 #include <string.h>
 
 #include "test.h"
+#include "lib.h"
 
 static int check_UnboundedInt_form(char *src, UnboundedInt result) {
     if (strlen(src) != result.mLength) {
         return 0;
     }
-    Number *current = ((Number *) result.mFirst);
+    Number *current = result.mFirst;
     for (size_t i = 0; i < result.mLength; i++) {
         if (current->mVal != src[i]) {
             return 0;
@@ -30,6 +31,10 @@ static void test_UnboundedInt_newString() {
     UnboundedInt uAdd = UnboundedInt_newString(strAdd);
     assert(check_UnboundedInt_form(&strAdd[1], uAdd));
     UnboundedInt_free(uAdd);
+    char *strNeg = "-936419645";
+    UnboundedInt uNeg = UnboundedInt_newString(strNeg);
+    assert(check_UnboundedInt_form(&strNeg[1], uNeg) && uNeg.mSign == '-');
+    UnboundedInt_free(uNeg);
 }
 
 static void test_UnboundedInt_newll() {
@@ -43,16 +48,100 @@ static void test_UnboundedInt_newll() {
     UnboundedInt uAdd = UnboundedInt_newll(llAdd);
     assert(check_UnboundedInt_form(strAdd, uAdd));
     UnboundedInt_free(uAdd);
+    char *strNeg = "-936419645";
+    UnboundedInt uNeg = UnboundedInt_newString(strNeg);
+    assert(check_UnboundedInt_form(&strNeg[1], uNeg) && uNeg.mSign == '-');
+    UnboundedInt_free(uNeg);
 }
 
 static void test_UnboundedInt_toString() {
-    //todo: Construction d'un UnboundedInt (positif, negetif, bug ? et comparaison)
+    char *strPos = "1123534876543";
+    long long llPos = 1123534876543;
+    UnboundedInt uPos = UnboundedInt_newll(llPos);
+    char *res = UnboundedInt_toString(uPos);
+    assert(str_equals(strPos, res));
+    UnboundedInt_free(uPos);
+    free(res);
+    char *strAdd = "936419645";
+    long long llAdd = +936419645;
+    UnboundedInt uAdd = UnboundedInt_newll(llAdd);
+    res = UnboundedInt_toString(uAdd);
+    assert(str_equals(res,strAdd));
+    UnboundedInt_free(uAdd);
+    free(res);
+    char *strNeg = "-936419645";
+    UnboundedInt uNeg = UnboundedInt_newString(strNeg);
+    res = UnboundedInt_toString(uNeg);
+    assert(str_equals(res, strNeg));
+    UnboundedInt_free(uNeg);
+    free(res);
 }
 
 static void test_UnboundedInt_cmpUnboundedInt() {
+    UnboundedInt u1 = UnboundedInt_newll(645248);
+    UnboundedInt u2 = UnboundedInt_newll(543124);
+    UnboundedInt u3 = UnboundedInt_newll(-46872);
+    UnboundedInt u4 = UnboundedInt_newll(-13246);
+    UnboundedInt u5 = UnboundedInt_newll(5724);
+    UnboundedInt u6 = UnboundedInt_newll(-6578);
+    UnboundedInt u7 = UnboundedInt_newll(0);
+    int b1 = UnboundedInt_cmpUnboundedInt(u1, u7);
+    int b2 = UnboundedInt_cmpUnboundedInt(u2, u1);
+    int b3 = UnboundedInt_cmpUnboundedInt(u3, u3);
+    int b4 = UnboundedInt_cmpUnboundedInt(u4, u5);
+    int b5 = UnboundedInt_cmpUnboundedInt(u5, u7);
+    int b6 = UnboundedInt_cmpUnboundedInt(u4, u3);
+    int b7 = UnboundedInt_cmpUnboundedInt(u7, u6);
+    UnboundedInt_free(u1);
+    UnboundedInt_free(u2);
+    UnboundedInt_free(u3);
+    UnboundedInt_free(u4);
+    UnboundedInt_free(u5);
+    UnboundedInt_free(u6);
+    UnboundedInt_free(u7);
+    assert(b1 > 0);
+    assert(b2 < 0);
+    assert(b3 == 0);
+    assert(b4 < 0);
+    assert(b5 > 0);
+    assert(b6 < 0);
+    assert(b7 > 0);
 }
 
 static void test_UnboundedInt_cmpll() {
+    long long i1 = 645248;
+    long long i3 = -46872;
+    long long i5 = 5724;
+    long long i6 = -6578;
+    long long i7 = 0;
+    UnboundedInt u1 = UnboundedInt_newll(645248);
+    UnboundedInt u2 = UnboundedInt_newll(543124);
+    UnboundedInt u3 = UnboundedInt_newll(-46872);
+    UnboundedInt u4 = UnboundedInt_newll(-13246);
+    UnboundedInt u5 = UnboundedInt_newll(5724);
+    UnboundedInt u6 = UnboundedInt_newll(-6578);
+    UnboundedInt u7 = UnboundedInt_newll(0);
+    int b1 = UnboundedInt_cmpll(u1, i7);
+    int b2 = UnboundedInt_cmpll(u2, i1);
+    int b3 = UnboundedInt_cmpll(u3, i3);
+    int b4 = UnboundedInt_cmpll(u4, i5);
+    int b5 = UnboundedInt_cmpll(u5, i7);
+    int b6 = UnboundedInt_cmpll(u4, i3);
+    int b7 = UnboundedInt_cmpll(u7, i6);
+    UnboundedInt_free(u1);
+    UnboundedInt_free(u2);
+    UnboundedInt_free(u3);
+    UnboundedInt_free(u4);
+    UnboundedInt_free(u5);
+    UnboundedInt_free(u6);
+    UnboundedInt_free(u7);
+    assert(b1 > 0);
+    assert(b2 < 0);
+    assert(b3 == 0);
+    assert(b4 < 0);
+    assert(b5 > 0);
+    assert(b6 < 0);
+    assert(b7 > 0);
 }
 
 static void test_UnboundedInt_add() {
@@ -108,8 +197,7 @@ static void test_UnboundedInt_add() {
     assert(b7 == 0);
 }
 
-static void test_UnboundedInt_subtract() { //todo: fix
-
+static void test_UnboundedInt_subtract() {
     long long i1 = 645248;
     long long i2 = 543124;
     long long i3 = -46872;
@@ -198,10 +286,6 @@ static void test_UnboundedInt_multiply() {
     assert(b5 == 0);
 }
 
-static void test_UnboundedInt_divide() {}
-
-static void test_UnboundedInt_pow() {}
-
 static void test_UnboundedInt_abs() {
     long long i1 = -834873642;
     long long i2 = 834873642;
@@ -258,6 +342,10 @@ static void test_UnboundedInt_fact() {
     assert(b2 == 0);
     assert(b3 == 0);
 }
+
+static void test_UnboundedInt_divide() {}
+
+static void test_UnboundedInt_pow() {}
 
 int main() {
     test(test_UnboundedInt_newll, "UnboundedInt_newll()");

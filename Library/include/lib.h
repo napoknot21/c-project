@@ -14,6 +14,8 @@
  */
 int isAnOperator(char s);
 
+int str_equals(const char *s1, const char *s2);
+
 /**
  * Indicate if the char a has a higher precedence than b.
  * @param a The first operator.

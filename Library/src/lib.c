@@ -78,10 +78,10 @@ char *intToString(int n) {
 }
 
 int str_equals(const char *s1, const char *s2) {
-    int l1 = (int) strlen(s1);
-    int l2 = (int) strlen(s2);
+    size_t l1 = strlen(s1);
+    size_t l2 = strlen(s2);
     if (l1 != l2) return 0;
-    for (int i = 0; i < l1; i++) {
+    for (size_t i = 0; i < l1; i++) {
         if (s1[i] != s2[i]) {
             return 0;
         }

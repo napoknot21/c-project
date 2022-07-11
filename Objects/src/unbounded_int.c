@@ -76,6 +76,7 @@ static char *buildString(UnboundedInt ui, char *new, size_t length) {
 	Number *current = ui.mFirst;
 	for (size_t i = 0; i < length; i++) {
 		new[i] = current->mVal;
+		current = current->mNext;
 	}
 	new[length] = '\0';
 	return new;
@@ -165,20 +166,14 @@ UnboundedInt UnboundedInt_newString(char *e) {
 	UnboundedInt res = UNBOUNDED_INT_ERROR;
 	int i;
 	res.mLength = 0;
-	if (*str == '-' || *str == '+') {
-		if (*str == '-') {
-			res.mSign = '-';
-		}
-		else {
-			res.mSign = '+';
-		}
-		i = 1;
+
+	switch (*str) {
+	case '-': res.mSign = '-'; i = 1; break;
+	case '+': res.mSign = '+'; i = 1; break;
+	default: res.mSign = 0; i = 0; break;
 	}
-	else {
-		res.mSign = '+';
-		i = 0;
-	}
-	for (int j = i; j < strlen(str); j++) {
+
+	for (size_t j = i; j < strlen(str); j++) {
 		res = addLast(res, *(str + j));
 	}
 	return res;
