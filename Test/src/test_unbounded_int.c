@@ -176,14 +176,12 @@ static void test_UnboundedInt_multiply() {
     UnboundedInt res2 = UnboundedInt_multiply(u1, u4);
     UnboundedInt res3 = UnboundedInt_multiply(u3, u3);
     UnboundedInt res4 = UnboundedInt_multiply(u2, u2);
-    //Todo: fix access to desallocated memory
     UnboundedInt res5 = UnboundedInt_multiply(u3, u2);
-
-    int b1 = UnboundedInt_cmpll(res1, i4 * i1);
+	int b1 = UnboundedInt_cmpll(res1, i4 * i1);
     int b2 = UnboundedInt_cmpll(res2, i1 * i4);
     int b3 = UnboundedInt_cmpll(res3, i3 * i3);
     int b4 = UnboundedInt_cmpll(res4, i2 * i2);
-    int b5 = UnboundedInt_cmpll(res5, i3 + i2);
+    int b5 = UnboundedInt_cmpll(res5, i3 * i2);
     UnboundedInt_free(u1);
     UnboundedInt_free(u2);
     UnboundedInt_free(u3);
@@ -233,7 +231,7 @@ static void test_UnboundedInt_abs() {
 static long long fact(long long n) {
     if (n <= 0) return 1;
     long long val = 1;
-    for (long long i = 1; i < n; i++) val *= i;
+    for (long long i = 1; i <= n; i++) val *= i;
     return val;
 }
 
@@ -256,9 +254,9 @@ static void test_UnboundedInt_fact() {
     UnboundedInt_free(res1);
     UnboundedInt_free(res2);
     UnboundedInt_free(res3);
-    assert(b1);
-    assert(b2);
-    assert(b3);
+    assert(b1 == 0);
+    assert(b2 == 0);
+    assert(b3 == 0);
 }
 
 int main() {
@@ -270,9 +268,9 @@ int main() {
 	test(test_UnboundedInt_abs, "UnboundedInt_abs()");
     test(test_UnboundedInt_add, "UnboundedInt_add()");
     test(test_UnboundedInt_subtract, "UnboundedInt_subtract()");
-    //test(test_UnboundedInt_multiply, "UnboundedInt_multiply");
+    test(test_UnboundedInt_multiply, "UnboundedInt_multiply");
+    test(test_UnboundedInt_fact, "UnboundedInt_fact");
     //test(test_UnboundedInt_divide, "UnboundedInt_divide");
-    //test(test_UnboundedInt_fact, "UnboundedInt_fact");
     //test(test_UnboundedInt_pow, "UnboundedInt_pow");
     return 0;
 }

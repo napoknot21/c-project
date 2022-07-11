@@ -10,9 +10,11 @@
 
 #include "exec_error.h"
 #define NUM (48)
+#define BASE (10)
 
 static Number *number_new(char c) {
 	if (!isdigit(c)) {
+		perror_src("The given argument wasn't a number !");
 		return NULL;
 	}
 	Number *n = malloc(sizeof(Number));
@@ -29,7 +31,7 @@ static Number *number_new(char c) {
 static UnboundedInt addFirst(UnboundedInt u, char c) {
 	Number *new = number_new(c);
 	if (new == NULL) {
-		perror_src("Memory insufficient");
+		perror_src("Something went wrong with the creation of the Number");
 		return u;
 	}
 
@@ -70,18 +72,6 @@ static UnboundedInt addLast(UnboundedInt u, char c) {
 
 }
 
-UnboundedInt UnboundedInt_free(UnboundedInt u) {
-	Number *c = u.mFirst;
-	if (c == NULL) return UNBOUNDED_INT_ERROR;
-	while (c->mNext != NULL) {
-		Number *n = c->mNext;
-		free(c);
-		c = n;
-	}
-	free(c);
-	return UNBOUNDED_INT_ERROR;
-}
-
 static char *buildString(UnboundedInt ui, char *new, size_t length) {
 	Number *current = ui.mFirst;
 	for (size_t i = 0; i < length; i++) {
@@ -114,7 +104,7 @@ static UnboundedInt removeFirst(UnboundedInt ui) {
 }
 
 /**
- * Clean up an UnboundedInt by removing the unnecessary zero before the first non-zero numbe
+ * Clean up an UnboundedInt by removing the unnecessary zero before the first non-zero number
  * @param ui the UnboundedInt that will be cleaned 
  * @return return ui with the modification
  */
@@ -132,7 +122,7 @@ static UnboundedInt cleanUnbounded_int(UnboundedInt ui) {
 		index += 1;
 	}
 	if (tmp == NULL) {
-		for (int i = 0; i < ui.mLength - 1; i++) {
+		for (int i = 0; i < index - 1; i++) {
 			ui = removeFirst(ui);
 		}
 		return ui;
@@ -146,8 +136,31 @@ static UnboundedInt cleanUnbounded_int(UnboundedInt ui) {
 
 }
 
+static UnboundedInt multiplyByNumber (UnboundedInt a, Number b) {
+	UnboundedInt result = UNBOUNDED_INT_ERROR;
+	result.mSign = a.mSign;
+	Number *ac = a.mLast;
+	int r = 0;
+	while (ac != NULL) {
+		int const res = r + (ac->mVal - NUM) * (b.mVal - NUM);
+		if (res >= BASE) {
+			r = res / BASE;
+		}
+		else {
+			r = 0;
+		}
+		char const c = NUM + res % BASE;
+		result = addFirst(result, c);
+		ac = ac->mLast;
+	}
+	if (r != 0) {
+		result = addFirst(result, NUM + r);
+	}
+	return result;
+}
+
 UnboundedInt UnboundedInt_newString(char *e) {
-	if (isAStringNum(e) == 0) return UNBOUNDED_INT_ERROR;
+	if (!isAStringNum(e)) return UNBOUNDED_INT_ERROR;
 	const char *str = cleanNumber(e);
 	UnboundedInt res = UNBOUNDED_INT_ERROR;
 	int i;
@@ -173,13 +186,16 @@ UnboundedInt UnboundedInt_newString(char *e) {
 
 UnboundedInt UnboundedInt_newll(long long i) {
 	UnboundedInt new = UNBOUNDED_INT_ERROR;
-	int base = 10;
-	new.mSign = (i >= 0) ? '+' : '-';
+	if (i == 0) {
+		new.mSign = '+';
+		return addFirst(new, '0');
+	}
+	new.mSign = (i > 0) ? '+' : '-';
 	long long n = llabs(i);
 	while (n > 0) {
-		int d = (int) (n % base);
-		new = addFirst(new, (char) (NUM + d));
-		n /= base;
+		 int d = (int) (n % (long long ) BASE);
+		new = addFirst(new, NUM + d);
+		n /= BASE;
 	}
 	return new;
 }
@@ -218,14 +234,14 @@ char *UnboundedInt_toString(UnboundedInt ui) {
 
 int UnboundedInt_cmpUnboundedInt(UnboundedInt a, UnboundedInt b) {
 	if (
-		a.mSign == '+' && b.mSign == '-' || (a.mSign == b.mSign && ((a.mSign == '+' && a.mLength > b.mLength)
+		a.mSign == '*' || (a.mSign == '+' && b.mSign == '-') || (a.mSign == b.mSign && ((a.mSign == '+' && a.mLength > b.mLength)
 			|| (a.mSign == '-' && a.mLength < b.mLength)))
 		)
 	{
 		return 1;
 	}
 	if (
-		a.mSign == '-' && b.mSign == '+' || (a.mSign == b.mSign && ((a.mSign == '+' && a.mLength < b.mLength)
+		(b.mSign == '*') ||(a.mSign == '-' && b.mSign == '+') || (a.mSign == b.mSign && ((a.mSign == '+' && a.mLength < b.mLength)
 			|| (a.mSign == '-' && a.mLength > b.mLength)))
 		)
 	{
@@ -255,7 +271,6 @@ int UnboundedInt_cmpll(UnboundedInt a, long long b) {
 }
 
 UnboundedInt UnboundedInt_add(UnboundedInt a, UnboundedInt b) {
-	int base = 10;
 	if (a.mLength == 0) {
 		return unboundedInt_cpy(b);
 	}
@@ -277,35 +292,35 @@ UnboundedInt UnboundedInt_add(UnboundedInt a, UnboundedInt b) {
 	Number *bc = b.mLast;
 	while (ac != NULL && bc != NULL) {
 		int res = r + (ac->mVal - NUM) + (bc->mVal - NUM);
-		if (res >= base) {
-			r = res / base;
+		if (res >= BASE) {
+			r = res / BASE;
 		} else {
 			r = 0;
 		}
-		char c = (char) NUM + (res % base);
+		char c = (char) NUM + (res % BASE);
 		result = addFirst(result, c);
 		ac = ac->mLast;
 		bc = bc->mLast;
 	}
 	while (ac != NULL) {
 		int res = r + ac->mVal - NUM;
-		if (res >= base) {
-			r = res / base;
+		if (res >= BASE) {
+			r = res / BASE;
 		} else {
 			r = 0;
 		}
-		char c = (char) (NUM + (res % base));
+		char c = (char) (NUM + (res % BASE));
 		result = addFirst(result, c);
 		ac = ac->mLast;
 	}
 	while (bc != NULL) {
 		int res = r + bc->mVal - NUM;
-		if (res >= base) {
-			r = res / base;
+		if (res >= BASE) {
+			r = res / BASE;
 		} else {
 			r = 0;
 		}
-		char c = (char) (NUM + (res % base));
+		char c = (char) (NUM + (res % BASE));
 		result = addFirst(result, c);
 		bc = bc->mLast;
 	}
@@ -316,7 +331,6 @@ UnboundedInt UnboundedInt_add(UnboundedInt a, UnboundedInt b) {
 }
 
 UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b) {
-	int base = 10;
 	UnboundedInt result = UNBOUNDED_INT_ERROR;
 	result.mSign = '+';
 	if (a.mLength == 0) {
@@ -361,7 +375,7 @@ UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b) {
 		} else {
 			r = 0;
 		}
-		char c = (char) NUM + (res % base);
+		char c = (char) NUM + (res % BASE);
 		result = addFirst(result, c);
 		ac = ac->mLast;
 		bc = bc->mLast;
@@ -374,18 +388,18 @@ UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b) {
 		} else {
 			r = 0;
 		}
-		char c = (char) (NUM + (res % base));
+		char c = (char) (NUM + (res % BASE));
 		result = addFirst(result, c);
 		ac = ac->mLast;
 	}
 	while (bc != NULL) {
 		int res = r + bc->mVal - NUM;
-		if (res >= base) {
-			r = res / base;
+		if (res >= BASE) {
+			r = res / BASE;
 		} else {
 			r = 0;
 		}
-		char c = (char) (NUM + (res % base));
+		char c = (char) (NUM + (res % BASE));
 		result = addFirst(result, c);
 		bc = bc->mLast;
 	}
@@ -393,7 +407,33 @@ UnboundedInt UnboundedInt_subtract(UnboundedInt a, UnboundedInt b) {
 }
 
 UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b) {
-	return UNBOUNDED_INT_ERROR;
+	if (a.mLength == 0) {
+		return unboundedInt_cpy(b);
+	}
+	if (b.mLength == 0) {
+		return unboundedInt_cpy(a);
+	}
+
+	if (a.mLength < b.mLength) {
+		UnboundedInt tmp = b;
+		b = a;
+		a = tmp;
+	}
+	UnboundedInt result = UNBOUNDED_INT_ERROR;
+	result.mSign = (a.mSign == b.mSign) ? '+' : '-';
+	Number *current = b.mLast;
+	for (size_t i = 0; i < b.mLength; i++) {
+		UnboundedInt tmp = multiplyByNumber(a, *current);
+		tmp.mSign = result.mSign;
+		for (size_t j = 0; j < i; j++) {
+			tmp = addLast(tmp, '0');
+		}
+		result = UnboundedInt_add(result, tmp);
+		UnboundedInt_free(tmp);
+		current = current->mLast;
+	}
+	return cleanUnbounded_int(result);
+	
 }
 
 UnboundedInt UnboundedInt_divide(UnboundedInt a, UnboundedInt b) {
@@ -428,12 +468,19 @@ UnboundedInt UnboundedInt_abs(UnboundedInt x) {
 UnboundedInt UnboundedInt_fact(UnboundedInt n) {
 	UnboundedInt decr = UnboundedInt_newll(1);
 	UnboundedInt result = UnboundedInt_newll(1);
+	if (UnboundedInt_cmpll(n, 0) > 0) {
+		UnboundedInt tmp = UnboundedInt_multiply(result, n);
+		UnboundedInt_free(result);
+		result = tmp;
+		tmp = UnboundedInt_subtract(n, decr);
+		n = tmp;
+	}
 	while (UnboundedInt_cmpll(n, 0) > 0) {
 		UnboundedInt tmp = UnboundedInt_multiply(result, n);
 		UnboundedInt_free(result);
 		result = tmp;
 		tmp = UnboundedInt_subtract(n, decr);
-		UnboundedInt_free(n); //access to desallocated memory
+		UnboundedInt_free(n);
 		n = tmp;
 	}
 	UnboundedInt_free(decr);
@@ -453,9 +500,21 @@ void UnboundedInt_print(UnboundedInt ui) {
 		printf("-");
 	}
 	Number *p = ui.mFirst;
-	for (int i = 0; i < ui.mLength; i++) {
+	for (size_t i = 0; i < ui.mLength; i++) {
 		printf("%c", p->mVal);
 		p = p->mNext;
 	}
 	printf("\n");
+}
+
+UnboundedInt UnboundedInt_free(UnboundedInt u) {
+	Number *c = u.mFirst;
+	if (c == NULL) return UNBOUNDED_INT_ERROR;
+	while (c->mNext != NULL) {
+		Number *n = c->mNext;
+		free(c);
+		c = n;
+	}
+	free(c);
+	return UNBOUNDED_INT_ERROR;
 }

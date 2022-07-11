@@ -4,6 +4,7 @@
 #include "lib.h"
 #include <string.h>
 #include<ctype.h>
+#include <stdio.h>
 
 #include "exec_error.h"
 
