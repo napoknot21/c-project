@@ -94,6 +94,8 @@ UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b);
  */
 UnboundedInt UnboundedInt_divide(UnboundedInt a, UnboundedInt b);
 
+UnboundedInt UnboundedInt_modulo(UnboundedInt a, UnboundedInt b);
+
 UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n);
 
 UnboundedInt UnboundedInt_abs(UnboundedInt x);

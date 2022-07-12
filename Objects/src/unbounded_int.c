@@ -104,6 +104,17 @@ static UnboundedInt removeFirst(UnboundedInt ui) {
 	return ui;
 }
 
+static UnboundedInt removeLast(UnboundedInt ui) {
+	if (ui.mLength <= 1) return UNBOUNDED_INT_ERROR;
+	Number *tmp;
+	tmp = ui.mLast;
+	ui.mLast = ui.mLast->mLast;
+	ui.mLast->mNext = NULL;
+	free(tmp);
+	ui.mLength--;
+	return ui;
+}
+
 /**
  * Clean up an UnboundedInt by removing the unnecessary zero before the first non-zero number
  * @param ui the UnboundedInt that will be cleaned 
@@ -158,6 +169,68 @@ static UnboundedInt multiplyByNumber (UnboundedInt a, Number b) {
 		result = addFirst(result, NUM + r);
 	}
 	return result;
+}
+
+static UnboundedInt divide (UnboundedInt ua, UnboundedInt ub, int modulo) {
+	if (ub.mLength == 0 || ub.mLength == 1 && ub.mFirst->mVal == '0') {
+		return UNBOUNDED_INT_ERROR;
+	}
+	if (ua.mLength == 1 && ua.mFirst->mVal == '0') {
+		return UnboundedInt_newll(0);
+	}
+	if (ub.mLength == 1 && ub.mFirst->mVal == '1') {
+		if (modulo) {
+			return UnboundedInt_newll(0);
+		}
+			UnboundedInt result = unboundedInt_cpy(ua);
+			result.mSign = (ua.mSign == ub.mSign) ? '+' : '-';
+			return result;
+	}
+
+	int done = 0;
+	UnboundedInt result = UNBOUNDED_INT_ERROR;
+	result.mSign = '+';
+	UnboundedInt a = UnboundedInt_abs(ua);
+	UnboundedInt b = UnboundedInt_abs(ub);
+
+	while (UnboundedInt_cmpUnboundedInt(a, b) >= 0) {
+		UnboundedInt d = UnboundedInt_abs(b);
+		UnboundedInt mul = UnboundedInt_newll(1);
+		done = 0;
+		while (UnboundedInt_cmpUnboundedInt(a, d) > 0) {		//add zero at the end
+			d = addLast(d, '0');
+			mul = addLast(mul, '0');
+			done = 1;
+		}
+		if (done) {
+			d = removeLast(d);
+			mul = removeLast(mul);
+		}
+		UnboundedInt resTmp = UnboundedInt_add(result, mul);
+		UnboundedInt_free(result);
+		UnboundedInt_free(mul);
+		result = resTmp;
+		resTmp = UnboundedInt_subtract(a, d);
+		UnboundedInt_free(a);
+		UnboundedInt_free(d);
+		a = resTmp;
+		done = 1;
+	}
+	UnboundedInt_free(b);
+	if (modulo) {
+		UnboundedInt_free(result);
+		if (ua.mSign == ub.mSign && ua.mSign == '-') {
+			a.mSign = '-';
+		}
+		return a;
+	}
+	UnboundedInt_free(a);
+	if (done) {
+		result.mSign = (ua.mSign == ub.mSign) ? '+' : '-';
+		return result;
+	}
+	UnboundedInt_free(result);
+	return UnboundedInt_newll(0);
 }
 
 UnboundedInt UnboundedInt_newString(char *e) {
@@ -423,8 +496,10 @@ UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b) {
 		for (size_t j = 0; j < i; j++) {
 			tmp = addLast(tmp, '0');
 		}
-		result = UnboundedInt_add(result, tmp);
+		UnboundedInt resTmp = UnboundedInt_add(result, tmp);
 		UnboundedInt_free(tmp);
+		UnboundedInt_free(result);
+		result = resTmp;
 		current = current->mLast;
 	}
 	return cleanUnbounded_int(result);
@@ -432,7 +507,11 @@ UnboundedInt UnboundedInt_multiply(UnboundedInt a, UnboundedInt b) {
 }
 
 UnboundedInt UnboundedInt_divide(UnboundedInt a, UnboundedInt b) {
-	return UNBOUNDED_INT_ERROR;
+	return divide(a,b,0);
+}
+
+UnboundedInt UnboundedInt_modulo(UnboundedInt a, UnboundedInt b) {
+	return divide(a,b,1);
 }
 
 UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n) {
@@ -461,14 +540,16 @@ UnboundedInt UnboundedInt_abs(UnboundedInt x) {
 }
 
 UnboundedInt UnboundedInt_fact(UnboundedInt n) {
-	UnboundedInt decr = UnboundedInt_newll(1);
 	UnboundedInt result = UnboundedInt_newll(1);
+	if (n.mLength == 1 && (n.mFirst->mVal =='0' || n.mFirst->mVal == '1')) {
+		return result;
+	}
+	UnboundedInt decr = UnboundedInt_newll(1);
 	if (UnboundedInt_cmpll(n, 0) > 0) {
 		UnboundedInt tmp = UnboundedInt_multiply(result, n);
 		UnboundedInt_free(result);
 		result = tmp;
-		tmp = UnboundedInt_subtract(n, decr);
-		n = tmp;
+		n = UnboundedInt_subtract(n, decr);
 	}
 	while (UnboundedInt_cmpll(n, 0) > 0) {
 		UnboundedInt tmp = UnboundedInt_multiply(result, n);
@@ -479,6 +560,7 @@ UnboundedInt UnboundedInt_fact(UnboundedInt n) {
 		n = tmp;
 	}
 	UnboundedInt_free(decr);
+	UnboundedInt_free(n);
 	return result;
 }
 
