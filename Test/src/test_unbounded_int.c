@@ -22,6 +22,21 @@ static int check_UnboundedInt_form(char *src, UnboundedInt result) {
     return 1;
 }
 
+static long long pow(long long a, long long b) {
+    if (b < 0) {
+        return 0;
+    }
+    if (b == 0) {
+	    return 1;
+    }
+	long long tmp = pow(a, b / 2);
+    long long square = tmp * tmp;
+    if (b%2 == 0) {
+        return square;
+    }
+    return a * square;
+}
+
 static void test_UnboundedInt_newString() {
     char *strPos = "1123534876543";
     UnboundedInt uPos = UnboundedInt_newString(strPos);
@@ -457,7 +472,61 @@ static void test_UnboundedInt_modulo() {
 
 }
 
-static void test_UnboundedInt_pow() {}
+static void test_UnboundedInt_pow() {
+    long long i1 = 2;
+    long long i2 = 4;
+    long long i3 = -46872;
+    long long i4 = -13246;
+    long long i5 = 5724;
+    long long i6 = -6578;
+    long long i7 = 0;
+    UnboundedInt u1 = UnboundedInt_newll(i1);
+    UnboundedInt u2 = UnboundedInt_newll(i2);
+    UnboundedInt u3 = UnboundedInt_newll(i3);
+    UnboundedInt u4 = UnboundedInt_newll(i4);
+    UnboundedInt u5 = UnboundedInt_newll(i5);
+    UnboundedInt u6 = UnboundedInt_newll(i6);
+    UnboundedInt u7 = UnboundedInt_newll(i7);
+    UnboundedInt res1 = UnboundedInt_pow(u1, u2);
+    UnboundedInt res2 = UnboundedInt_pow(u2, u1);
+    UnboundedInt res3 = UnboundedInt_pow(u7, u6);
+    UnboundedInt res4 = UnboundedInt_pow(u7, u5);
+    UnboundedInt res5 = UnboundedInt_pow(u6, u7);
+    UnboundedInt res6 = UnboundedInt_pow(u4, u2);
+    UnboundedInt res7 = UnboundedInt_pow(u3, u4);
+    UnboundedInt res8 = UnboundedInt_pow(u1, u4);
+    int b1 = UnboundedInt_cmpll(res1, pow(i1 , i2));
+    int b2 = UnboundedInt_cmpll(res2, pow(i2 , i1));
+    int b3 = UnboundedInt_cmpll(res3, pow(i7, i6));
+    int b4 = UnboundedInt_cmpll(res4, pow(i7 , i5));
+    int b5 = u5.mSign == '*';         
+    int b6 = UnboundedInt_cmpll(res6, pow(i4 , i2));
+    int b7 = UnboundedInt_cmpll(res7, pow(i3 , i4));
+    int b8 = UnboundedInt_cmpll(res8, pow(i1 , i4));
+    UnboundedInt_free(u1);
+    UnboundedInt_free(u2);
+    UnboundedInt_free(u3);
+    UnboundedInt_free(u4);
+    UnboundedInt_free(u5);
+    UnboundedInt_free(u6);
+    UnboundedInt_free(u7);
+    UnboundedInt_free(res1);
+    UnboundedInt_free(res2);
+    UnboundedInt_free(res3);
+    UnboundedInt_free(res4);
+    UnboundedInt_free(res5);
+    UnboundedInt_free(res6);
+    UnboundedInt_free(res7);
+    UnboundedInt_free(res8);
+    assert(b1 == 0);
+    assert(b2 == 0);
+    assert(b3 == 0);
+    assert(b4 == 0);
+    assert(b5 == 0);
+    assert(b6 == 0);
+    assert(b7 == 0);
+    assert(b8 == 0);
+}
 
 int main() {
     test(test_UnboundedInt_newll, "UnboundedInt_newll()");
@@ -472,6 +541,6 @@ int main() {
     test(test_UnboundedInt_fact, "UnboundedInt_fact()");
     test(test_UnboundedInt_divide, "UnboundedInt_divide()");
     test(test_UnboundedInt_modulo, "UnboundedInt_modulo()");
-    //test(test_UnboundedInt_pow, "UnboundedInt_pow");
+    test(test_UnboundedInt_pow, "UnboundedInt_pow()");
     return 0;
 }

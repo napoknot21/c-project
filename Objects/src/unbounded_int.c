@@ -515,22 +515,35 @@ UnboundedInt UnboundedInt_modulo(UnboundedInt a, UnboundedInt b) {
 }
 
 UnboundedInt UnboundedInt_pow(UnboundedInt x, UnboundedInt n) {
-	//UnboundedInt result = UnboundedInt_newll(1);
-	//UnboundedInt decr = UnboundedInt_newll(1);
-	//UnboundedInt mod = UnboundedInt_newll(2);
-	//if (UnboundedInt_cmpll(n, 0) == 0) {
-	//	return result;
-	//}
-	/*while (UnboundedInt_cmpll(n, 0) == 1) {
-		//UnboundedInt modulo = fun(n,mod);
-		if (UnboundedInt_cmpll(MODULO(n,mod),1) == 0) { //modulo
-			result = UnboundedInt_multiply(result,x);
-			n = UnboundedInt_subtract(n,decr);
+	if (n.mSign == '-') {
+		return UnboundedInt_newll(0);
+	}
+	if (UnboundedInt_cmpll(x, 0) == 0) {
+		return UnboundedInt_newll(0);
+	}
+	if (UnboundedInt_cmpll(n, 0) == 0 || UnboundedInt_cmpll(x, 1) == 0) {
+		UnboundedInt result = UnboundedInt_newll(1);
+		result.mSign = x.mSign;
+		return result;
+	}
+	UnboundedInt mod = UnboundedInt_newll(2);
+	UnboundedInt result = unboundedInt_cpy(x);
+	n = unboundedInt_cpy(n);
+	while (UnboundedInt_cmpll(n,1) > 0) {
+		UnboundedInt tmp = UnboundedInt_multiply(result, result);
+		UnboundedInt_free(result);
+		result = tmp;
+		UnboundedInt modulo = UnboundedInt_modulo(n, mod);
+		if (UnboundedInt_cmpll(modulo, 1) == 0) {
+			tmp = UnboundedInt_multiply(result, x);
+			UnboundedInt_free(result);
+			result = tmp;
 		}
-		x = UnboundedInt_multiply(x,x);
-		n = UnboundedInt_multiply(n,mod);
-	}*/
-	return UNBOUNDED_INT_ERROR;
+		tmp = UnboundedInt_divide(n, mod);
+		UnboundedInt_free(n);
+		n = tmp;
+	}
+	return result;
 }
 
 UnboundedInt UnboundedInt_abs(UnboundedInt x) {
