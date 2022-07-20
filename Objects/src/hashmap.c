@@ -46,6 +46,27 @@ static size_t hash2(size_t hash) {
     return (2 * hash + 1) % LLONG_MAX;
 }
 
+static size_t find(HashMap *map, char *name, int flag) {
+    size_t hashVal = hash(name);
+    size_t ind = hash1((double) map->mCapacity, hashVal) % (size_t) map->mCapacity;
+    size_t step = hash2(hashVal);
+    size_t dummy = -1;
+    for (int i = 0; i < map->mCapacity; i++) {
+        if (map->mData[ind].mType == NONE) {
+            if (dummy == -1) dummy = ind;
+            break;
+        }
+        if (map->mData[ind].mType == DUMMY) {
+            if (dummy == -1) dummy = ind;
+        }
+        else if (map->mData[ind].mHash == hashVal && map->cmp(name, map->mData[ind].mData)) {
+            return ind;
+        }
+        ind = (ind + step) % (size_t) map->mCapacity;
+    }
+    return (flag) ? dummy : -1;
+}
+
 
 HashMap *HashMap_new() {
     HashMap *map = malloc(sizeof(HashMap));
@@ -71,27 +92,7 @@ HashMap *HashMap_new() {
     return map;
 }
 
-static size_t find(HashMap *map, char *name, int flag) {
-    size_t hashVal = hash(name);
-    size_t ind = hash1((double) map->mCapacity, hashVal) % (size_t) map->mCapacity;
-    size_t step = hash2(hashVal);
-    size_t dummy = -1;
-    for (int i = 0; i < map->mCapacity; i++) {
-        if (map->mData[ind].mType == NONE) {
-            if (dummy == -1) dummy = ind;
-            break;
-        }
-        if (map->mData[ind].mType == DUMMY) {
-            if (dummy == -1) dummy = ind;
-        } else if (map->mData[ind].mHash == hashVal && map->cmp(name, map->mData[ind].mData)) {
-            return ind;
-        }
-        ind = (ind + step) % (size_t) map->mCapacity;
-    }
-    return (flag) ? dummy : -1;
-}
-
-int hashMap_put(HashMap *map, char *name, void *value) {
+int HashMap_put(HashMap *map, char *name, void *value) {
     long long hashVal = hash(name);
     long long empty = find(map, name, 1);
     if (empty == -1) return 0;
@@ -112,7 +113,7 @@ int hashMap_put(HashMap *map, char *name, void *value) {
     return 1;
 }
 
-void *hashMap_get(HashMap *map, char *name) {
+void *HashMap_get(HashMap *map, char *name) {
     long long pos = find(map, name, 0);
     if (pos == -1) return NULL;
     return map->mData[pos].mData;
@@ -132,8 +133,7 @@ static void resize(HashMap *map, size_t newSize) {
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
     for (int i = 0; i < oldLen; i++) {
-        if (old[i].mType == NONE || old[i].mType == DUMMY) continue;
-        else hashMap_put(map, old[i].mName, old[i].mData);
+        if (old[i].mType != NONE && old[i].mType != DUMMY) HashMap_put(map, old[i].mName, old[i].mData);
     }
     free(old);
 }
@@ -152,7 +152,7 @@ int HashMap_remove(HashMap *map, char *name) {
     return 1;
 }
 
-void hashMap_free(HashMap *map) {
+void HashMap_free(HashMap *map) {
     if (map == NULL) return;
     for (size_t i = 0; i < map->mCapacity; i++) {
         HashMapData data = map->mData[i];
@@ -161,5 +161,4 @@ void hashMap_free(HashMap *map) {
         }
     }
     free(map);
-    map = NULL;
 }

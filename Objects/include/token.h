@@ -19,7 +19,7 @@ typedef enum TokenType {
  */
 typedef struct Token {
     char *data;
-    enum TokenType type;
+    TokenType type;
 } Token;
 
 /**
@@ -34,6 +34,6 @@ void Token_free(Token t);
  * @param type The token's type.
  * @return The created Token.
  */
-Token Token_new(char *s, size_t len, enum TokenType type);
+Token Token_new(char *s, size_t len, TokenType type);
 
 #endif //C_PROJECT_TOKEN_H

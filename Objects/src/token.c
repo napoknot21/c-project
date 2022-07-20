@@ -4,12 +4,12 @@
 #include "token.h"
 #include "lib.h"
 
-Token token_new(char *s, size_t len, enum TokenType type) {
+Token Token_new(char *s, size_t len,TokenType type) {
     Token token = {.data = trim(s, len), .type = type};
     return token;
 }
 
-void token_free(Token t) {
+void Token_free(Token t) {
     if (t.type == FUNCTION) return;
     //free(t.data);
 }

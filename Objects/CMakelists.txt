@@ -4,13 +4,16 @@ add_library(Objects
         include/function.h
         include/hashmap.h
         include/stack.h
+        include/token.h
         include/unbounded_int.h
         src/ast.c
         src/buffer.c
         src/function.c
         src/hashmap.c
         src/stack.c
-        src/unbounded_int.c)
+        src/token.c
+        src/unbounded_int.c
+        )
 
 target_include_directories(Objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 

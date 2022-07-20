@@ -8,9 +8,7 @@
 
 #include <ctype.h>
 
-#include <math.h>
 #include <limits.h>
-#include <errno.h>
 
 #include "unbounded_int.h"
 #include "lib.h"
@@ -34,7 +32,6 @@ static FILE *OUT;
 
 static int CALL_ID = 0;
 
-#define BUFFER_SIZE 16
 #define INCR_CALL (CALL_ID = CALL_ID + 19 % INT_MAX)
 
 /* ####################################################################################################################
@@ -52,100 +49,6 @@ static int std_abs(int argc, UnboundedInt *argv, char **argn);
 static int std_fact(int argc, UnboundedInt *argv, char **argn);
 
 
-
-/* #####################################################################################################################
- * Storage tree's functions.
- */
-
-/**
- * Variables storage tree.
- */
-typedef struct Tree Tree;
-
-/**
- * Create the storage tree
- * @return an empty tree.
- */
-static Tree *tree_new();
-
-/**
- * Free the storage tree.
- *
- * @param t the storage tree.
- */
-static void tree_free(Tree *t);
-
-/**
- * Add a variable in the tree, if the variable is already present, its data will be updated.
- *
- * @param t the storage tree.
- * @param n the data value.
- * @param string the variable's name.
- * @return   0 if the variable was normally added. <br>
- *          -1 if the name is empty. <br>
- *          -2 if the tree is NULL.
- */
-static int tree_add(Tree *t, UnboundedInt n, char *string);
-
-/**
- * Gets the value of the given variable.
- *
- * @param t The storage tree.
- * @param string The variable's name
- * @return the data value if the value is found. <br>
- *          0 otherwise
- */
-static UnboundedInt tree_getValue(Tree *t, char *string);
-
-/**
- * Variables storage node.
- */
-typedef struct Node Node;
-
-/**
- * Create a node in a tree.
- *
- * @param id the node's id
- * @return the pointer of the created node.
- */
-static Node *node_new(char id);
-
-/**
- * free the sub-tree.
- *
- * @param n the sub-tree's root.
- */
-static void node_free(Node *n);
-
-/**
- * Add a variable in the tree, if the variable is already present, its data will be updated.
- *
- * @param pNode the current node.
- * @param n the data value.
- * @param string the variable's name.
- * @return  0 if the variable was normally added. <br>
- *          -1 if the variable's name is empty
- */
-static int node_add(Node **pNode, UnboundedInt n, const char *string);
-
-/**
- * Gets the value of the given variable.
- *
- * @param node The current node.
- * @param string The variable's name.
- * @return the data value if the value is found. <br>
- *          0 otherwise.
- */
-static UnboundedInt node_getValue(Node **node, char *string);
-
-/**
- * Open files according to the arguments given to the program. By default, in = stdin and out = stdout
- *
- * @param in The input file stream.
- * @param out The output file stream.
- * @param argc The argv length.
- * @param argv The args which will be treated.
- */
 static void connect(FILE **in, FILE **out, int argc, char **argv);
 
 /**
@@ -163,13 +66,11 @@ static void disconnect(FILE **in, FILE **out);
  * @param s2 The second string
  * @return true if the string are equals, false otherwise.
  */
-static int str_equals(const char *s1, const char *s2);
 
 /**
  * Parse the input file stream, do the instruction and print the result on the output file stream.
  *
  * @param in The input file stream.
- * @param out The output file stream.
  * @param ast The AST.
  * @param storage The storage tree.
  * @return true if everything went fine, false otherwise.
@@ -208,21 +109,6 @@ static Function buildCalledFunction(Function data, char *buffer);
 static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, int *isFunc, int *argsStart, HashMap *map,
                              Function *function);
 
-/* #####################################################################################################################
- * struct definitions
- */
-struct Node {
-    char id;
-    UnboundedInt data;
-    Node *left;
-    Node *middle;
-    Node *right;
-};
-
-struct Tree {
-    Node *root;
-};
-
 void load_stdlib(HashMap *map) {
     Function print = Function_new("print", VOID_TYPE, std_print, 1);
     Function pow = Function_new("pow", NUM_TYPE, std_pow, 2);
@@ -240,50 +126,49 @@ void load_stdlib(HashMap *map) {
  * Main function.
  */
 int main(int argc, char **argv) {
-    /*FILE *in = NULL, *out = NULL;
+    FILE *in = NULL, *out = NULL;
     connect(&in, &out, argc, argv);
     OUT = out;
     if (in == NULL) {
         if (out != NULL) fclose(out);
-        printErr("Can't open the source file");
+        perror_src("Can't open the source file");
         exit(EXIT_FAILURE);
     }
 
     if (out == NULL) {
-        printErr("Can't open the destination file");
+        perror_src("Can't open the destination file");
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
     AST *ast = AST_new();
     if (ast == NULL) {
-        printErr("");
+        perror_src("");
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
-    Tree *storage = tree_new();
+    HashMap *storage = HashMap_new();
     if (storage == NULL) {
-        printErr("");
+        perror_src("");
         AST_free(ast);
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
-    HashMap *map = HashMap_new();
-    if (map == NULL) {
-        printErr("");
+    HashMap *functions = HashMap_new();
+    if (functions == NULL) {
+        perror_src("");
         AST_free(ast);
-        free(storage);
+        HashMap_free(storage);
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
-    load_stdlib(map);
-    int err = parseFile(in, ast, storage, map);
+    load_stdlib(functions);
+    int err = parseFile(in, ast, storage, functions);
     AST_free(ast);
-    tree_free(storage);
-    hashMap_free(map);
+    HashMap_free(storage);
+    HashMap_free(functions);
     disconnect(&in, &out);
     if (EXIT_REQUEST == -1) exit(EXIT_FAILURE);
-    exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);*/
-    return 0;
+    exit((EXIT_REQUEST == 1 || err) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 
@@ -292,18 +177,18 @@ int main(int argc, char **argv) {
  */
 
 static int
-parse(int c, AST *ast, HashMap *storage, HashMap *map, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
+parse(int c, AST *ast, HashMap *storage, HashMap *functionsMap, TokenType *last, TokenType *current, Buffer *stack, int *isFunc,
       int *argStart, Function *function, AST *argAst, UnboundedInt *astResult) {
     if (c == 4) {
         EXIT_REQUEST = 1;
         return 0;
     }
     if ((char) c == '\n' || (char) c == '\r') {
-        int val = treatment(stack, ast, storage, *current, isFunc, map, function, argStart);
+        int val = treatment(stack, ast, storage, *current, isFunc, functionsMap, function, argStart);
         if (*isFunc) {
-            functionTreatment(c, stack, argAst, storage, isFunc, argStart, map, function);
+            functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, function);
         }
-        if (val == 0 || (val > 0 && !AST_apply(storage, ast, map))) {
+        if (val == 0 || (val > 0 && !AST_apply(storage, ast, functionsMap))) {
             return 0;
         }
         stack = Buffer_clear(stack);
@@ -316,7 +201,7 @@ parse(int c, AST *ast, HashMap *storage, HashMap *map, TokenType *last, TokenTyp
         *last = *current = VOID;
         isFunc = 0;
     } else if (*isFunc) {
-        functionTreatment(c, stack, argAst, storage, isFunc, argStart, map, function);
+        functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, function);
     } else if (isspace(c)) {
         *current = VOID;
     } else if (isalpha(c)) {
@@ -331,7 +216,7 @@ parse(int c, AST *ast, HashMap *storage, HashMap *map, TokenType *last, TokenTyp
         *current = OPERATOR;
     }
     if (*current != *last && *last != VOID) {
-        if (!treatment(stack, ast, storage, *last, isFunc, map, function, argStart)) {
+        if (!treatment(stack, ast, storage, *last, isFunc, functionsMap, function, argStart)) {
             return 0;
         }
         stack = Buffer_clear(stack);
@@ -400,7 +285,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 }
 
 static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, UnboundedInt *astResult) {
-    int len = (int) strlen(in);
+    size_t len = strlen(in);
     if (len == 0) {
         return 0;
     }
@@ -426,7 +311,7 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Unbou
         perror_src("");
         return 0;
     }
-    for (unsigned int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         int c = (int) (in[i]);
         int b = parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, function, argAST, astResult);
         if (!b) {
@@ -626,60 +511,6 @@ static void disconnect(FILE **in, FILE **out) {
     }
 }
 
-static Buffer *buffer_new() {
-    Buffer *buffer = malloc(sizeof(Buffer));
-    if (buffer == NULL) {
-        perror_src("");
-        return NULL;
-    }
-    buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    if (buffer->buffer == NULL) {
-        perror_src("");
-        free(buffer);
-        return NULL;
-    }
-    buffer->capacity = BUFFER_SIZE;
-    buffer->length = 0;
-    return buffer;
-}
-
-static Buffer *buffer_clear(Buffer *buffer) {
-    free(buffer->buffer);
-    buffer->buffer = calloc(BUFFER_SIZE, sizeof(char));
-    if (buffer->buffer == NULL) {
-        perror_src("");
-        free(buffer);
-        return NULL;
-    }
-    buffer->capacity = BUFFER_SIZE;
-    buffer->length = 0;
-    return buffer;
-}
-
-static Buffer *buffer_free(Buffer *buffer) {
-    free(buffer->buffer);
-    free(buffer);
-    return NULL;
-}
-
-static int buffer_add(Buffer *buffer, const char e) {
-    if (buffer == NULL) {
-        perror_src("");
-        return 0;
-    }
-    if (buffer->length + 1 >= buffer->capacity) {
-        char *tmp = realloc(buffer->buffer, 2 * buffer->capacity);
-        if (tmp == NULL) {
-            perror_src("");
-            return 0;
-        }
-        buffer->capacity *= 2;
-        buffer->buffer = tmp;
-    }
-    buffer->buffer[buffer->length++] = e;
-    return 1;
-}
-
 /* ####################################################################################################################
  * STD functions
  */
@@ -715,98 +546,8 @@ static int std_exit(int argc, UnboundedInt *argv, char **argn) {
 
 static int std_fact(int argc, UnboundedInt *argv, char **argn) {
     argv[argc] = UnboundedInt_fact(argv[0]);
-    //(argv[0]);
-    //free(argn[0]);
+    free(argn[0]);
     return 1;
-}
-
-
-/* #####################################################################################################################
- * AST functions
- */
-
-/* #####################################################################################################################
- * Storage tree's functions.
- */
-static Tree *tree_new() {
-    Tree *t = malloc(sizeof(Tree));
-    if (t == NULL) return NULL;
-    t->root = NULL;
-    return t;
-}
-
-static Node *node_new(char id) {
-    Node *n = malloc(sizeof(Node));
-    if (n == NULL) {
-        return NULL;
-    }
-    n->id = id;
-    n->data = UnboundedInt_newll(0);
-    n->left = n->middle = n->right = NULL;
-    return n;
-}
-
-static int tree_add(Tree *t, UnboundedInt n, char *string) {
-    if (t == NULL) return -2;
-    int len = (int) strlen(string);
-    if (len < 1) return -1;
-    node_add(&t->root, n, string);
-    return 0;
-}
-
-static int node_add(Node **pNode, const UnboundedInt n, const char *string) {
-    int len = (int) strlen(string);
-    if (len < 1) return -1;
-    if (*pNode == NULL) {
-        *pNode = node_new(string[0]);
-    }
-    if (string[0] < (*pNode)->id) {
-        return node_add(&(*pNode)->left, n, string);
-    }
-    if (string[0] > (*pNode)->id) {
-        return node_add(&(*pNode)->right, n, string);
-    }
-    if (len > 1) {
-        return node_add(&(*pNode)->middle, n, string + 1);
-    }
-    (*pNode)->data = n;
-    return 0;
-}
-
-static UnboundedInt tree_getValue(Tree *t, char *string) {
-    int len = (int) strlen(string);
-    if (len < 1) return UnboundedInt_newll(0);
-    return node_getValue(&t->root, string);
-}
-
-static UnboundedInt node_getValue(Node **node, char *string) {
-    int len = (int) strlen(string);
-    if (len < 1) return UnboundedInt_newll(0);
-    if (node == NULL || *node == NULL) return UnboundedInt_newll(0);
-    if (string[0] < (*node)->id) {
-        return node_getValue(&(*node)->left, string);
-    }
-    if (string[0] > (*node)->id) {
-        return node_getValue(&(*node)->right, string);
-    }
-    if (len == 1) {
-        return (*node)->data;
-    }
-    return node_getValue(&(*node)->middle, string + 1);
-}
-
-static void tree_free(Tree *t) {
-    node_free(t->root);
-    free(t);
-}
-
-static void node_free(Node *n) {
-    if (n == NULL) return;
-    node_free(n->left);
-    node_free(n->middle);
-    node_free(n->right);
-    //UnboundedInt_free(n->data);
-    //free(n);
 }
 
 /* #####################################################################################################################
@@ -816,26 +557,23 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
     Function *f = (Function *)  HashMap_get(map, name);
     if (f == NULL) return 0;
     if (f->requested > f->argc) {
-        if (!EXIT_REQUEST) perror_file(MISSING_ARGUMENTS);
+        if (!EXIT_REQUEST) {
+            perror_file(MISSING_ARGUMENTS);
+        }
         EXIT_REQUEST = -1;
         return 0;
-    } else if (f->requested < f->argc) {
-        if (!EXIT_REQUEST) perror_file(TOO_MANY_ARGUMENTS);
+    }
+	if (f->requested < f->argc) {
+        if (!EXIT_REQUEST) {
+            perror_file(TOO_MANY_ARGUMENTS);
+        }
         EXIT_REQUEST = -1;
         return 0;
     }
     f->func(f->argc, f->argv, f->argn);
-    if (node != NULL && f->retType != VOID_TYPE) node->result = f->argv[f->argc];
+    if (node != NULL && f->retType != VOID_TYPE) {
+        node->result = f->argv[f->argc];
+    }
     HashMap_remove(map, f->name);
     return 1;
 }
-
-
-/* #####################################################################################################################
- * HashMap's function
- */
-
-
-/* #####################################################################################################################
- * Other's functions
- */

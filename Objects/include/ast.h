@@ -13,10 +13,10 @@
 #define MULTIPLICATION(a, b)(UnboundedInt_multiply(a,b))
 #define ADDITION(a, b)(UnboundedInt_add(a,b))
 #define SUBSTRACTION(a, b)(UnboundedInt_subtract(a,b))
-//#define DIVISION(a, b)(unboundedInt_divide(a, b))
-
+#define DIVISION(a, b)(UnboundedInt_divide(a, b))
+#define MODULO(a, b)(UnboundedInt_modulo(a,b))
 #define EQUALS(t, a, b)(HashMap_put((t), (a), (b)))
-//#define MODULO(a, b)((a) % (b))
+
 
 
 /**

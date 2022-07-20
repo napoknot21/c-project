@@ -7,7 +7,6 @@
 #include "unbounded_int.h"
 #include "ast.h"
 #include "hashmap.h"
-#include <string.h>
 
 typedef enum FuncType {
     STD, DUMMY, NONE, CALL

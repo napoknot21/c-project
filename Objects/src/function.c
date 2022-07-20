@@ -4,8 +4,9 @@
 #include "function.h"
 #include "lib.h"
 #include <stdlib.h>
+#include <string.h>
 
-Function function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
+Function Function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
                       unsigned short requestedArguments) {
     Function f = {
             .name = trim(name, strlen(name)),
@@ -19,7 +20,7 @@ Function function_new(char *name, RetType type, int (*function)(int, UnboundedIn
     return f;
 }
 
-void function_free(Function f) {
+void Function_free(Function f) {
     //free(f.argv);
     //free(f.argn);
     free(f.name);
