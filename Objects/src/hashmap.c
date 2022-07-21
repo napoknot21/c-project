@@ -48,29 +48,31 @@ static size_t hash2(size_t hash) {
 
 static size_t find(HashMap *map, char *name, int flag) {
     size_t hashVal = hash(name);
-    size_t ind = hash1((double) map->mCapacity, hashVal) % (size_t) map->mCapacity;
+    size_t ind = hash1((double) map->mCapacity, hashVal) % map->mCapacity;
     size_t step = hash2(hashVal);
-    size_t dummy = -1;
-    for (int i = 0; i < map->mCapacity; i++) {
+    size_t dummyInit = map->mCapacity + 1;
+    size_t dummy = dummyInit;
+
+    for (size_t i = 0; i < map->mCapacity; i++) {
         if (map->mData[ind].mType == NONE) {
-            if (dummy == -1) dummy = ind;
+            if (dummy == dummyInit) dummy = ind;
             break;
         }
         if (map->mData[ind].mType == DUMMY) {
-            if (dummy == -1) dummy = ind;
+            if (dummy == dummyInit) dummy = ind;
         }
-        else if (map->mData[ind].mHash == hashVal && map->cmp(name, map->mData[ind].mData)) {
+        else if (map->mData[ind].mHash == hashVal && map->mCmp(name, map->mData[ind].mData)) {
             return ind;
         }
-        ind = (ind + step) % (size_t) map->mCapacity;
+        ind = (ind + step) % map->mCapacity;
     }
     return (flag) ? dummy : -1;
 }
 
 
-HashMap *HashMap_new() {
+HashMap *HashMap_new(int (*cmpData)(void *, void *), void (*freeData)(void *)) {
     HashMap *map = malloc(sizeof(HashMap));
-    if (map == NULL) {
+	if (map == NULL) {
         perror_src("");
         return NULL;
     }
@@ -89,6 +91,8 @@ HashMap *HashMap_new() {
     }
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
+    map->mCmp = cmpData;
+    map->mFree = freeData
     return map;
 }
 

@@ -13,7 +13,9 @@ add_library(Objects
         src/stack.c
         src/token.c
         src/unbounded_int.c
-        )
+        src/variable.c 
+        include/variable.h
+)
 
 target_include_directories(Objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 

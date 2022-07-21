@@ -17,14 +17,14 @@ struct HashMap {
     size_t mDummyNumber;
     float mMinRatio, mMaxRatio;
 
-    int (*cmp)(const char *, const void *);
+    int (*mCmp)(const char *, const void *);
 
     void (*mFree)(void *);
 };
 
 void *HashMap_get(HashMap *map, char *name);
 
-HashMap *HashMap_new();
+HashMap *HashMap_new(int (*cmpData)(void *, void *), void (*freeData)(void *));
 
 int HashMap_put(HashMap *map, char *name, void *value);
 

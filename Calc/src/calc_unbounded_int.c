@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
         disconnect(&in, &out);
         exit(EXIT_FAILURE);
     }
-    HashMap *functions = HashMap_new();
+    HashMap *functions = HashMap_new(Function_cmp,Function_free);
     if (functions == NULL) {
         perror_src("");
         AST_free(ast);
