@@ -17,7 +17,7 @@
 #include "function.h"
 #include "token.h"
 #include "ast.h"
-#include "mBuffer.h"
+#include "Buffer.h"
 #include "app_informations.h"
 #include "variable.h"
 
@@ -245,7 +245,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
     if (function->mArgc > function->mRequested) {
         return 0;
     }
-    if (buffer->length == 0 && (c == '(')) {
+    if (buffer->mLength == 0 && (c == '(')) {
         *argsStart = 1;
         return 1;
     }
@@ -266,7 +266,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
     }
     if (c == ',') {
         UnboundedInt astResult = UnboundedInt_newll(0);
-        char *in = trim(buffer->mBuffer, buffer->length);
+        char *in = trim(buffer->mBuffer, buffer->mLength);
         function->mArgn[function->mArgc] = in;
         int val = parseString(in, ast, storage, map, &astResult);
         if (!val) return 1;
@@ -395,7 +395,7 @@ static int treatment
             int *func, HashMap *functionsMap, Function *function, int *argsStart)
 {
     char *buffer = pBuffer->mBuffer;
-    size_t len = pBuffer->length;
+    size_t len = pBuffer->mLength;
     Function* test = HashMap_get(functionsMap, "print");
     if (type == VOID || buffer[0] == '\0') {
         return (AST_hasFunction(ast)) ? 1 : -2;  //void value
@@ -418,7 +418,7 @@ static int treatment
     }
     if (type == NUMBER && buffer[0] == '=') {
         Token token = Token_new(buffer, 1, OPERATOR);
-        UnboundedInt value = *((UnboundedInt*) HashMap_get(storage, token.data));
+        UnboundedInt value = *((UnboundedInt*) HashMap_get(storage, token.mData));
         if (!AST_add(ast, value, token)) {
             Token_free(token);
             return 0; //error value
@@ -431,7 +431,7 @@ static int treatment
         return 0;   //error value
     }
     Token token = Token_new(buffer, len, type);
-    UnboundedInt value = *((UnboundedInt*) HashMap_get(storage, token.data));
+    UnboundedInt value = *((UnboundedInt*) HashMap_get(storage, token.mData));
     if (!AST_add(ast, value, token)) {
         Token_free(token);
         return 0; //error value

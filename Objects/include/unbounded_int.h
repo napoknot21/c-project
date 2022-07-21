@@ -26,21 +26,21 @@ typedef struct {
 UnboundedInt UnboundedInt_free(UnboundedInt u);
 
 /**
- * Convertis un string en type UnboundedInt
+ * Convertis un string en mType UnboundedInt
  * @param e : le string à convertir
  * @return UnboundedInt la paramètre comme nouvelle structure
  */
 UnboundedInt UnboundedInt_newString(char *e);
 
 /**
- * Convertit un long en type UnboundedInt
+ * Convertit un long en mType UnboundedInt
  * @param i variable à convertir
  * @return UnboundedInt : paramètre comme nouvelle struct
  */
 UnboundedInt UnboundedInt_newll(long long i);
 
 /**
- * Convertis un type UnboundedInt en string
+ * Convertis un mType UnboundedInt en string
  * @param i struct UnboundedInt
  * @return char* le paramètre sous en format string
  */

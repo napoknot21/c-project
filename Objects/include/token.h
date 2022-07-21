@@ -18,8 +18,8 @@ typedef enum TokenType {
  * Lexers Tokens.
  */
 typedef struct Token {
-    char *data;
-    TokenType type;
+    char *mData;
+    TokenType mType;
 } Token;
 
 /**
@@ -29,7 +29,7 @@ typedef struct Token {
 void Token_free(Token t);
 
 /**
- * Create a new token according to the string given in argument and the type.
+ * Create a new token according to the string given in argument and the mType.
  * @param s The token' data.
  * @param type The token's type.
  * @return The created Token.
