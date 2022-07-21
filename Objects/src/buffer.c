@@ -2,10 +2,10 @@
 // Created by Kevin on 05/07/2022.
 //
 
+#include "Buffer.h"
+
 #include <stdlib.h>
 
-
-#include "mBuffer.h"
 #include "exec_error.h"
 
 #define BUFFER_SIZE 16
@@ -22,8 +22,8 @@ Buffer *Buffer_new() {
         free(buffer);
         return NULL;
     }
-    buffer->capacity = BUFFER_SIZE;
-    buffer->length = 0;
+    buffer->mCapacity = BUFFER_SIZE;
+    buffer->mLength = 0;
     return buffer;
 }
 
@@ -35,8 +35,8 @@ Buffer *Buffer_clear(Buffer *buffer) {
         free(buffer);
         return NULL;
     }
-    buffer->capacity = BUFFER_SIZE;
-    buffer->length = 0;
+    buffer->mCapacity = BUFFER_SIZE;
+    buffer->mLength = 0;
     return buffer;
 }
 
@@ -51,15 +51,15 @@ int Buffer_add(Buffer *buffer, const char e) {
         perror_src("");
         return 0;
     }
-    if (buffer->length + 1 >= buffer->capacity) {
-        char *tmp = realloc(buffer->mBuffer, 2 * buffer->capacity);
+    if (buffer->mLength + 1 >= buffer->mCapacity) {
+        char *tmp = realloc(buffer->mBuffer, 2 * buffer->mCapacity);
         if (tmp == NULL) {
             perror_src("");
             return 0;
         }
-        buffer->capacity *= 2;
+        buffer->mCapacity *= 2;
         buffer->mBuffer = tmp;
     }
-    buffer->mBuffer[buffer->length++] = e;
+    buffer->mBuffer[buffer->mLength++] = e;
     return 1;
 }

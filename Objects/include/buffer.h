@@ -9,8 +9,8 @@
 */
 typedef struct Buffer {
     char *mBuffer;
-    int capacity;
-    int length;
+    int mCapacity;
+    int mLength;
 } Buffer;
 
 /**
@@ -20,7 +20,7 @@ typedef struct Buffer {
 Buffer *Buffer_new();
 
 /**
- * Clear the mBuffer and puts its capacity to the BUFFER_SIZE.
+ * Clear the mBuffer and puts its mCapacity to the BUFFER_SIZE.
  * @param buffer The buffer pointer.
  * @return the buffer if everything went fine, NULL otherwise
  */

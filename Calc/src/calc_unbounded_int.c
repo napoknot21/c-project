@@ -165,7 +165,6 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
     load_stdlib(functionsMap);
-    Function* test = HashMap_get(functionsMap, "print");
     int err = parseFile(in, ast, storage, functionsMap);
     AST_free(ast);
     HashMap_free(storage);
@@ -365,7 +364,6 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
         return 0;
     }
     int c;
-    Function* test = HashMap_get(functionsMap, "print");
     while ((c = fgetc(in)) != EOF) {
         if (!parse(c, ast, storage, functionsMap, &last, &current, stack, &isFunc, &argsStart, function, argAST, NULL)) {
             Buffer_free(stack);
@@ -396,7 +394,6 @@ static int treatment
 {
     char *buffer = pBuffer->mBuffer;
     size_t len = pBuffer->mLength;
-    Function* test = HashMap_get(functionsMap, "print");
     if (type == VOID || buffer[0] == '\0') {
         return (AST_hasFunction(ast)) ? 1 : -2;  //void value
     }
