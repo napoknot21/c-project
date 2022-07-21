@@ -8,6 +8,9 @@
 #include "exec_error.h"
 #include "hashmap.h"
 
+#include "lib.h"
+#include "variable.h"
+
 enum Type {
     NONE, DUMMY, FULL
 };
@@ -16,12 +19,12 @@ enum Type;
 struct HashMapData {
     size_t mHash;
     char *mName;
-    void *mData;
+   Variable mData;
     enum Type mType;
 };
 
-#define DUMMY_DATA(h) ((HashMapData) {.mName = "", .mHash = (h), .mData = NULL, .mType = DUMMY})
-#define NONE_DATA ((HashMapData) {.mName = "", .mHash = 0, .mData = NULL, .mType = NONE})
+#define DUMMY_DATA(h) ((HashMapData) {.mName = "", .mHash = (h), .mData = NULL, .mType = FUNCTION_DUMMY})
+#define NONE_DATA ((HashMapData) {.mName = "", .mHash = 0, .mData = NULL, .mType = FUNCTION_NONE})
 #define HASHMAP_INITIAL_SIZE 11
 #define HASHMAP_MIN_RATIO ((float)0.25)
 #define HASHMAP_MAX_RATIO ((float)0.75)
@@ -54,23 +57,23 @@ static size_t find(HashMap *map, char *name, int flag) {
     size_t dummy = dummyInit;
 
     for (size_t i = 0; i < map->mCapacity; i++) {
-        if (map->mData[ind].mType == NONE) {
+        if (map->mData[ind].mType == FUNCTION_NULL) {
             if (dummy == dummyInit) dummy = ind;
             break;
         }
-        if (map->mData[ind].mType == DUMMY) {
+        if (map->mData[ind].mType == FUNCTION_DUMMY) {
             if (dummy == dummyInit) dummy = ind;
         }
-        else if (map->mData[ind].mHash == hashVal && map->mCmp(name, map->mData[ind].mData)) {
+        else if (map->mData[ind].mHash == hashVal && str_equals(name,map->mData[ind].mName)) {
             return ind;
         }
         ind = (ind + step) % map->mCapacity;
     }
-    return (flag) ? dummy : -1;
+    return (flag) ? dummy : dummyInit;
 }
 
 
-HashMap *HashMap_new(int (*cmpData)(void *, void *), void (*freeData)(void *)) {
+HashMap *HashMap_new(int (*cmpData)(const char *, void *), void (*freeData)(void *)) {
     HashMap *map = malloc(sizeof(HashMap));
 	if (map == NULL) {
         perror_src("");
@@ -92,7 +95,7 @@ HashMap *HashMap_new(int (*cmpData)(void *, void *), void (*freeData)(void *)) {
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
     map->mCmp = cmpData;
-    map->mFree = freeData
+    map->mFree = freeData;
     return map;
 }
 
@@ -102,11 +105,11 @@ int HashMap_put(HashMap *map, char *name, void *value) {
     if (empty == -1) return 0;
 
     HashMapData new = {.mName = name, .mData = value, .mType = FULL, .mHash = hashVal};
-    if (map->mData[empty].mType == DUMMY) {
+    if (map->mData[empty].mType == FUNCTION_DUMMY) {
         map->mDummyNumber--;
         map->mKeyNumber++;
     }
-    if (map->mData[empty].mType == NONE) {
+    if (map->mData[empty].mType == FUNCTION_NULL) {
         map->mKeyNumber++;
     }
     map->mData[empty] = new;
@@ -118,8 +121,8 @@ int HashMap_put(HashMap *map, char *name, void *value) {
 }
 
 void *HashMap_get(HashMap *map, char *name) {
-    long long pos = find(map, name, 0);
-    if (pos == -1) return NULL;
+    size_t pos = find(map, name, 0);
+    if (pos == map->mCapacity + 1) return NULL;
     return map->mData[pos].mData;
 }
 
@@ -137,7 +140,7 @@ static void resize(HashMap *map, size_t newSize) {
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
     for (int i = 0; i < oldLen; i++) {
-        if (old[i].mType != NONE && old[i].mType != DUMMY) HashMap_put(map, old[i].mName, old[i].mData);
+        if (old[i].mType != FUNCTION_NULL && old[i].mType != FUNCTION_DUMMY) HashMap_put(map, old[i].mName, old[i].mData);
     }
     free(old);
 }

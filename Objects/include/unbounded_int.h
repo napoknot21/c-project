@@ -9,6 +9,7 @@ typedef struct Number {
 } Number;
 
 
+
 typedef struct {
     char mSign; //soit + ou -
     size_t mLength; //Taille de la chaine

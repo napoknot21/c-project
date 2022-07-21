@@ -8,26 +8,26 @@
 #include "ast.h"
 #include "hashmap.h"
 
-typedef enum FuncType {
-    STD, DUMMY, NONE, CALL
-} FuncType;
+typedef enum FunctionType {
+    FUNCTION_STD, FUNCTION_DUMMY, FUNCTION_NONE, FUNCTION_CALL
+} FunctionType;
 
 typedef enum RetType {
-    NUM_TYPE, VOID_TYPE
+    RETURN_NUM, RETURN_VOID
 } RetType;
 
 
 typedef struct Function Function;
 
 struct Function {
-    char *name;
-    unsigned short requested;
-    unsigned short argc;
-    RetType retType;
-    UnboundedInt *argv;
-    char **argn;
+    char *mName;
+    unsigned short mRequested;
+    unsigned short mArgc;
+    RetType mRetType;
+    UnboundedInt *mArgv;
+    char **mArgn;
 
-    int (*func)(int, UnboundedInt *, char **);
+    int (*mFunc)(int, UnboundedInt *, char **); //Todo: Build an Union in order to create different functions
 };
 
 Function Function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
@@ -37,6 +37,9 @@ void Function_free(Function f);
 
 int Function_apply(HashMap *map, char *name, ASN *node);
 
+int Function_hashMapUtil_cmp(const char* name, void* func);
 
-#define FUNCTION_NULL (Function) {.name = NULL, .requested = 0, .argc = 0, .retType= VOID_TYPE, .argv = NULL, .argn = NULL}
+void Function_hashMapUtil_free(void* func);
+
+#define FUNCTION_NULL (Function) {.mName = NULL, .mRequested = 0, .mArgc = 0, .mRetType= RETURN_VOID, .mArgv = NULL, .mArgn = NULL}
 #endif //C_PROJECT_FUNCTION_H

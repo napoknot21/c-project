@@ -1,5 +1,6 @@
 #ifndef VARIABLE
 #define VARIABLE
+#include "function.h"
 #include "unbounded_int.h"
 
 typedef struct Variable Variable;
@@ -9,6 +10,7 @@ union Value {
 	char* string;
 	char character;
 	void* null;
+	Function function;
 };
 
 enum VarType {
@@ -22,7 +24,15 @@ struct Variable {
 
 #define VAR_NULL ((Variable){.mName = "", .mValue.null = NULL, .mType = VARTYPE_NULL})
 
-Variable Variable_new(char* name, void* value, VarType type);
+int Variable_equals(Variable a, Variable b);
+
+int Variable_isCopy(Variable a, Variable b);
+
+int Variable_hashMapUtil_cmp(const char *name, void *var);
+
+void Variable_hashMapUtil_free(void *var);
+
+Variable Variable_new(char *name, void *value, VarType type);
 
 void Variable_free(Variable var);
 #endif // VARIABLE

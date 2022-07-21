@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 
+#include "unbounded_int.h"
+
 typedef struct HashMap HashMap;
 typedef struct HashMapData HashMapData;
 
@@ -17,14 +19,21 @@ struct HashMap {
     size_t mDummyNumber;
     float mMinRatio, mMaxRatio;
 
-    int (*mCmp)(const char *, const void *);
+    int (*mCmp)(const char *, void *);
 
     void (*mFree)(void *);
 };
 
+union DataValue {
+    UnboundedInt ui;
+    char* string;
+    char character;
+    void* null;
+};
+
 void *HashMap_get(HashMap *map, char *name);
 
-HashMap *HashMap_new(int (*cmpData)(void *, void *), void (*freeData)(void *));
+HashMap *HashMap_new(int (*cmpData)(const char*, void *), void (*freeData)(void *));
 
 int HashMap_put(HashMap *map, char *name, void *value);
 

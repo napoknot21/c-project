@@ -1,6 +1,6 @@
 add_library(Objects
         include/ast.h
-        include/buffer.h
+        "include/Buffer.h"
         include/function.h
         include/hashmap.h
         include/stack.h
