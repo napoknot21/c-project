@@ -130,7 +130,9 @@ static void resize(HashMap *map, size_t newSize) {
     HashMapData *old = map->mData;
     size_t oldLen = map->mCapacity;
     HashMapData *new = malloc(newSize * sizeof(HashMapData));
-    for (int i = 0; i < newSize; i++) new[i] = NONE_DATA;
+    for (size_t i = 0; i < newSize; i++) {
+        new[i] = NONE_DATA;
+    }
     if (new == NULL) {
         perror_src("");
         return;
@@ -139,8 +141,10 @@ static void resize(HashMap *map, size_t newSize) {
     map->mCapacity = newSize;
     map->mKeyNumber = 0;
     map->mDummyNumber = 0;
-    for (int i = 0; i < oldLen; i++) {
-        if (old[i].mType != HASHMAP_NONE && old[i].mType != HASHMAP_DUMMY) HashMap_put(map, old[i].mName, old[i].mData);
+    for (size_t i = 0; i < oldLen; i++) {
+        if (old[i].mType != HASHMAP_NONE && old[i].mType != HASHMAP_DUMMY) {
+            HashMap_put(map, old[i].mName, old[i].mData);
+        }
     }
     free(old);
 }
