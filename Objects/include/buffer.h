@@ -8,9 +8,9 @@
  * Parser Buffer.
 */
 typedef struct Buffer {
-    char *mBuffer;
-    int mCapacity;
-    int mLength;
+	char *mBuffer;
+	int mCapacity;
+	int mLength;
 } Buffer;
 
 /**

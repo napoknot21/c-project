@@ -11,15 +11,19 @@
 * Token types.
 */
 typedef enum TokenType {
-    NUMBER, VAR, OPERATOR, VOID, FUNCTION
+	NUMBER,
+	VAR,
+	OPERATOR,
+	VOID,
+	FUNCTION
 } TokenType;
 
 /**
  * Lexers Tokens.
  */
 typedef struct Token {
-    char *mData;
-    TokenType mType;
+	char *mData;
+	TokenType mType;
 } Token;
 
 /**

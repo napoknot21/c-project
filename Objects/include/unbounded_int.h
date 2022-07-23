@@ -3,18 +3,17 @@
 #include <stdlib.h>
 
 typedef struct Number {
-    struct Number *mNext;
-    char mVal; //Pour stocker un chiffre ('0', '1', '2', ..., '9')
-    struct Number *mLast;
+	struct Number *mNext;
+	char mVal; //Pour stocker un chiffre ('0', '1', '2', ..., '9')
+	struct Number *mLast;
 } Number;
 
 
-
 typedef struct {
-    char mSign; //soit + ou -
-    size_t mLength; //Taille de la chaine
-    Number *mFirst; //chiffre le plus élévé
-    Number *mLast; //Chiffre des unités
+	char mSign; //soit + ou -
+	size_t mLength; //Taille de la chaine
+	Number *mFirst; //chiffre le plus élévé
+	Number *mLast; //Chiffre des unités
 } UnboundedInt;
 
 #define UNBOUNDED_INT_ERROR ((UnboundedInt) {.mLength = 0, .mLast = NULL, .mFirst = NULL, .mSign = '*'})

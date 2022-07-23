@@ -18,19 +18,18 @@
 #define EQUALS(t, a, b)(HashMap_put((t), (a), (b)))
 
 
-
 /**
 * Abstract syntax node used for arithmetic evaluations.
 */
 typedef struct ASN {
-    Token token;
-    UnboundedInt result;
-    struct ASN *left;
-    struct ASN *right;
+	Token token;
+	UnboundedInt result;
+	struct ASN *left;
+	struct ASN *right;
 } ASN;
 
 typedef struct AST {
-    ASN *root;
+	ASN *root;
 } AST;
 
 /**
