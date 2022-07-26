@@ -4,7 +4,7 @@
 #ifndef C_PROJECT_FUNCTION_H
 #define C_PROJECT_FUNCTION_H
 
-#include "unbounded_int.h"
+#include "variable.h"
 #include "ast.h"
 #include "hashmap.h"
 
@@ -28,14 +28,14 @@ struct Function {
 	unsigned short mRequested;
 	unsigned short mArgc;
 	RetType mRetType;
-	UnboundedInt *mArgv;
+	Variable *mArgv;
 	char **mArgn;
 
-	int (*mFunc)(int, UnboundedInt *, char **); //Todo: Build an Union in order to create different functions
+	int (*mFunc)(int, Variable *, char **); //Todo: Build an Union in order to create different functions
 };
 
-Function *Function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
-                       unsigned short requestedArguments);
+Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
+                      unsigned short requestedArguments);
 
 void Function_free(Function f);
 

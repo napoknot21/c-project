@@ -31,6 +31,8 @@ static char *error_getMessage(enum Error error) {
 			return "Too many arguments were given";
 		case MISSING_ARGUMENTS:
 			return "Some arguments are missing";
+		case UNKNOWN_VARTYPE:
+			return "The type of the variable is unknown";
 		default:
 			return "";
 	}

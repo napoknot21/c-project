@@ -11,10 +11,12 @@
 
 #include <stdio.h>
 
+#include "app_informations.h"
 #include "lib.h"
 
 #include "exec_error.h"
-#include "unbounded_int.h"
+#include "function.h"
+#include "variable.h"
 #include "token.h"
 #include "hashmap.h"
 
@@ -23,7 +25,7 @@
  * @param storage The storage tree.
  * @param asn The root of the sub AST.
  */
-static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map);
+static Variable ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map);
 
 /**
  * Allocate a new memory block for an ASN.
@@ -31,7 +33,7 @@ static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map
  * @param s The node's data
  * @return The node's pointer
  */
-static ASN *ASN_new(UnboundedInt value, Token token);
+static ASN *ASN_new(Variable value, Token token);
 
 /**
  * Add a new Node in the AST according to the string given in argument. Manage the operator priority.
@@ -39,7 +41,7 @@ static ASN *ASN_new(UnboundedInt value, Token token);
  * @param storage. The storage tree.
  * @param s The node value.
  */
-static int ASN_add(UnboundedInt value, ASN **asn, Token token);
+static int ASN_add(Variable value, ASN **asn, Token token);
 
 /**
  * Free the ASN.
@@ -60,31 +62,28 @@ static ASN *ASN_free(ASN *asn);
  *         The DEFAULT_OP(empty node) is considered as an addition.
  *         if the node is not an operator, return the result of the node.
  */
-static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedInt right);
+static Variable op(ASN *asn, HashMap *storage, Variable left, Variable right);
 
 
-static ASN *ASN_new(UnboundedInt value, Token token) {
+static ASN *ASN_new(Variable value, Token token) {
 	ASN *node = malloc(sizeof(ASN));
 	if (node == NULL) return NULL;
 	switch (token.mType) {
 		case OPERATOR:
-			node->result = UnboundedInt_newll(0);
+			node->result = VAR_NULL;
 			node->token = token;
 			break;
 		case NUMBER:
 			node->token = token;
-			node->result = UnboundedInt_newString(token.mData);
+			UnboundedInt tmp = UnboundedInt_newString(token.mData);
+			node->result = Variable_new("", &tmp, VARTYPE_INT);
 			break;
 		case VAR:
-			node->result = value;
+			node->result = Variable_cpy(value);
 			node->token = token;
 			break;
-		case FUNCTION:
-			node->result = UnboundedInt_newll(0);
-			break;
-
 		default:
-			node->result = UnboundedInt_newll(0);
+			node->result = VAR_NULL;
 			node->token = token;
 			break;
 	}
@@ -94,7 +93,7 @@ static ASN *ASN_new(UnboundedInt value, Token token) {
 	return node;
 }
 
-static int ASN_add(UnboundedInt value, ASN **asn, Token token) {
+static int ASN_add(Variable value, ASN **asn, Token token) {
 	if (*asn == NULL) {
 		*asn = ASN_new(value, Token_new("", 0, OPERATOR));
 		(*asn)->left = ASN_new(value, token);
@@ -120,57 +119,173 @@ static int ASN_add(UnboundedInt value, ASN **asn, Token token) {
 
 static ASN *ASN_free(ASN *n) {
 	if (n != NULL) {
-		ASN_free(n->right);
-		ASN_free(n->left);
-		//unboundedInt_free(n->result);
+		n->right = ASN_free(n->right);
+		n->left = ASN_free(n->left);
+		Variable_free(n->result);
+		n->result = VAR_NULL;
 		free(n);
 	}
 
 	return n = NULL;
 }
 
-static UnboundedInt op(ASN *asn, HashMap *storage, UnboundedInt left, UnboundedInt right) {
+static Variable equals(HashMap *storage, char *name, Variable value) {
+	value.mName = name;
+	Variable cpy = Variable_cpy(value);
+	Variable *old = HashMap_get(storage, name);
+	if (old != NULL) {
+		Variable_free(*old);
+	}
+	HashMap_put(storage, name, &cpy);
+	return Variable_cpy(value);
+}
+
+static Variable multipliply(Variable left, Variable right) { //TODO: finish the other cases
+	switch (left.mType) {
+		case VARTYPE_INT:
+			if (right.mType == VARTYPE_INT) {
+				UnboundedInt tmp = UnboundedInt_multiply(right.mValue.ui, left.mValue.ui);
+				return Variable_new("", &tmp, VARTYPE_INT);
+			}
+			break;
+	}
+	return VAR_NULL;
+
+}
+
+static Variable subtract(Variable left, Variable right) {
+	switch (left.mType) {
+		case VARTYPE_INT:
+			if (right.mType == VARTYPE_INT) {
+				UnboundedInt tmp = UnboundedInt_subtract(right.mValue.ui, left.mValue.ui);
+				return Variable_new("", &tmp, VARTYPE_INT);
+			}
+			break;
+	}
+	return VAR_NULL;
+}
+
+static Variable add(Variable left, Variable right) {
+	switch (left.mType) {
+		case VARTYPE_INT:
+			if (right.mType == VARTYPE_INT) {
+				UnboundedInt tmp = UnboundedInt_add(right.mValue.ui, left.mValue.ui);
+				return Variable_new("", &tmp, VARTYPE_INT);
+			}
+			break;
+	}
+	return VAR_NULL;
+}
+
+static Variable divide(Variable left, Variable right) {
+	switch (left.mType) {
+		case VARTYPE_INT:
+			if (right.mType == VARTYPE_INT) {
+				UnboundedInt tmp = UnboundedInt_divide(right.mValue.ui, left.mValue.ui);
+				return Variable_new("", &tmp, VARTYPE_INT);
+			}
+			break;
+	}
+	return VAR_NULL;
+}
+
+static Variable modulo(Variable left, Variable right) {
+	switch (left.mType) {
+		case VARTYPE_INT:
+			if (right.mType == VARTYPE_INT) {
+				UnboundedInt tmp = UnboundedInt_modulo(right.mValue.ui, left.mValue.ui);
+				return Variable_new("", &tmp, VARTYPE_INT);
+			}
+			break;
+	}
+	return VAR_NULL;
+}
+
+static Variable defaultOP(ASN *asn, Variable left, Variable right) {
+	return left.mType == VARTYPE_NULL ? Variable_cpy(right) : Variable_cpy(left);
+	/*if (left.mType == VARTYPE_NULL) {
+		asn->left = ASN_free(asn->left);
+		free(asn->right);
+		asn->right = NULL;
+		return right;
+	} 
+	asn->right = ASN_free(asn->right);
+	free(asn->left);
+	asn->left = NULL;
+	return left;*/
+}
+
+
+static Variable op(ASN *asn, HashMap *storage, Variable left, Variable right) {
 	switch (asn->token.mData[0]) {
 		case '=':
-			EQUALS(storage, asn->left->token.mData, &right);
-			return right;
+			return equals(storage, asn->left->token.mData, right);
 		case '*':
-			return MULTIPLICATION(right, left);
+			return multipliply(left, right);
 		case '-':
-			return SUBSTRACTION(left, right);
+			return subtract(left, right);
 		case DEFAULT_OP:
+			return defaultOP(asn, left, right);
 		case '+':
-			return ADDITION(left, right);
+			return add(left, right);
 		case '/':
-			return DIVISION(left, right);
+			return divide(left, right);
 		case '%':
-			return MODULO(left, right);
+			return modulo(left, right);
 		default:
 			return asn->result;
 	}
 }
 
+/* #####################################################################################################################
+ * Function's functions
+ */
+static int function_apply(HashMap *map, char *name, ASN *node) {
+	Function *f = HashMap_get(map, name);
+	if (f == NULL) return 0;
+	if (f->mRequested > f->mArgc) {
+		if (!EXIT_REQUEST) {
+			perror_file(MISSING_ARGUMENTS);
+		}
+		EXIT_REQUEST = -1;
+		return 0;
+	}
+	if (f->mRequested < f->mArgc) {
+		if (!EXIT_REQUEST) {
+			perror_file(TOO_MANY_ARGUMENTS);
+		}
+		EXIT_REQUEST = -1;
+		return 0;
+	}
+	f->mFunc(f->mArgc, f->mArgv, f->mArgn);
+	if (node != NULL && f->mRetType != RETURN_VOID) {
+		node->result = f->mArgv[f->mArgc];
+	}
+	HashMap_remove(map, f->mName);
+	return 1;
+}
 
-static UnboundedInt ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
-	if (asn == NULL) return UnboundedInt_newll(0);
+
+static Variable ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
+	if (asn == NULL) return VAR_NULL;
 	if (asn->token.mType == NUMBER || asn->token.mType == VAR) {
 		return asn->result;
 	}
-	UnboundedInt left = ASN_apply(storage, asn->left, err, map);
-	UnboundedInt right = ASN_apply(storage, asn->right, err, map);
+	Variable left = ASN_apply(storage, asn->left, err, map);
+	Variable right = ASN_apply(storage, asn->right, err, map);
 	if (((asn->token.mData[0] != DEFAULT_OP) && asn->token.mType == OPERATOR) && // missing binary operator argument
 		((asn->left == NULL) || (asn->right == NULL))) {
 		if (*err) perror_file(INVALID_SYNTAX);
 		*err = 0;
-		return UnboundedInt_newll(0);
+		return VAR_NULL;
 	}
 	if (asn->token.mData[0] == '=' && asn->left->token.mType == NUMBER) { //Invalid assignation
 		if (*err) perror_file(INVALID_SYNTAX);
 		*err = 0;
-		return UnboundedInt_newll(0);
+		return VAR_NULL;
 	}
 	if (asn->token.mType == FUNCTION) {
-		//*err = function_apply(map, asn->token.mData, asn);
+		*err = function_apply(map, asn->token.mData, asn);
 		printf("CALL to %s", asn->token.mData);
 		return asn->result;
 	}
@@ -184,8 +299,8 @@ AST *AST_new() {
 	return tree;
 }
 
-int AST_add(AST *ast, UnboundedInt value, Token token) {
-	if (ast == NULL || UnboundedInt_isError(value) || isspace(token.mData[0]) || token.mType == VOID) {
+int AST_add(AST *ast, Variable value, Token token) {
+	if (ast == NULL || isspace(token.mData[0]) || token.mType == VOID) {
 		perror_file(INTERNAL);
 		return 0;
 	}

@@ -110,4 +110,6 @@ int UnboundedInt_isError(UnboundedInt i);
  */
 void UnboundedInt_print(UnboundedInt ui);
 
+UnboundedInt unboundedInt_cpy(UnboundedInt u);
+
 #endif // !C_PROJECT_UNBOUNDED_INT_H

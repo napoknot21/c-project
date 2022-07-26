@@ -6,24 +6,17 @@
 
 
 #include "token.h"
-#include "unbounded_int.h"
+#include "variable.h"
 #include "hashmap.h"
 
 #define DEFAULT_OP '\0'
-#define MULTIPLICATION(a, b)(UnboundedInt_multiply(a,b))
-#define ADDITION(a, b)(UnboundedInt_add(a,b))
-#define SUBSTRACTION(a, b)(UnboundedInt_subtract(a,b))
-#define DIVISION(a, b)(UnboundedInt_divide(a, b))
-#define MODULO(a, b)(UnboundedInt_modulo(a,b))
-#define EQUALS(t, a, b)(HashMap_put((t), (a), (b)))
-
 
 /**
 * Abstract syntax node used for arithmetic evaluations.
 */
 typedef struct ASN {
 	Token token;
-	UnboundedInt result;
+	Variable result;
 	struct ASN *left;
 	struct ASN *right;
 } ASN;
@@ -51,7 +44,7 @@ AST *AST_new();
  * @param value The UnboundedInt that will be added to the AST.
  * @param s The node value.
  */
-int AST_add(AST *ast, UnboundedInt value, Token token);
+int AST_add(AST *ast, Variable value, Token token);
 
 /**
  * Apply the arithmetic expression stored in the ast.

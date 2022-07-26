@@ -39,15 +39,15 @@ static int CALL_ID = 0;
  * FUNCTION_STD functions
  */
 
-static int std_print(int argc, UnboundedInt *argv, char **argn);
+static int std_print(int argc, Variable *argv, char **argn);
 
-static int std_pow(int argc, UnboundedInt *argv, char **argn);
+static int std_pow(int argc, Variable *argv, char **argn);
 
-static int std_exit(int argc, UnboundedInt *argv, char **argn);
+static int std_exit(int argc, Variable *argv, char **argn);
 
-static int std_abs(int argc, UnboundedInt *argv, char **argn);
+static int std_abs(int argc, Variable *argv, char **argn);
 
-static int std_fact(int argc, UnboundedInt *argv, char **argn);
+static int std_fact(int argc, Variable *argv, char **argn);
 
 
 static void connect(FILE **in, FILE **out, int argc, char **argv);
@@ -78,7 +78,7 @@ static void disconnect(FILE **in, FILE **out);
  */
 static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap);
 
-static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, UnboundedInt *astResult);
+static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Variable *astResult);
 
 /**
  * Treats the token stored in the mBuffer.
@@ -95,7 +95,7 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Unbou
  */
 static int
 treatment(Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type, int *func, HashMap *functionsMap,
-          Function **function, int *argsStart);
+          Function *function, int *argsStart);
 
 
 /* #####################################################################################################################
@@ -104,24 +104,23 @@ treatment(Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type, int *func
 
 static int function_apply(HashMap *map, char *name, ASN *node);
 
-static Function *buildCalledFunction(Function data);
+static Function buildCalledFunction(Function data);
 
 static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, int *isFunc, int *argsStart,
                              HashMap *map,
                              Function *function);
 
 void load_stdlib(HashMap *map) {
-	Function *print = Function_new("print", RETURN_VOID, std_print, 1);
-	Function *pow = Function_new("pow", RETURN_NUM, std_pow, 2);
-	Function *exit = Function_new("exit", RETURN_VOID, std_exit, 0);
-	Function *abs = Function_new("abs", RETURN_NUM, std_abs, 1);
-	Function *fact = Function_new("fact", RETURN_NUM, std_fact, 1);
-	HashMap_put(map, print->mName, &print);
-	HashMap_put(map, print->mName, print);
-	HashMap_put(map, pow->mName, pow);
-	HashMap_put(map, exit->mName, exit);
-	HashMap_put(map, abs->mName, abs);
-	HashMap_put(map, fact->mName, fact);
+	Function print = Function_new("print", RETURN_VOID, std_print, 1);
+	Function pow = Function_new("pow", RETURN_NUM, std_pow, 2);
+	Function exit = Function_new("exit", RETURN_VOID, std_exit, 0);
+	Function abs = Function_new("abs", RETURN_NUM, std_abs, 1);
+	Function fact = Function_new("fact", RETURN_NUM, std_fact, 1);
+	HashMap_put(map, print.mName, &print);
+	HashMap_put(map, pow.mName, &pow);
+	HashMap_put(map, exit.mName, &exit);
+	HashMap_put(map, abs.mName, &abs);
+	HashMap_put(map, fact.mName, &fact);
 
 }
 
@@ -149,14 +148,14 @@ int main(int argc, char **argv) {
 		disconnect(&in, &out);
 		exit(EXIT_FAILURE);
 	}
-	HashMap *storage = HashMap_new(Variable_hashMapUtil_cmp, Variable_hashMapUtil_free);
+	HashMap *storage = HashMap_new(sizeof(Variable), Variable_hashMapUtil_cmp, Variable_hashMapUtil_free);
 	if (storage == NULL) {
 		perror_src("");
 		AST_free(ast);
 		disconnect(&in, &out);
 		exit(EXIT_FAILURE);
 	}
-	HashMap *functionsMap = HashMap_new(Function_hashMapUtil_cmp, Function_hashMapUtil_free);
+	HashMap *functionsMap = HashMap_new(sizeof(Function), Function_hashMapUtil_cmp, Function_hashMapUtil_free);
 	if (functionsMap == NULL) {
 		perror_src("");
 		AST_free(ast);
@@ -181,7 +180,7 @@ int main(int argc, char **argv) {
 
 static int
 parse(int c, AST *ast, HashMap *storage, HashMap *functionsMap, TokenType *last, TokenType *current, Buffer *stack,
-      int *isFunc, int *argStart, Function **function, AST *argAst, UnboundedInt *astResult) {
+      int *isFunc, int *argStart, Function *function, AST *argAst, Variable *astResult) {
 	if (c == 4) {
 		EXIT_REQUEST = 1;
 		return 0;
@@ -189,7 +188,7 @@ parse(int c, AST *ast, HashMap *storage, HashMap *functionsMap, TokenType *last,
 	if ((char) c == '\n' || (char) c == '\r') {
 		int val = treatment(stack, ast, storage, *current, isFunc, functionsMap, function, argStart);
 		if (*isFunc) {
-			functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, *function);
+			functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, function);
 		}
 		if (val == 0 || (val > 0 && !AST_apply(storage, ast, functionsMap))) {
 			return 0;
@@ -206,7 +205,7 @@ parse(int c, AST *ast, HashMap *storage, HashMap *functionsMap, TokenType *last,
 
 	}
 	else if (*isFunc) {
-		functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, *function);
+		functionTreatment(c, stack, argAst, storage, isFunc, argStart, functionsMap, function);
 	}
 	else if (isspace(c)) {
 		*current = VOID;
@@ -271,7 +270,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 		return 1;
 	}
 	if (c == ',') {
-		UnboundedInt astResult = UnboundedInt_newll(0);
+		Variable astResult = VAR_NULL;
 		char *in = trim(buffer->mBuffer, buffer->mLength);
 		function->mArgn[function->mArgc] = in;
 		int val = parseString(in, ast, storage, map, &astResult);
@@ -294,12 +293,11 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 	return 1;
 }
 
-static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, UnboundedInt *astResult) {
+static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Variable *astResult) {
 	size_t len = strlen(in);
 	if (len == 0) {
 		return 0;
 	}
-	Function *function;
 	int isFunc = 0;
 	int argsStart = 0;
 	TokenType last, current;
@@ -315,9 +313,17 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Unbou
 		perror_src("");
 		return 0;
 	}
+
+	Function *function = malloc(sizeof(Function));
+	if (function == NULL) {
+		Buffer_free(stack);
+		AST_free(ast);
+		perror_src("");
+		return 0;
+	}
 	for (size_t i = 0; i < len; i++) {
 		int c = in[i];
-		int b = parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, &function, argAST, astResult);
+		int b = parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, function, argAST, astResult);
 		if (!b) {
 			Buffer_free(stack);
 			AST_free(argAST);
@@ -326,7 +332,7 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Unbou
 		last = current;
 		if (EXIT_REQUEST != 0) break;
 	}
-	int val = treatment(stack, ast, storage, current, &isFunc, map, &function, &argsStart);
+	int val = treatment(stack, ast, storage, current, &isFunc, map, function, &argsStart);
 	if (val == 0 || (val > 0 && !AST_apply(storage, ast, map))) {
 		Buffer_free(stack);
 		AST_free(argAST);
@@ -354,10 +360,16 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 		perror_src("");
 		return 0;
 	}
-	Function *function;
+	Function *function = malloc(sizeof(Function));
+	if (function == NULL) {
+		Buffer_free(stack);
+		AST_free(ast);
+		perror_src("");
+		return 0;
+	}
 	int c;
 	while ((c = fgetc(in)) != EOF) {
-		if (!parse(c, ast, storage, functionsMap, &last, &current, stack, &isFunc, &argsStart, &function, argAST,
+		if (!parse(c, ast, storage, functionsMap, &last, &current, stack, &isFunc, &argsStart, function, argAST,
 		           NULL)) {
 			Buffer_free(stack);
 			AST_free(argAST);
@@ -366,7 +378,7 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 		last = current;
 		if (EXIT_REQUEST != 0) break;
 	}
-	int val = treatment(stack, ast, storage, current, &isFunc, functionsMap, &function, &argsStart);
+	int val = treatment(stack, ast, storage, current, &isFunc, functionsMap, function, &argsStart);
 	if (val == 0 || (val > 0 && !AST_apply(storage, ast, functionsMap))) {
 		Buffer_free(stack);
 		AST_free(argAST);
@@ -380,7 +392,7 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 static int treatment
 (
 	Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type,
-	int *func, HashMap *functionsMap, Function **function, int *argsStart) {
+	int *func, HashMap *functionsMap, Function *function, int *argsStart) {
 
 
 	char *buffer = pBuffer->mBuffer;
@@ -391,11 +403,11 @@ static int treatment
 	Function *data = HashMap_get(functionsMap, buffer);
 	if (data != NULL) {
 		*func = 1;
-		Function *new = buildCalledFunction(*data);
+		Function new = buildCalledFunction(*data);
 		*function = new;
-		HashMap_put(functionsMap, new->mName, function);
-		Token token = Token_new(new->mName, strlen(new->mName), FUNCTION);
-		UnboundedInt value = UnboundedInt_newll(0);
+		HashMap_put(functionsMap, new.mName, function);
+		Token token = Token_new(new.mName, strlen(new.mName), FUNCTION);
+		Variable value = VAR_NULL;
 		if (!AST_add(ast, value, token)) {
 			Token_free(token);
 			return 0; //error value
@@ -406,8 +418,8 @@ static int treatment
 	}
 	if (type == NUMBER && buffer[0] == '=') {
 		Token token = Token_new(buffer, 1, OPERATOR);
-		UnboundedInt *tmp = HashMap_get(storage, token.mData);
-		UnboundedInt value = (tmp == NULL) ? UnboundedInt_newll(0) : *tmp;
+		Variable *tmp = HashMap_get(storage, token.mData);
+		Variable value = (tmp == NULL) ? VAR_NULL : *tmp;
 		if (!AST_add(ast, value, token)) {
 			Token_free(token);
 			return 0; //error value
@@ -420,8 +432,8 @@ static int treatment
 		return 0;   //error value
 	}
 	Token token = Token_new(buffer, len, type);
-	UnboundedInt *tmp = HashMap_get(storage, token.mData);
-	UnboundedInt value = (tmp == NULL) ? UnboundedInt_newll(0) : *tmp;
+	Variable *tmp = HashMap_get(storage, token.mData);
+	Variable value = (tmp == NULL) ? VAR_NULL : *tmp;
 	if (!AST_add(ast, value, token)) {
 		Token_free(token);
 		return 0; //error value
@@ -429,7 +441,7 @@ static int treatment
 	return 1; //add value
 }
 
-static Function *buildCalledFunction(Function f) {
+static Function buildCalledFunction(Function f) {
 	size_t dLen = strlen(f.mName);
 	INCR_CALL;
 	char *r = intToString(CALL_ID);
@@ -438,14 +450,14 @@ static Function *buildCalledFunction(Function f) {
 	size_t len = strlen(line);
 	char *newName = malloc((len + dLen + rLen + 1) * sizeof(char));
 	if (newName == NULL) {
-		return NULL;
+		return FUNCTION_NULL;
 	}
 	char *tmp = memmove(newName, f.mName, dLen * sizeof(char));
 	if (tmp == NULL) {
 		free(newName);
 		free(line);
 		free(r);
-		return NULL;
+		return FUNCTION_NULL;
 	}
 	newName = tmp;
 	tmp = memmove(&newName[dLen], line, len * sizeof(char));
@@ -453,14 +465,14 @@ static Function *buildCalledFunction(Function f) {
 		free(newName);
 		free(line);
 		free(r);
-		return NULL;
+		return FUNCTION_NULL;
 	}
 	tmp = memmove(&newName[dLen + len], r, rLen * sizeof(char));
 	if (tmp == NULL) {
 		free(newName);
 		free(line);
 		free(r);
-		return NULL;
+		return FUNCTION_NULL;
 	}
 	newName[dLen + len + rLen] = '\0';
 	return Function_new(newName, f.mRetType, f.mFunc, f.mRequested);
@@ -512,65 +524,66 @@ static void disconnect(FILE **in, FILE **out) {
  * FUNCTION_STD functions
  */
 
-static int std_print(int argc, UnboundedInt *argv, char **argn) {
-	char *result = UnboundedInt_toString(argv[0]);
-	fprintf(OUT, "%s = %s \n", argn[0], result);
-	argv[argc] = UNBOUNDED_INT_ERROR;
+static int std_print(int argc, Variable *argv, char **argn) {
+	argv[argc] = VAR_NULL;
+	char *result;
+	char *format;
+	switch (argv[0].mType) {
+		case VARTYPE_INT:
+			format = "%s = %s \n";
+			result = UnboundedInt_toString(argv[0].mValue.ui);
+			break;
+		case VARTYPE_STRING:
+			format = "%s = %s \n";
+			result = argv[0].mValue.string;
+			break;
+		case VARTYPE_CHARACTER:
+			format = "%s = %c \n";
+			result = &argv[0].mValue.character;
+			break;
+		default:
+			perror_file(UNKNOWN_VARTYPE);
+			return 0;
+	}
+	fprintf(OUT, format, argn[0], result);
+
 	//free(result);
 	//UnboundedInt_free(mArgv[0]);
 	//free(mArgn[0]);
 	return 0;
 }
 
-static int std_pow(int argc, UnboundedInt *argv, char **argn) {
-	argv[argc] = UnboundedInt_pow(argv[0], argv[1]);
-	return 1;
-
+static int std_pow(int argc, Variable *argv, char **argn) {
+	if (argv[0].mType == VARTYPE_INT && argv[1].mType == VARTYPE_INT) {
+		UnboundedInt tmp = UnboundedInt_pow(argv[0].mValue.ui, argv[1].mValue.ui);
+		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
+		return 1;
+	}
+	return 0;
 }
 
-static int std_abs(int argc, UnboundedInt *argv, char **argn) {
-	argv[argc] = UnboundedInt_abs(argv[0]);
+static int std_abs(int argc, Variable *argv, char **argn) {
+	if (argv[0].mType == VARTYPE_INT) {
+		UnboundedInt tmp = UnboundedInt_abs(argv[0].mValue.ui);
+		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
+		return 1;
+	}
 	//free(mArgn[0]);
-	//UnboundedInt_free(mArgv[0]);
-	return 1;
+	//Variable_free(mArgv[0]);
+	return 0;
 }
 
-static int std_exit(int argc, UnboundedInt *argv, char **argn) {
-	argv[argc] = UNBOUNDED_INT_ERROR;
+static int std_exit(int argc, Variable *argv, char **argn) {
+	argv[argc] = VAR_NULL;
 	EXIT_REQUEST = 1;
 	return 1;
 }
 
-static int std_fact(int argc, UnboundedInt *argv, char **argn) {
-	argv[argc] = UnboundedInt_fact(argv[0]);
-	free(argn[0]);
-	return 1;
-}
-
-/* #####################################################################################################################
- * Function's functions
- */
-static int function_apply(HashMap *map, char *name, ASN *node) {
-	Function *f = HashMap_get(map, name);
-	if (f == NULL) return 0;
-	if (f->mRequested > f->mArgc) {
-		if (!EXIT_REQUEST) {
-			perror_file(MISSING_ARGUMENTS);
-		}
-		EXIT_REQUEST = -1;
-		return 0;
+static int std_fact(int argc, Variable *argv, char **argn) {
+	if (argv[0].mType == VARTYPE_INT) {
+		UnboundedInt tmp = UnboundedInt_fact(argv[0].mValue.ui);
+		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
+		return 1;
 	}
-	if (f->mRequested < f->mArgc) {
-		if (!EXIT_REQUEST) {
-			perror_file(TOO_MANY_ARGUMENTS);
-		}
-		EXIT_REQUEST = -1;
-		return 0;
-	}
-	f->mFunc(f->mArgc, f->mArgv, f->mArgn);
-	if (node != NULL && f->mRetType != RETURN_VOID) {
-		node->result = f->mArgv[f->mArgc];
-	}
-	HashMap_remove(map, f->mName);
 	return 1;
 }

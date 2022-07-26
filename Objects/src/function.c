@@ -8,23 +8,19 @@
 
 #include "exec_error.h"
 
-Function *Function_new(char *name, RetType type, int (*function)(int, UnboundedInt *, char **),
-                       unsigned short requestedArguments) {
+Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
+                      unsigned short requestedArguments) {
 
-	Function *f = malloc(sizeof(Function));
-	if (f == NULL) {
-		perror_src("");
-		return NULL;
-	}
 
-	f->mName = trim(name, strlen(name));
-	f->mRequested = requestedArguments;
-	f->mFunc = function;
-	f->mArgc = 0;
-	f->mRetType = type;
-	f->mArgv = calloc(requestedArguments + 1, sizeof(UnboundedInt));
-	f->mArgn = malloc(requestedArguments * sizeof(char *));
-
+	Function f = {
+		f.mName = trim(name, strlen(name)),
+		f.mRequested = requestedArguments,
+		f.mArgc = 0,
+		f.mRetType = type,
+		f.mArgv = calloc(requestedArguments + 1, sizeof(UnboundedInt)),
+		f.mArgn = malloc(requestedArguments * sizeof(char *)),
+		f.mFunc = function
+	};
 	return f;
 }
 
@@ -37,7 +33,7 @@ void Function_hashMapUtil_free(void *func) {
 }
 
 void Function_free(Function f) {
-	//free(f.mArgv);
-	//free(f.mArgn);
+	free(f.mArgv);
+	free(f.mArgn);
 	free(f.mName);
 }

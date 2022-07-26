@@ -1,6 +1,8 @@
 //
 // Created by Kevin on 05/07/2022.
 //
+
+//TODO: Fix sur la HashMap qui cause la supression de donnnes en particulier sur les unboundedInt
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -75,7 +77,7 @@ static size_t find(HashMap *map, char *name, int flag) {
 }
 
 
-HashMap *HashMap_new(int (*cmpData)(const char *, void *), void (*freeData)(void *)) {
+HashMap *HashMap_new(int objectSize, int (*cmpData)(const char *, void *), void (*freeData)(void *)) {
 	HashMap *map = malloc(sizeof(HashMap));
 	if (map == NULL) {
 		perror_src("");
@@ -98,15 +100,15 @@ HashMap *HashMap_new(int (*cmpData)(const char *, void *), void (*freeData)(void
 	map->mDummyNumber = 0;
 	map->mCmp = cmpData;
 	map->mFree = freeData;
+	map->mObjectSize = objectSize;
+	map->spare = NULL;
 	return map;
 }
 
-int HashMap_put(HashMap *map, char *name, void *value) {
+void *HashMap_put(HashMap *map, char *name, void *value) {
 	size_t hashVal = hash(name);
 	size_t empty = find(map, name, 1);
-	if (empty == map->mCapacity + 1) return 0;
-
-	HashMapData new = {.mName = name, .mData = value, .mType = HASHMAP_FULL, .mHash = hashVal};
+	if (empty == map->mCapacity + 1) return NULL;
 	if (map->mData[empty].mType == HASHMAP_DUMMY) {
 		map->mDummyNumber--;
 		map->mKeyNumber++;
@@ -114,12 +116,26 @@ int HashMap_put(HashMap *map, char *name, void *value) {
 	if (map->mData[empty].mType == HASHMAP_NONE) {
 		map->mKeyNumber++;
 	}
+	if (map->mData[empty].mData != NULL) {
+		map->spare = map->mData[empty].mData;
+	}
+	else {
+		map->spare = NULL;
+	}
+	void *data = malloc(sizeof(map->mObjectSize));
+	if (data == NULL) return 0;
+	void *tmp = memmove(data, value, map->mObjectSize);
+	if (tmp == NULL) {
+		free(data);
+		return NULL;
+	}
+	HashMapData new = {.mName = name, .mData = data, .mType = HASHMAP_FULL, .mHash = hashVal};
 	map->mData[empty] = new;
 	if (map->mDummyNumber + map->mKeyNumber >= (size_t) ((double) map->mCapacity * map->mMaxRatio)) {
 		int ratio = (map->mDummyNumber < map->mKeyNumber) ? 2 : 1;
 		resize(map, ratio * map->mCapacity);
 	}
-	return 1;
+	return map->spare;
 }
 
 void *HashMap_get(HashMap *map, char *name) {
@@ -151,7 +167,7 @@ static void resize(HashMap *map, size_t newSize) {
 	free(old);
 }
 
-int HashMap_remove(HashMap *map, char *name) {
+int HashMap_remove(HashMap *map, char *name) {		//TODO: fix Donnees corrompues
 	long long pos = find(map, name, 0);
 	if (pos == -1) return -1;
 	HashMapData del = map->mData[pos];

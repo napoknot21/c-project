@@ -1,31 +1,27 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
-#include "function.h"
-#include "unbounded_int.h"
 
-typedef struct Variable Variable;
-typedef enum VarType VarType;
+#include "unbounded_int.h"
 
 union Value {
 	UnboundedInt ui;
 	char *string;
 	char character;
 	void *null;
-	Function function;
 };
 
-enum VarType {
+typedef enum VarType {
 	VARTYPE_STRING,
 	VARTYPE_INT,
 	VARTYPE_CHARACTER,
 	VARTYPE_NULL
-};
+} VarType;
 
-struct Variable {
+typedef struct Variable {
 	char *mName;
 	union Value mValue;
 	VarType mType;
-};
+} Variable;
 
 #define VAR_NULL ((Variable){.mName = "", .mValue.null = NULL, .mType = VARTYPE_NULL})
 
@@ -40,4 +36,6 @@ void Variable_hashMapUtil_free(void *var);
 Variable Variable_new(char *name, void *value, VarType type);
 
 void Variable_free(Variable var);
+
+Variable Variable_cpy(Variable var);
 #endif // VARIABLE_H

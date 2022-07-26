@@ -1,6 +1,7 @@
 #include "variable.h"
 #include "string.h"
 #include "lib.h"
+#include "stdlib.h"
 
 #include "unbounded_int.h"
 
@@ -64,6 +65,9 @@ Variable Variable_new(char *name, void *value, VarType type) {
 }
 
 void Variable_free(Variable var) {
+	if (var.mType == VARTYPE_NULL) {
+		return;
+	}
 	free(var.mName);
 	switch (var.mType) {
 		case VARTYPE_STRING:
@@ -72,5 +76,31 @@ void Variable_free(Variable var) {
 		case VARTYPE_INT:
 			UnboundedInt_free(var.mValue.ui);
 			break;
+	}
+}
+
+Variable Variable_cpy(Variable var) {
+	if (var.mType == VARTYPE_NULL) {
+		return VAR_NULL;
+	}
+	size_t len = strlen(var.mName);
+	char *name = malloc(sizeof(char) * (len + 1));
+	name = strncpy(name, var.mName, len);
+	name[len] = '\0';
+	switch (var.mType) {
+		case VARTYPE_INT:
+			UnboundedInt tmp = unboundedInt_cpy(var.mValue.ui);
+			return Variable_new(name, &tmp, var.mType);
+		case VARTYPE_STRING:
+			len = strlen(var.mName);
+			char *cpy = malloc(sizeof(char) * (len + 1));
+			cpy = strncpy(cpy, var.mValue.string, len);
+			cpy[len] = '\0';
+			return Variable_new(name, cpy, var.mType);
+		case VARTYPE_CHARACTER:
+			char ccpy = var.mValue.character;
+			return Variable_new(name, &ccpy, var.mType);
+		default:
+			return VAR_NULL;
 	}
 }

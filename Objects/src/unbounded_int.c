@@ -82,17 +82,6 @@ static char *buildString(UnboundedInt ui, char *new, size_t length) {
 	return new;
 }
 
-static UnboundedInt unboundedInt_cpy(UnboundedInt u) {
-	UnboundedInt cpy = UNBOUNDED_INT_ERROR;
-	cpy.mSign = u.mSign;
-	Number *current = u.mFirst;
-	while (current != NULL) {
-		cpy = addLast(cpy, current->mVal);
-		current = current->mNext;
-	}
-	return cpy;
-}
-
 static UnboundedInt removeFirst(UnboundedInt ui) {
 	if (ui.mLength <= 1) return UNBOUNDED_INT_ERROR;
 	Number *tmp;
@@ -234,6 +223,17 @@ static UnboundedInt divide(UnboundedInt ua, UnboundedInt ub, int modulo) {
 	return UnboundedInt_newll(0);
 }
 
+UnboundedInt unboundedInt_cpy(UnboundedInt u) {
+	UnboundedInt cpy = UNBOUNDED_INT_ERROR;
+	cpy.mSign = u.mSign;
+	Number *current = u.mFirst;
+	while (current != NULL) {
+		cpy = addLast(cpy, current->mVal);
+		current = current->mNext;
+	}
+	return cpy;
+}
+
 UnboundedInt UnboundedInt_newString(char *e) {
 	if (!isAStringNum(e)) return UNBOUNDED_INT_ERROR;
 	const char *str = cleanNumber(e);
@@ -248,7 +248,7 @@ UnboundedInt UnboundedInt_newString(char *e) {
 		case '+': res.mSign = '+';
 			i = 1;
 			break;
-		default: res.mSign = 0;
+		default: res.mSign = '+';
 			i = 0;
 			break;
 	}
