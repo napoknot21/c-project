@@ -8,7 +8,7 @@
 
 #include "exec_error.h"
 
-#define BUFFER_SIZE 16
+static size_t BUFFER_SIZE = 16;
 
 Buffer *Buffer_new() {
 	Buffer *buffer = malloc(sizeof(Buffer));
@@ -27,7 +27,7 @@ Buffer *Buffer_new() {
 	return buffer;
 }
 
-Buffer *Buffer_clear(Buffer *buffer) {
+Buffer *Buffer_clear(Buffer *buffer) {	//Todo: Donnees corrompu calloc, l'exception peut etre causée par la HashMap
 	free(buffer->mBuffer);
 	buffer->mBuffer = calloc(BUFFER_SIZE, sizeof(char));
 	if (buffer->mBuffer == NULL) {
