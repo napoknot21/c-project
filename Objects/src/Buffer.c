@@ -27,9 +27,11 @@ Buffer *Buffer_new() {
 	return buffer;
 }
 
-Buffer *Buffer_clear(Buffer *buffer) {	//Todo: Donnees corrompu calloc, l'exception peut etre causée par la HashMap
-	free(buffer->mBuffer);
+Buffer *Buffer_clear(Buffer *buffer) {
+	char* del = buffer->mBuffer;
+	buffer->mBuffer = NULL;
 	buffer->mBuffer = calloc(BUFFER_SIZE, sizeof(char));
+	free(del);
 	if (buffer->mBuffer == NULL) {
 		perror_src("");
 		free(buffer);
@@ -51,7 +53,7 @@ int Buffer_add(Buffer *buffer, const char e) {
 		perror_src("");
 		return 0;
 	}
-	if (buffer->mLength + 1 >= buffer->mCapacity) {
+	if (buffer->mLength >= buffer->mCapacity) {
 		char *tmp = realloc(buffer->mBuffer, 2 * buffer->mCapacity);
 		if (tmp == NULL) {
 			perror_src("");

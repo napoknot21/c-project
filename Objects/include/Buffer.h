@@ -4,13 +4,14 @@
 
 #ifndef C_PROJECT_BUFFER_H
 #define C_PROJECT_BUFFER_H
+#include <stddef.h>
 /**
  * Parser Buffer.
 */
 typedef struct Buffer {
 	char *mBuffer;
-	int mCapacity;
-	int mLength;
+	size_t mCapacity;
+	size_t mLength;
 } Buffer;
 
 /**
