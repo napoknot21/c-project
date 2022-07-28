@@ -33,7 +33,7 @@ void Function_hashMapUtil_free(void *func) {
 }
 
 void Function_free(Function f) {
-	free(f.mArgv);
-	free(f.mArgn);
-	free(f.mName);
+	//free(f.mArgv);
+	//free(f.mArgn);
+	//free(f.mName);
 }

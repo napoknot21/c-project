@@ -38,14 +38,14 @@ char *trim(const char *s, size_t len) {
 			break;
 		}
 	}
-	for (int i = len; i >= 0; i--) {
+	for (int i = (int)len - 1; i >= 0; i--) {
 		if (!isspace(s[i])) {
 			end = i;
 			break;
 		}
 	}
-	int size = end - start;
-	char *ret = malloc(size * sizeof(char) + 1);
+	int size = end - start + 1;
+	char *ret = malloc((size + 1) * sizeof(char));
 	if (ret == NULL) {
 		perror_src("");
 		return NULL;

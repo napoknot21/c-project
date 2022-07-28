@@ -413,7 +413,6 @@ static int treatment
 			return 0; //error value
 		}
 		*argsStart = 1;
-		Buffer_clear(pBuffer);
 		return 1;
 	}
 	if (type == NUMBER && buffer[0] == '=') {

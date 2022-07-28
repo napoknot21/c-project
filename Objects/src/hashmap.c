@@ -3,6 +3,7 @@
 //
 
 //TODO: Fix sur la HashMap qui cause la supression de donnnes en particulier sur les unboundedInt
+//TODO fix HASHMAP
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -106,7 +107,7 @@ HashMap *HashMap_new(int objectSize, int (*cmpData)(const char *, void *), void 
 }
 
 void *HashMap_put(HashMap *map, char *name, void *value) {
-	size_t hashVal = hash(name);
+	/*size_t hashVal = hash(name);
 	size_t empty = find(map, name, 1);
 	if (empty == map->mCapacity + 1) return NULL;
 	if (map->mData[empty].mType == HASHMAP_DUMMY) {
@@ -124,7 +125,7 @@ void *HashMap_put(HashMap *map, char *name, void *value) {
 	}
 	void *data = malloc(sizeof(map->mObjectSize));
 	if (data == NULL) return 0;
-	void *tmp = memmove(data, value, map->mObjectSize);
+	void *tmp = memcpy(data, value, map->mObjectSize);
 	if (tmp == NULL) {
 		free(data);
 		return NULL;
@@ -135,13 +136,15 @@ void *HashMap_put(HashMap *map, char *name, void *value) {
 		int ratio = (map->mDummyNumber < map->mKeyNumber) ? 2 : 1;
 		resize(map, ratio * map->mCapacity);
 	}
-	return map->spare;
+	return map->spare;*/
+	return NULL;
 }
 
 void *HashMap_get(HashMap *map, char *name) {
 	size_t pos = find(map, name, 0);
 	if (pos == map->mCapacity + 1) return NULL;
-	return map->mData[pos].mData;
+	//return map->mData[pos].mData;
+	return NULL;
 }
 
 static void resize(HashMap *map, size_t newSize) {

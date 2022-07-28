@@ -31,7 +31,7 @@ struct Function {
 	Variable *mArgv;
 	char **mArgn;
 
-	int (*mFunc)(int, Variable *, char **); //Todo: Build an Union in order to create different functions
+	int (*mFunc)(int, Variable *, char **);
 };
 
 Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
