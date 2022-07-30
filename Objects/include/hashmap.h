@@ -11,24 +11,22 @@ typedef struct HashMap HashMap;
 typedef struct HashMapData HashMapData;
 
 struct HashMap {
-	HashMapData *mData;
-	void *spare;
+	HashMapData **mData;
 	size_t mCapacity;
 	size_t mKeyNumber;
 	size_t mDummyNumber;
-	size_t mObjectSize;
 	float mMinRatio, mMaxRatio;
 
-	int (*mCmp)(const char *, void *);
+	void (*mFree)(void *val);
 
-	void (*mFree)(void *);
+	void *(*mCpy)(void *dst, void *src, size_t size);
 };
 
-void *HashMap_get(HashMap *map, char *name);
+int HashMap_get(HashMap *map, char *name, void *dst);
 
-HashMap *HashMap_new(int objectSize, int (*cmpData)(const char *, void *), void (*freeData)(void *));
+HashMap *HashMap_new(void (*freeData)(void *), void *(*cpy)(void *, void *, size_t));
 
-void *HashMap_put(HashMap *map, char *name, void *value);
+int HashMap_put(HashMap *map, char *name, void *value, size_t size);
 
 void HashMap_free(HashMap *map);
 

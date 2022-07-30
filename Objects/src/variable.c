@@ -104,3 +104,48 @@ Variable Variable_cpy(Variable var) {
 			return VAR_NULL;
 	}
 }
+
+void *Variable_HashMapUtil_cpy(void *dst, void *src, size_t size) {
+	Variable *fDst = dst;
+	Variable *fSrc = src;
+	size_t len = strlen(fSrc->mName);
+	char *name = malloc(sizeof(char) * (len + 1));
+	if (name == NULL) {
+		return NULL;
+	}
+	char *tmp = memcpy(name, fSrc->mName, (len + 1) * sizeof(char));
+	if (tmp == NULL) {
+		free(name);
+		return NULL;
+	}
+	fDst->mName = name = tmp;
+	fDst->mType = fSrc->mType;
+	switch (fSrc->mType) {
+		case VARTYPE_INT:
+			fDst->mValue.ui = unboundedInt_cpy(fSrc->mValue.ui);
+			break;
+
+		case VARTYPE_STRING:
+			len = strlen(fSrc->mName);
+			char *cpy = malloc(sizeof(char) * (len + 1));
+			if (cpy == NULL) {
+				free(name);
+				return NULL;
+			}
+			cpy = memcpy(cpy, fSrc->mValue.string, (len + 1) * sizeof(char));
+			if (cpy == NULL) {
+				free(name);
+				return NULL;
+			}
+			fDst->mValue.string = cpy;
+			break;
+
+		case VARTYPE_CHARACTER:
+			fDst->mValue.character = fSrc->mValue.character;
+			break;
+		default:
+			fDst->mValue.null = NULL;
+			fDst->mType = VARTYPE_NULL;
+	}
+	return dst;
+}

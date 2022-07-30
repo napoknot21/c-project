@@ -111,16 +111,17 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
                              Function *function);
 
 void load_stdlib(HashMap *map) {
+	size_t size = sizeof(Function);
 	Function print = Function_new("print", RETURN_VOID, std_print, 1);
 	Function pow = Function_new("pow", RETURN_NUM, std_pow, 2);
 	Function exit = Function_new("exit", RETURN_VOID, std_exit, 0);
 	Function abs = Function_new("abs", RETURN_NUM, std_abs, 1);
 	Function fact = Function_new("fact", RETURN_NUM, std_fact, 1);
-	HashMap_put(map, print.mName, &print);
-	HashMap_put(map, pow.mName, &pow);
-	HashMap_put(map, exit.mName, &exit);
-	HashMap_put(map, abs.mName, &abs);
-	HashMap_put(map, fact.mName, &fact);
+	HashMap_put(map, print.mName, &print, size);
+	HashMap_put(map, pow.mName, &pow, size);
+	HashMap_put(map, exit.mName, &exit, size);
+	HashMap_put(map, abs.mName, &abs, size);
+	HashMap_put(map, fact.mName, &fact, size);
 
 }
 
@@ -148,14 +149,14 @@ int main(int argc, char **argv) {
 		disconnect(&in, &out);
 		exit(EXIT_FAILURE);
 	}
-	HashMap *storage = HashMap_new(sizeof(Variable), Variable_hashMapUtil_cmp, Variable_hashMapUtil_free);
+	HashMap *storage = HashMap_new(Variable_hashMapUtil_free, Variable_HashMapUtil_cpy);
 	if (storage == NULL) {
 		perror_src("");
 		AST_free(ast);
 		disconnect(&in, &out);
 		exit(EXIT_FAILURE);
 	}
-	HashMap *functionsMap = HashMap_new(sizeof(Function), Function_hashMapUtil_cmp, Function_hashMapUtil_free);
+	HashMap *functionsMap = HashMap_new(Function_hashMapUtil_free, Function_HashMapUtil_cpy);
 	if (functionsMap == NULL) {
 		perror_src("");
 		AST_free(ast);
@@ -284,7 +285,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 			return 0;
 		}
 		if (!*isFunc) {
-			HashMap_put(map, function->mName, function);
+			HashMap_put(map, function->mName, function, sizeof(Function));
 			*function = FUNCTION_NULL;
 		}
 		return 1;
@@ -389,6 +390,7 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 	return 1;
 }
 
+//Fix double call to hashMap_get possible error -> function and variable has the same name
 static int treatment
 (
 	Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type,
@@ -400,43 +402,62 @@ static int treatment
 	if (type == VOID || buffer[0] == '\0') {
 		return (AST_hasFunction(ast)) ? 1 : -2;  //void value
 	}
-	Function *data = HashMap_get(functionsMap, buffer);
-	if (data != NULL) {
+	Function *data = malloc(sizeof(Function));
+	if (data == NULL) {
+		perror_src("");
+		return 0;
+	}
+
+	if (HashMap_get(functionsMap, buffer, data)) {
 		*func = 1;
 		Function new = buildCalledFunction(*data);
 		*function = new;
-		HashMap_put(functionsMap, new.mName, function);
+		HashMap_put(functionsMap, new.mName, function, sizeof(*function));
 		Token token = Token_new(new.mName, strlen(new.mName), FUNCTION);
 		Variable value = VAR_NULL;
 		if (!AST_add(ast, value, token)) {
 			Token_free(token);
 			return 0; //error value
 		}
+		free(data);
 		*argsStart = 1;
 		return 1;
 	}
 	if (type == NUMBER && buffer[0] == '=') {
 		Token token = Token_new(buffer, 1, OPERATOR);
-		Variable *tmp = HashMap_get(storage, token.mData);
-		Variable value = (tmp == NULL) ? VAR_NULL : *tmp;
+		Variable *tmp = malloc(sizeof(Variable));
+		if (tmp == NULL) {
+			Token_free(token);
+			perror_src("");
+			return 0;
+		}
+		Variable value = HashMap_get(storage, token.mData, tmp) ? *tmp : VAR_NULL;
 		if (!AST_add(ast, value, token)) {
 			Token_free(token);
+			free(tmp);
 			return 0; //error value
 		}
+		free(tmp);
 		buffer++;
 		len--;
 	}
-	if ((type == NUMBER) && !isSignOrNumber(buffer[0])) {
+	if (type == NUMBER && !isSignOrNumber(buffer[0])) {
 		perror_file(MISSING_BLANK);
 		return 0;   //error value
 	}
 	Token token = Token_new(buffer, len, type);
-	Variable *tmp = HashMap_get(storage, token.mData);
-	Variable value = (tmp == NULL) ? VAR_NULL : *tmp;
+	Variable *tmp = malloc(sizeof(Variable));
+	if (tmp == NULL) {
+		perror_src("");
+		return 0;
+	}
+	Variable value = HashMap_get(storage, token.mData, tmp) ? *tmp : VAR_NULL;
 	if (!AST_add(ast, value, token)) {
+		free(tmp);
 		Token_free(token);
 		return 0; //error value
 	}
+	free(tmp);
 	return 1; //add value
 }
 

@@ -32,6 +32,33 @@ void Function_hashMapUtil_free(void *func) {
 	Function_free(*(Function *) func);
 }
 
+void *Function_HashMapUtil_cpy(void *dst, void *src, size_t size) {
+	Function *fSrc = src;
+	Function *cpy = dst;
+	size_t len = strlen(fSrc->mName);
+	char *name = malloc(len * sizeof(char));
+	if (name == NULL) {
+		perror_src("");
+		return NULL;
+	}
+	char *tmp = strncpy(name, fSrc->mName, len);
+	if (tmp == NULL) {
+		free(name);
+		return NULL;
+	}
+	tmp[len] = '\0';
+	name = tmp;
+
+	cpy->mName = name;
+	cpy->mArgc = fSrc->mArgc;
+	cpy->mRequested = fSrc->mRequested;
+	cpy->mRetType = fSrc->mRetType;
+	cpy->mFunc = fSrc->mFunc;
+	cpy->mArgv = calloc(fSrc->mRequested + 1, sizeof(UnboundedInt));
+	cpy->mArgn = malloc(fSrc->mRequested * sizeof(char *));
+	return cpy;
+}
+
 void Function_free(Function f) {
 	//free(f.mArgv);
 	//free(f.mArgn);

@@ -132,11 +132,12 @@ static ASN *ASN_free(ASN *n) {
 static Variable equals(HashMap *storage, char *name, Variable value) {
 	value.mName = name;
 	Variable cpy = Variable_cpy(value);
-	Variable *old = HashMap_get(storage, name);
-	if (old != NULL) {
-		Variable_free(*old);
+	Variable *old = malloc(sizeof(Variable));
+	if (old == NULL) {
+		perror_src("");
+		return Variable_cpy(value);
 	}
-	HashMap_put(storage, name, &cpy);
+	HashMap_put(storage, name, &cpy, sizeof(Variable));
 	return Variable_cpy(value);
 }
 
@@ -241,12 +242,20 @@ static Variable op(ASN *asn, HashMap *storage, Variable left, Variable right) {
  * Function's functions
  */
 static int function_apply(HashMap *map, char *name, ASN *node) {
-	Function *f = HashMap_get(map, name);
-	if (f == NULL) return 0;
+	Function *f = malloc(sizeof(Function));
+	if (f == NULL) {
+		perror_src("");
+		return 0;
+	}
+	if (!HashMap_get(map, name, f)) {
+		free(f);
+		return 0;
+	}
 	if (f->mRequested > f->mArgc) {
 		if (!EXIT_REQUEST) {
 			perror_file(MISSING_ARGUMENTS);
 		}
+		free(f);
 		EXIT_REQUEST = -1;
 		return 0;
 	}
@@ -254,6 +263,7 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
 		if (!EXIT_REQUEST) {
 			perror_file(TOO_MANY_ARGUMENTS);
 		}
+		free(f);
 		EXIT_REQUEST = -1;
 		return 0;
 	}
@@ -262,6 +272,7 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
 		node->result = f->mArgv[f->mArgc];
 	}
 	HashMap_remove(map, f->mName);
+	free(f);
 	return 1;
 }
 

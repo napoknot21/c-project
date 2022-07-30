@@ -31,7 +31,7 @@ struct Function {
 	Variable *mArgv;
 	char **mArgn;
 
-	int (*mFunc)(int, Variable *, char **);
+	int (*mFunc)(int argc, Variable *argv, char **argn);
 };
 
 Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
@@ -44,6 +44,8 @@ int Function_apply(HashMap *map, char *name, ASN *node);
 int Function_hashMapUtil_cmp(const char *name, void *func);
 
 void Function_hashMapUtil_free(void *func);
+
+void *Function_HashMapUtil_cpy(void *dst, void *src, size_t size);
 
 #define FUNCTION_NULL (Function) {.mName = NULL, .mRequested = 0, .mArgc = 0, .mRetType= RETURN_VOID, .mArgv = NULL, .mArgn = NULL}
 #endif //C_PROJECT_FUNCTION_H

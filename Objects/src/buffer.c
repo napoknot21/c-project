@@ -28,10 +28,9 @@ Buffer *Buffer_new() {
 }
 
 Buffer *Buffer_clear(Buffer *buffer) {
-	char* del = buffer->mBuffer;
+	char *del = buffer->mBuffer;
 	buffer->mBuffer = NULL;
 	buffer->mBuffer = calloc(BUFFER_SIZE, sizeof(char));
-	free(del);
 	if (buffer->mBuffer == NULL) {
 		perror_src("");
 		free(buffer);
@@ -39,6 +38,7 @@ Buffer *Buffer_clear(Buffer *buffer) {
 	}
 	buffer->mCapacity = BUFFER_SIZE;
 	buffer->mLength = 0;
+	free(del);
 	return buffer;
 }
 

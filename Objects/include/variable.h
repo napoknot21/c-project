@@ -33,6 +33,8 @@ int Variable_hashMapUtil_cmp(const char *name, void *var);
 
 void Variable_hashMapUtil_free(void *var);
 
+void *Variable_HashMapUtil_cpy(Variable *dst, Variable *src, size_t size);
+
 Variable Variable_new(char *name, void *value, VarType type);
 
 void Variable_free(Variable var);
