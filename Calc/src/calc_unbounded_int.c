@@ -39,15 +39,15 @@ static int CALL_ID = 0;
  * FUNCTION_STD functions
  */
 
-static int std_print(int argc, Variable *argv, char **argn);
+static int std_print(int argc, Variable *argv);
 
-static int std_pow(int argc, Variable *argv, char **argn);
+static int std_pow(int argc, Variable *arg);
 
-static int std_exit(int argc, Variable *argv, char **argn);
+static int std_exit(int argc, Variable *argv);
 
-static int std_abs(int argc, Variable *argv, char **argn);
+static int std_abs(int argc, Variable *argv);
 
-static int std_fact(int argc, Variable *argv, char **argn);
+static int std_fact(int argc, Variable *argv);
 
 
 static void connect(FILE **in, FILE **out, int argc, char **argv);
@@ -110,7 +110,9 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
                              HashMap *map,
                              Function *function);
 
+
 void load_stdlib(HashMap *map) {
+	void* test = malloc(sizeof(Function));
 	size_t size = sizeof(Function);
 	Function print = Function_new("print", RETURN_VOID, std_print, 1);
 	Function pow = Function_new("pow", RETURN_NUM, std_pow, 2);
@@ -118,12 +120,15 @@ void load_stdlib(HashMap *map) {
 	Function abs = Function_new("abs", RETURN_NUM, std_abs, 1);
 	Function fact = Function_new("fact", RETURN_NUM, std_fact, 1);
 	HashMap_put(map, print.mName, &print, size);
+	HashMap_get(map, "print", test);
 	HashMap_put(map, pow.mName, &pow, size);
 	HashMap_put(map, exit.mName, &exit, size);
 	HashMap_put(map, abs.mName, &abs, size);
 	HashMap_put(map, fact.mName, &fact, size);
 
+
 }
+
 
 /* #####################################################################################################################
  * Main function.
@@ -273,11 +278,9 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 	if (c == ',') {
 		Variable astResult = VAR_NULL;
 		char *in = trim(buffer->mBuffer, buffer->mLength);
-		function->mArgn[function->mArgc] = in;
 		int val = parseString(in, ast, storage, map, &astResult);
 		if (!val) return 1;
-		function->mArgc++;
-		function->mArgv[function->mArgc - 1] = astResult;
+		function->mArgv[function->mArgc++] = astResult;
 		buffer = Buffer_clear(buffer);
 		ast = AST_clear(ast);
 		if (buffer == NULL || ast == NULL) {
@@ -339,7 +342,9 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Varia
 		AST_free(argAST);
 		return 0;
 	}
-	if (astResult != NULL && ast->root != NULL) *astResult = ast->root->result;
+	if (astResult != NULL && ast->root != NULL) {
+		*astResult = AST_getResult(ast);
+	}
 	Buffer_free(stack);
 	AST_free(argAST);
 	return 1;
@@ -544,7 +549,7 @@ static void disconnect(FILE **in, FILE **out) {
  * FUNCTION_STD functions
  */
 
-static int std_print(int argc, Variable *argv, char **argn) {
+static int std_print(int argc, Variable *argv) {
 	argv[argc] = VAR_NULL;
 	char *result;
 	char *format;
@@ -565,7 +570,7 @@ static int std_print(int argc, Variable *argv, char **argn) {
 			perror_file(UNKNOWN_VARTYPE);
 			return 0;
 	}
-	fprintf(OUT, format, argn[0], result);
+	fprintf(OUT, format, argv[0].mName, result);
 
 	//free(result);
 	//UnboundedInt_free(mArgv[0]);
@@ -573,7 +578,7 @@ static int std_print(int argc, Variable *argv, char **argn) {
 	return 0;
 }
 
-static int std_pow(int argc, Variable *argv, char **argn) {
+static int std_pow(int argc, Variable *argv) {
 	if (argv[0].mType == VARTYPE_INT && argv[1].mType == VARTYPE_INT) {
 		UnboundedInt tmp = UnboundedInt_pow(argv[0].mValue.ui, argv[1].mValue.ui);
 		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
@@ -582,7 +587,7 @@ static int std_pow(int argc, Variable *argv, char **argn) {
 	return 0;
 }
 
-static int std_abs(int argc, Variable *argv, char **argn) {
+static int std_abs(int argc, Variable *argv) {
 	if (argv[0].mType == VARTYPE_INT) {
 		UnboundedInt tmp = UnboundedInt_abs(argv[0].mValue.ui);
 		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
@@ -593,13 +598,13 @@ static int std_abs(int argc, Variable *argv, char **argn) {
 	return 0;
 }
 
-static int std_exit(int argc, Variable *argv, char **argn) {
+static int std_exit(int argc, Variable *argv) {
 	argv[argc] = VAR_NULL;
 	EXIT_REQUEST = 1;
 	return 1;
 }
 
-static int std_fact(int argc, Variable *argv, char **argn) {
+static int std_fact(int argc, Variable *argv) {
 	if (argv[0].mType == VARTYPE_INT) {
 		UnboundedInt tmp = UnboundedInt_fact(argv[0].mValue.ui);
 		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);

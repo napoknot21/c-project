@@ -11,6 +11,7 @@
 #include "exec_error.h"
 #include "hashmap.h"
 
+#include "function.h"
 #include "lib.h"
 
 enum Type {
@@ -152,6 +153,8 @@ HashMap *HashMap_new(void (*freeData)(void *), void *(*cpy)(void *, void *, size
 	return map;
 }
 
+static Function* TEST = NULL;
+
 int HashMap_put(HashMap *map, char *name, void *value, size_t size) {
 	long long hashVal = hash(name);
 	long long empty = find(map, name, 1);
@@ -170,6 +173,7 @@ int HashMap_put(HashMap *map, char *name, void *value, size_t size) {
 		HashMapData_free(map->mData[empty], map->mFree);
 	}
 	void *data = malloc(size);
+	TEST = data;
 	if (data == NULL) {
 		return -1;
 	}
@@ -179,6 +183,7 @@ int HashMap_put(HashMap *map, char *name, void *value, size_t size) {
 		return -1;
 	}
 	map->mData[empty] = HashMapData_new(hashVal, name, data, size);
+	TEST = map->mData[empty]->mData;
 
 	if (map->mDummyNumber + map->mKeyNumber >= (size_t) ((double) map->mCapacity * map->mMaxRatio)) {
 		int ratio = (map->mDummyNumber < map->mKeyNumber) ? 2 : 1;
@@ -192,7 +197,7 @@ int HashMap_get(HashMap *map, char *name, void *dst) {
 	if (pos == -1) {
 		return 0;
 	}
-	if (!map->mCpy(dst, map->mData[pos], map->mData[pos]->mSize)) {
+	if (!map->mCpy(dst, map->mData[pos]->mData, map->mData[pos]->mSize)) {
 		return 0;
 	}
 	return 1;

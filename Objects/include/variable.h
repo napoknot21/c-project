@@ -11,10 +11,11 @@ union Value {
 };
 
 typedef enum VarType {
+	VARTYPE_NULL,
 	VARTYPE_STRING,
 	VARTYPE_INT,
-	VARTYPE_CHARACTER,
-	VARTYPE_NULL
+	VARTYPE_CHARACTER
+	
 } VarType;
 
 typedef struct Variable {

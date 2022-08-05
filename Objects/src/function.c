@@ -8,7 +8,7 @@
 
 #include "exec_error.h"
 
-Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
+Function Function_new(char *name, RetType type, int (*function)(int, Variable *),
                       unsigned short requestedArguments) {
 
 
@@ -17,10 +17,12 @@ Function Function_new(char *name, RetType type, int (*function)(int, Variable *,
 		f.mRequested = requestedArguments,
 		f.mArgc = 0,
 		f.mRetType = type,
-		f.mArgv = calloc(requestedArguments + 1, sizeof(UnboundedInt)),
-		f.mArgn = malloc(requestedArguments * sizeof(char *)),
+		f.mArgv = malloc((requestedArguments + 1) * sizeof(Variable)),
 		f.mFunc = function
 	};
+	for (size_t i = 0; i<= f.mRequested; i++) {
+		f.mArgv[i] = VAR_NULL;
+	}
 	return f;
 }
 
@@ -35,27 +37,16 @@ void Function_hashMapUtil_free(void *func) {
 void *Function_HashMapUtil_cpy(void *dst, void *src, size_t size) {
 	Function *fSrc = src;
 	Function *cpy = dst;
-	size_t len = strlen(fSrc->mName);
-	char *name = malloc(len * sizeof(char));
-	if (name == NULL) {
-		perror_src("");
-		return NULL;
-	}
-	char *tmp = strncpy(name, fSrc->mName, len);
-	if (tmp == NULL) {
-		free(name);
-		return NULL;
-	}
-	tmp[len] = '\0';
-	name = tmp;
-
+	char* name = str_cpy(fSrc->mName);
 	cpy->mName = name;
 	cpy->mArgc = fSrc->mArgc;
 	cpy->mRequested = fSrc->mRequested;
 	cpy->mRetType = fSrc->mRetType;
 	cpy->mFunc = fSrc->mFunc;
-	cpy->mArgv = calloc(fSrc->mRequested + 1, sizeof(UnboundedInt));
-	cpy->mArgn = malloc(fSrc->mRequested * sizeof(char *));
+	cpy->mArgv = calloc(fSrc->mRequested + 1 , sizeof(Variable));
+	for (size_t i = 0; i <= fSrc->mRequested; i++) {
+		cpy->mArgv[i] = Variable_cpy(fSrc->mArgv[i]);
+	}
 	return cpy;
 }
 

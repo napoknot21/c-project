@@ -63,4 +63,6 @@ int isAStringNum(const char *c);
  */
 char *cleanNumber(char *str);
 
+char* str_cpy(char* src);
+
 #endif //C_PROJECT_LIB_H

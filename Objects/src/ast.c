@@ -103,7 +103,7 @@ static int ASN_add(Variable value, ASN **asn, Token token) {
 			perror_file(INVALID_SYNTAX);
 			return 0;
 		}
-		strncpy((*asn)->token.mData, token.mData, strlen(token.mData));
+		memcpy((*asn)->token.mData, token.mData, (strlen(token.mData) + 1) * sizeof(char));
 	}
 	else if ((*asn)->right == NULL || token.mType == NUMBER || token.mType == FUNCTION || token.mType == VAR ||
 		!isHigher((*asn)->token.mData[0], token.mData[0])) {
@@ -267,7 +267,7 @@ static int function_apply(HashMap *map, char *name, ASN *node) {
 		EXIT_REQUEST = -1;
 		return 0;
 	}
-	f->mFunc(f->mArgc, f->mArgv, f->mArgn);
+	f->mFunc(f->mArgc, f->mArgv);
 	if (node != NULL && f->mRetType != RETURN_VOID) {
 		node->result = f->mArgv[f->mArgc];
 	}
@@ -297,7 +297,6 @@ static Variable ASN_apply(HashMap *storage, ASN *asn, int *err, HashMap *map) {
 	}
 	if (asn->token.mType == FUNCTION) {
 		*err = function_apply(map, asn->token.mData, asn);
-		printf("CALL to %s", asn->token.mData);
 		return asn->result;
 	}
 	return asn->result = op(asn, storage, left, right);
@@ -362,4 +361,9 @@ int ASN_hasFunction(ASN *asn) {
 	int left = (asn->left == NULL) ? 0 : ASN_hasFunction(asn->left);
 	int right = (asn->right == NULL) ? 0 : ASN_hasFunction(asn->right);
 	return left || right;
+}
+
+Variable AST_getResult(AST *ast) {
+	if (ast == NULL || ast->root == NULL) return VAR_NULL;
+	return Variable_cpy(ast->root->result);
 }

@@ -64,4 +64,6 @@ int AST_hasFunction(AST *ast);
 
 int ASN_hasFunction(ASN *asn);
 
+Variable AST_getResult(AST* ast);
+
 #endif //C_PROJECT_AST_H

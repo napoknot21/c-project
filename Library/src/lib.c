@@ -50,7 +50,7 @@ char *trim(const char *s, size_t len) {
 		perror_src("");
 		return NULL;
 	}
-	strncpy(ret, s, size);
+	memcpy(ret, s, size);
 	ret[size] = '\0';
 	return ret;
 }
@@ -155,4 +155,18 @@ char *cleanNumber(char *str) {
 	memmove(newStr, str + index, length);
 	newStr[newLen] = '\0';
 	return newStr;
+}
+
+char* str_cpy(char* src) {
+	size_t len = strlen(src);
+	char* cpy = malloc(sizeof(char) * (len + 1));
+	if (cpy == NULL) {
+		return NULL;
+	}
+	char* tmp = memcpy(cpy, src, (len + 1) * sizeof(char));
+	if (tmp == NULL) {
+		free(cpy);
+		return NULL;
+	}
+	return cpy;
 }

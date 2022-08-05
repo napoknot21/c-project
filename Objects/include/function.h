@@ -29,12 +29,11 @@ struct Function {
 	unsigned short mArgc;
 	RetType mRetType;
 	Variable *mArgv;
-	char **mArgn;
 
-	int (*mFunc)(int argc, Variable *argv, char **argn);
+	int (*mFunc)(int argc, Variable *argv);
 };
 
-Function Function_new(char *name, RetType type, int (*function)(int, Variable *, char **),
+Function Function_new(char *name, RetType type, int (*function)(int, Variable *),
                       unsigned short requestedArguments);
 
 void Function_free(Function f);
@@ -47,5 +46,5 @@ void Function_hashMapUtil_free(void *func);
 
 void *Function_HashMapUtil_cpy(void *dst, void *src, size_t size);
 
-#define FUNCTION_NULL (Function) {.mName = NULL, .mRequested = 0, .mArgc = 0, .mRetType= RETURN_VOID, .mArgv = NULL, .mArgn = NULL}
+#define FUNCTION_NULL (Function) {.mName = NULL, .mRequested = 0, .mArgc = 0, .mRetType= RETURN_VOID, .mArgv = NULL}
 #endif //C_PROJECT_FUNCTION_H
