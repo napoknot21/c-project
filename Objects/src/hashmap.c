@@ -221,8 +221,10 @@ static void resize(HashMap *map, size_t newSize) {
 		}
 	}
 	for (size_t i = 0; i < oldLen; i++) {
-		old[i]->mType = HASHMAP_DUMMY;
-		old[i] = HashMapData_free(old[i], map->mFree);
+		if (old[i] != NULL) {
+			old[i]->mType = HASHMAP_DUMMY;
+			old[i] = HashMapData_free(old[i], map->mFree);
+		}
 	}
 	free(old);
 }

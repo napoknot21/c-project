@@ -572,9 +572,8 @@ static int std_print(int argc, Variable *argv) {
 	}
 	fprintf(OUT, format, argv[0].mName, result);
 
-	//free(result);
-	//UnboundedInt_free(mArgv[0]);
-	//free(mArgn[0]);
+	free(result);
+	Variable_free(argv[0]);
 	return 0;
 }
 
@@ -593,8 +592,7 @@ static int std_abs(int argc, Variable *argv) {
 		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
 		return 1;
 	}
-	//free(mArgn[0]);
-	//Variable_free(mArgv[0]);
+	Variable_free(argv[0]);
 	return 0;
 }
 
