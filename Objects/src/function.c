@@ -52,7 +52,7 @@ void *Function_HashMapUtil_cpy(void *dst, void *src, size_t size) {
 
 void Function_free(Function f) {
 	if (f.mName == NULL) return;
-	for (int i= 0; i< f.mArgc; i++) {
+	for (int i= 0; i<= f.mArgc; i++) {
 		Variable_free(f.mArgv[i]);
 	}
 	free(f.mArgv);

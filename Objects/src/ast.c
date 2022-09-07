@@ -204,16 +204,6 @@ static Variable modulo(Variable left, Variable right) {
 
 static Variable defaultOP(ASN *asn, Variable left, Variable right) {
 	return left.mType == VARTYPE_NULL ? Variable_cpy(right) : Variable_cpy(left);
-	/*if (left.mType == VARTYPE_NULL) {
-		asn->left = ASN_free(asn->left);
-		free(asn->right);
-		asn->right = NULL;
-		return right;
-	} 
-	asn->right = ASN_free(asn->right);
-	free(asn->left);
-	asn->left = NULL;
-	return left;*/
 }
 
 
