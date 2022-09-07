@@ -1,0 +1,22 @@
+add_library(Objects
+        include/ast.h
+        include/Buffer.h
+        include/function.h
+        include/hashmap.h
+        include/stack.h
+        include/token.h
+        include/unbounded_int.h
+        src/ast.c
+        src/buffer.c
+        src/function.c
+        src/hashmap.c
+        src/stack.c
+        src/token.c
+        src/unbounded_int.c
+        src/variable.c 
+        include/variable.h
+)
+
+target_include_directories(Objects PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+
+target_link_libraries(Objects PRIVATE Library)
