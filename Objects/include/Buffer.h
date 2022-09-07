@@ -38,10 +38,10 @@ Buffer *Buffer_free(Buffer *buffer);
 /**
  * Add the given element in the given mBuffer
  * @param buffer The buffer
- * @param e The element which will be added to the buffer
+ * @param c The element which will be added to the buffer
  * @return 1 if the element is added to the buffer, 0 otherwise
  */
-int Buffer_add(Buffer *buffer, char e);
+int Buffer_add(Buffer *buffer, char c);
 
 
 #endif //C_PROJECT_BUFFER_H

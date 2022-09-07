@@ -2,8 +2,6 @@
 // Created by Kevin on 05/07/2022.
 //
 
-//TODO: Fix sur la HashMap qui cause la supression de donnnes en particulier sur les unboundedInt
-//TODO fix HASHMAP
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -229,7 +227,7 @@ static void resize(HashMap *map, size_t newSize) {
 	free(old);
 }
 
-int HashMap_remove(HashMap *map, char *name) {		//TODO: fix Donnees corrompues
+int HashMap_remove(HashMap *map, char *name) {
 	long long pos = find(map, name, 0);
 	if (pos == -1) {
 		return -1;

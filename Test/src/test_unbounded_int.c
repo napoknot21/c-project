@@ -235,7 +235,7 @@ static void test_UnboundedInt_subtract() {
 	UnboundedInt res7 = UnboundedInt_subtract(u3, u4);
 	int b1 = UnboundedInt_cmpll(res1, i3 - i1);
 	int b2 = UnboundedInt_cmpll(res2, i1 - i4);
-	int b3 = UnboundedInt_cmpll(res3, i7 - i6); //Inversion 8756 vs 6578
+	int b3 = UnboundedInt_cmpll(res3, i7 - i6);
 	int b4 = UnboundedInt_cmpll(res4, i7 - i5);
 	int b5 = UnboundedInt_cmpll(res5, i6 - i7);
 	int b6 = UnboundedInt_cmpll(res6, i1 - i2);

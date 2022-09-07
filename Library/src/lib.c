@@ -21,9 +21,9 @@ unsigned short priority(const char a) {
 		case '+':
 		case '-':
 			return 2;
-		//case '/':
+		case '/':
 		case '*':
-			//case '%':
+		case '%':
 			return 3;
 		default:
 			return 0;
@@ -90,8 +90,7 @@ int str_equals(const char *s1, const char *s2) {
 }
 
 int isAnOperator(const char s) {
-	return s == '*' || s == '+' || s == '-' || s == '=';
-	//|| s == '%' || s == '/'
+	return s == '*' || s == '+' || s == '-' || s == '=' || s == '%' || s == '/';
 }
 
 int isAStringNum(const char *c) {

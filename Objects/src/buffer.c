@@ -48,7 +48,7 @@ Buffer *Buffer_free(Buffer *buffer) {
 	return NULL;
 }
 
-int Buffer_add(Buffer *buffer, const char e) {
+int Buffer_add(Buffer *buffer, const char c) {
 	if (buffer == NULL) {
 		perror_src("");
 		return 0;
@@ -62,6 +62,6 @@ int Buffer_add(Buffer *buffer, const char e) {
 		buffer->mCapacity *= 2;
 		buffer->mBuffer = tmp;
 	}
-	buffer->mBuffer[buffer->mLength++] = e;
+	buffer->mBuffer[buffer->mLength++] = c;
 	return 1;
 }

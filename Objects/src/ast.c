@@ -182,7 +182,7 @@ static Variable divide(Variable left, Variable right) {
 	switch (left.mType) {
 		case VARTYPE_INT:
 			if (right.mType == VARTYPE_INT) {
-				UnboundedInt tmp = UnboundedInt_divide(right.mValue.ui, left.mValue.ui);
+				UnboundedInt tmp = UnboundedInt_divide(left.mValue.ui, right.mValue.ui);
 				return Variable_new("", &tmp, VARTYPE_INT);
 			}
 			break;
@@ -194,7 +194,7 @@ static Variable modulo(Variable left, Variable right) {
 	switch (left.mType) {
 		case VARTYPE_INT:
 			if (right.mType == VARTYPE_INT) {
-				UnboundedInt tmp = UnboundedInt_modulo(right.mValue.ui, left.mValue.ui);
+				UnboundedInt tmp = UnboundedInt_modulo(left.mValue.ui, right.mValue.ui);
 				return Variable_new("", &tmp, VARTYPE_INT);
 			}
 			break;

@@ -11,5 +11,5 @@ Token Token_new(char *s, size_t len, TokenType type) {
 
 void Token_free(Token t) {
 	if (t.mType == FUNCTION) return;
-	//free(t.mData);
+	free(t.mData);
 }

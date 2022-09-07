@@ -112,7 +112,6 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 
 
 void load_stdlib(HashMap *map) {
-	void* test = malloc(sizeof(Function));
 	size_t size = sizeof(Function);
 	Function print = Function_new("print", RETURN_VOID, std_print, 1);
 	Function pow = Function_new("pow", RETURN_NUM, std_pow, 2);
@@ -120,7 +119,6 @@ void load_stdlib(HashMap *map) {
 	Function abs = Function_new("abs", RETURN_NUM, std_abs, 1);
 	Function fact = Function_new("fact", RETURN_NUM, std_fact, 1);
 	HashMap_put(map, print.mName, &print, size);
-	HashMap_get(map, "print", test);
 	HashMap_put(map, pow.mName, &pow, size);
 	HashMap_put(map, exit.mName, &exit, size);
 	HashMap_put(map, abs.mName, &abs, size);
@@ -253,7 +251,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 		perror_file(INTERNAL);
 		return -1;
 	}
-	if (function->mArgc > function->mRequested) {
+	if (function->mArgc >= function->mRequested) {
 		return 0;
 	}
 	if (buffer->mLength == 0 && (c == '(')) {
@@ -280,6 +278,7 @@ static int functionTreatment(int c, Buffer *buffer, AST *ast, HashMap *storage, 
 		char *in = trim(buffer->mBuffer, buffer->mLength);
 		int val = parseString(in, ast, storage, map, &astResult);
 		if (!val) return 1;
+		astResult.mName = in;
 		function->mArgv[function->mArgc++] = astResult;
 		buffer = Buffer_clear(buffer);
 		ast = AST_clear(ast);
@@ -325,12 +324,15 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Varia
 		perror_src("");
 		return 0;
 	}
+	*function = FUNCTION_NULL;
 	for (size_t i = 0; i < len; i++) {
 		int c = in[i];
 		int b = parse(c, ast, storage, map, &last, &current, stack, &isFunc, &argsStart, function, argAST, astResult);
 		if (!b) {
 			Buffer_free(stack);
 			AST_free(argAST);
+			Function_free(*function);
+			free(function);
 			return 0;
 		}
 		last = current;
@@ -340,11 +342,15 @@ static int parseString(char *in, AST *ast, HashMap *storage, HashMap *map, Varia
 	if (val == 0 || (val > 0 && !AST_apply(storage, ast, map))) {
 		Buffer_free(stack);
 		AST_free(argAST);
+		Function_free(*function);
+		free(function);
 		return 0;
 	}
 	if (astResult != NULL && ast->root != NULL) {
 		*astResult = AST_getResult(ast);
 	}
+	Function_free(*function);
+	free(function);
 	Buffer_free(stack);
 	AST_free(argAST);
 	return 1;
@@ -373,12 +379,15 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 		perror_src("");
 		return 0;
 	}
+	*function = FUNCTION_NULL;
 	int c;
 	while ((c = fgetc(in)) != EOF) {
 		if (!parse(c, ast, storage, functionsMap, &last, &current, stack, &isFunc, &argsStart, function, argAST,
 		           NULL)) {
 			Buffer_free(stack);
 			AST_free(argAST);
+			Function_free(*function);
+			free(function);
 			return 0;
 		}
 		last = current;
@@ -388,14 +397,17 @@ static int parseFile(FILE *in, AST *ast, HashMap *storage, HashMap *functionsMap
 	if (val == 0 || (val > 0 && !AST_apply(storage, ast, functionsMap))) {
 		Buffer_free(stack);
 		AST_free(argAST);
+		Function_free(*function);
+		free(function);
 		return 0;
 	}
 	Buffer_free(stack);
 	AST_free(argAST);
+	Function_free(*function);
+	free(function);
 	return 1;
 }
 
-//Fix double call to hashMap_get possible error -> function and variable has the same name
 static int treatment
 (
 	Buffer *pBuffer, AST *ast, HashMap *storage, TokenType type,
@@ -421,13 +433,18 @@ static int treatment
 		Token token = Token_new(new.mName, strlen(new.mName), FUNCTION);
 		Variable value = VAR_NULL;
 		if (!AST_add(ast, value, token)) {
+			free(data);
 			Token_free(token);
+			HashMap_remove(functionsMap, new.mName);
+			Function_free(new);
+			*function = FUNCTION_NULL;
 			return 0; //error value
 		}
 		free(data);
 		*argsStart = 1;
 		return 1;
 	}
+	free(data);
 	if (type == NUMBER && buffer[0] == '=') {
 		Token token = Token_new(buffer, 1, OPERATOR);
 		Variable *tmp = malloc(sizeof(Variable));
@@ -439,6 +456,7 @@ static int treatment
 		Variable value = HashMap_get(storage, token.mData, tmp) ? *tmp : VAR_NULL;
 		if (!AST_add(ast, value, token)) {
 			Token_free(token);
+			Variable_free(value);
 			free(tmp);
 			return 0; //error value
 		}
@@ -453,16 +471,19 @@ static int treatment
 	Token token = Token_new(buffer, len, type);
 	Variable *tmp = malloc(sizeof(Variable));
 	if (tmp == NULL) {
+		Token_free(token);
 		perror_src("");
 		return 0;
 	}
 	Variable value = HashMap_get(storage, token.mData, tmp) ? *tmp : VAR_NULL;
 	if (!AST_add(ast, value, token)) {
+		Variable_free(value);
 		free(tmp);
 		Token_free(token);
 		return 0; //error value
 	}
 	free(tmp);
+	Variable_free(value);
 	return 1; //add value
 }
 
@@ -550,27 +571,28 @@ static void disconnect(FILE **in, FILE **out) {
  */
 
 static int std_print(int argc, Variable *argv) {
+	int eql = strlen(argv[0].mName) != 0;
 	argv[argc] = VAR_NULL;
 	char *result;
 	char *format;
 	switch (argv[0].mType) {
 		case VARTYPE_INT:
-			format = "%s = %s \n";
+			format = eql ?"%s = %s\n" : "%s\n";
 			result = UnboundedInt_toString(argv[0].mValue.ui);
 			break;
 		case VARTYPE_STRING:
-			format = "%s = %s \n";
+			format = eql ? "%s = %s\n" : "%s\n";
 			result = argv[0].mValue.string;
 			break;
 		case VARTYPE_CHARACTER:
-			format = "%s = %c \n";
+			format = eql ? "%s = %c\n" : "%c\n";
 			result = &argv[0].mValue.character;
 			break;
 		default:
 			perror_file(UNKNOWN_VARTYPE);
 			return 0;
 	}
-	fprintf(OUT, format, argv[0].mName, result);
+	fprintf(OUT, format, argv[0].mName,result);
 
 	free(result);
 	Variable_free(argv[0]);
@@ -606,6 +628,7 @@ static int std_fact(int argc, Variable *argv) {
 	if (argv[0].mType == VARTYPE_INT) {
 		UnboundedInt tmp = UnboundedInt_fact(argv[0].mValue.ui);
 		argv[argc] = Variable_new("", &tmp, VARTYPE_INT);
+		Variable_free(argv[0]);
 		return 1;
 	}
 	return 1;
